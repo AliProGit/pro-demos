@@ -56,7 +56,7 @@ html.embedded .rail{top:58px;max-height:calc(100vh - 70px)}
 @media (max-width:980px){
  html.embedded .app{grid-template-columns:1fr}
  html.embedded .rail{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;position:sticky;top:58px;z-index:10;background:var(--bg);padding:6px 0;max-height:none}
- html.embedded .rail>*{flex:0 0 auto}
+ html.embedded .rail>*{flex:0 0 230px}
  html.embedded .rail h4{display:none}
 }`,
   },
