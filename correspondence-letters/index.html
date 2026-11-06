@@ -1,0 +1,1173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beren correspondence (DocGen letters): interactive demo, 2026-11-06</title>
+<style>
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --ink:#1B2A32; --muted:#5B6B73; --line:#D8DEDF; --soft:#EEF2F2;
+  --accent:#2F6F8F; --on-accent:#FFFFFF; --accent-soft:#E2EDF3;
+  --red:#B8322A; --red-soft:#F8DEDB; --green:#2E7D4B; --green-soft:#DCEFE2; --amber:#8A5300; --amber-soft:#FBE9C8;
+  --s1:#2a78d6; --s2:#eb6834; --grid:#E1E3E0; --axis:#C3C6C2;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
+h1,h2,h3,h4{margin:0;line-height:1.25;font-weight:650}
+h1{font-size:24px} h2{font-size:21px} h3{font-size:16px} h4{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+p{margin:0 0 10px}
+code{font:13px/1.4 Consolas,"Cascadia Mono","Courier New",monospace;background:var(--soft);padding:0 4px;border-radius:4px;word-break:break-word}
+pre{font:12.5px/1.45 Consolas,"Cascadia Mono","Courier New",monospace;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.top{display:flex;align-items:center;gap:14px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top .ttl h1{font-size:18px}
+.top .ttl p{margin:0;color:var(--muted);font-size:12.5px}
+.controls{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:7px 14px;font-weight:600}
+.btn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn[aria-pressed="true"]{background:var(--amber);color:#fff}
+select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.prog{font-size:13px;color:var(--muted);min-width:90px;text-align:right}
+.app{display:grid;grid-template-columns:280px 1fr;gap:18px;max-width:1500px;margin:0 auto;padding:16px 20px 30px}
+@media(max-width:980px){.app{grid-template-columns:1fr}}
+.rail{align-self:start;position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto;padding-right:4px}
+@media(max-width:980px){.rail{position:static;max-height:none}}
+.rail h4{margin:10px 0 6px 4px}
+.nav{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-bottom:5px;font-size:13.5px;line-height:1.3}
+.nav small{display:block;color:var(--muted);font-size:12px}
+.nav[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.nav.done{border-left:3px solid var(--accent)}
+.stage{min-width:0}
+.pbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.pbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.pbar i.ap{background:var(--amber);transition:none}
+.scene{display:none;animation:fade .25s ease}
+.scene.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card+.card{margin-top:14px}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:8px}
+.head .kicker{color:var(--muted);font-size:13px}
+.sub{color:var(--muted);margin:0 0 12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:1180px){.two{grid-template-columns:1fr}}
+.col h3{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent);vertical-align:middle}
+.badge.persona{background:var(--ink);color:#fff}
+.badge.red{background:var(--red-soft);color:var(--red)}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.badge.amber{background:var(--amber-soft);color:var(--amber)}
+.badge.dim{background:var(--soft);color:var(--muted)}
+.badge.aud{background:var(--soft);color:var(--ink);font-weight:500}
+.steps{margin:0;padding-left:0;list-style:none;counter-reset:s}
+.steps li{position:relative;padding:4px 0 4px 32px;counter-increment:s}
+.steps li::before{content:counter(s);position:absolute;left:0;top:5px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+ul.plain{margin:0;padding-left:18px} ul.plain li{margin:2px 0}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--soft);margin-top:10px}
+.box h4{margin-bottom:6px}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;margin:0;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.unv{color:var(--muted);font-style:italic}
+.unv small{font-style:normal;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px;color:var(--muted)}
+.dmark{display:inline-block;background:var(--red);color:#fff;border-radius:6px;padding:0 6px;font-size:12px;font-weight:700;margin-right:4px}
+.dok{display:inline-block;background:var(--green);color:#fff;border-radius:6px;padding:0 6px;font-size:12px;font-weight:700;margin-right:4px}
+/* chain */
+.chain{margin:0;padding:0;list-style:none}
+.chain li{position:relative;padding:8px 10px 8px 34px;border-left:2px solid var(--line);margin-left:10px;opacity:.55;transition:opacity .25s,background .25s}
+.chain li.lit{opacity:1}
+.chain li::before{content:"";position:absolute;left:-7px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.chain li.lit::before{background:var(--accent)}
+.chain li.bad{background:var(--red-soft);border-radius:0 8px 8px 0}
+.chain li.bad::before{border-color:var(--red);background:var(--red)}
+.chain li.good{background:var(--green-soft);border-radius:0 8px 8px 0}
+.chain li.good::before{border-color:var(--green);background:var(--green)}
+.chain b{display:block;font-size:14px}
+.chain span{display:block;color:var(--ink);font-size:13.5px}
+.chain .fields{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px}
+.chain .fields code{font-size:12px;background:var(--surface);border:1px solid var(--line)}
+.chain .dnote{display:block;margin-top:4px;color:var(--red);font-size:13px}
+.chain .gnote{display:block;margin-top:4px;color:var(--green);font-size:13px}
+/* letter preview */
+.letter{border:1px solid var(--line);border-radius:6px;background:#FFFEFB;padding:14px 16px;font:12.5px/1.45 Cambria,Georgia,serif;color:#222;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-top:10px}
+.letter .lh{font-size:10.5px;color:#444;border-bottom:1px solid #ccc;padding-bottom:4px;margin-bottom:8px}
+.letter .re{font-weight:700;margin:8px 0}
+.letter .blank{display:inline-block;min-width:90px;border-bottom:1px dotted var(--red);color:var(--red);font-size:11px;vertical-align:bottom;font-family:"Segoe UI",sans-serif}
+.letter .ft{font-size:10px;color:#555;border-top:1px solid #ccc;margin-top:10px;padding-top:4px}
+.letter .cb{font-family:Consolas,monospace}
+.letter .hl{background:var(--green-soft)}
+.letter .bd{background:var(--red-soft)}
+.lcap{font-size:12px;color:var(--muted);margin-top:4px}
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--muted);font-weight:600;background:var(--soft)}
+.scroll{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:460px}
+.tight td,.tight th{padding:4px 6px;font-size:12.5px}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.tile{background:var(--soft);border-radius:10px;padding:10px 12px}
+.tile b{display:block;font-size:26px;font-weight:600}
+.tile span{font-size:12.5px;color:var(--muted)}
+/* catalogue */
+.cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.lt{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);font-size:13px}
+.lt b{display:block}
+.lt .code{font-weight:700;color:var(--accent);margin-right:6px}
+.lt.off{opacity:.55}
+/* mermaid */
+.mm{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;overflow:auto;margin-top:8px}
+.mm svg{max-width:100%;height:auto}
+.mm.zoom{overflow:auto}.mm.zoom svg{max-width:none;width:1800px;height:auto}
+.mm .zoombtn{float:right;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--muted)}
+@media print{.mm .zoombtn{display:none}.mm.zoom svg{max-width:100%;width:auto}}
+.mm .fb{color:var(--muted);font-size:13px;margin-bottom:6px}
+details{margin-top:8px} summary{cursor:pointer;color:var(--accent);font-weight:600}
+/* checklist */
+.check{list-style:none;margin:0;padding:0}
+.check li{padding:7px 0 7px 30px;position:relative;border-bottom:1px solid var(--line)}
+.check li::before{content:"";position:absolute;left:4px;top:11px;width:14px;height:14px;border-radius:3px;border:2px solid var(--accent)}
+.check li.ok::before{background:var(--accent)}
+/* charts */
+.chart{margin-top:8px}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin:6px 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:60;max-width:260px}
+.grp{margin-top:12px}
+.grp h4{margin-bottom:6px}
+footer{max-width:1500px;margin:0 auto;padding:10px 20px 30px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line)}
+footer code{font-size:12px}
+.hint{font-size:12.5px;color:var(--muted)}
+.ap-count{font-size:12px;color:var(--muted);margin-left:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  .top,.rail,.pbar,.controls,.tip{display:none!important}
+  .app{display:block;padding:0}
+  .scene{display:block!important;page-break-after:always;margin-bottom:20px}
+  .card{border:1px solid #bbb;break-inside:avoid}
+  .chain li{opacity:1}
+  .scroll{max-height:none;overflow:visible}
+  body{font-size:12px;background:#fff}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="ttl"><h1>Beren correspondence: DocGen letters</h1><p>Pro-Spectus / Lembaz Family Support · built by LaunchpadLab · state as of 2026-11-05/06 · read-only demo</p></div>
+  <div class="controls">
+    <button class="btn alt" id="prev" type="button">Prev</button>
+    <button class="btn" id="next" type="button">Next</button>
+    <button class="btn alt" id="auto" type="button" aria-pressed="false">Auto-play</button>
+    <label class="hint" for="speed">Speed</label>
+    <select id="speed" aria-label="Auto-play speed"><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="4">4x</option></select>
+    <button class="btn alt" id="voice" type="button" aria-pressed="false" title="Narrate each scene with the browser's speech engine (Edge natural voices)">Voice off</button>
+    <select id="vsel" aria-label="Narration voice" title="Narration voice" style="max-width:190px"></select>
+    <button class="btn alt" id="say" type="button" title="Read this scene again">Read scene</button>
+    <span class="prog" id="prog"></span>
+  </div>
+</header>
+<div class="app">
+  <aside class="rail" id="rail"></aside>
+  <main class="stage">
+    <div class="pbar"><i id="pfill"></i></div>
+    <div id="stage"></div>
+    <p class="hint" style="margin-top:10px">Keys: left / right arrows move, Home / End jump, Space pauses auto-play, V toggles voice. With Voice on, Auto-play advances when the narration of a scene ends. Print (Ctrl+P) lays out every scene in order.</p>
+  </main>
+</div>
+<footer id="foot"></footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" onerror="window.__mmFail=true"></script>
+<script>
+/* ---------- helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(s){
+  if(s==null)return '';
+  return String(s)
+    .replace(/%U\{([^}]*)\}/g,'<em class="unv">$1<small>unverified</small></em>')
+    .replace(/%D\{(D[1-8][^}]*)\}/g,'<span class="dmark">$1</span>')
+    .replace(/%G\{([^}]*)\}/g,'<span class="dok">$1</span>')
+    .replace(/%B\{([^}]*)\}/g,'<span class="badge">$1</span>')
+    .replace(/%R\{([^}]*)\}/g,'<span class="badge red">$1</span>')
+    .replace(/%K\{([^}]*)\}/g,'<span class="badge green">$1</span>')
+    .replace(/%A\{([^}]*)\}/g,'<span class="badge amber">$1</span>');
+}
+function li(arr,cls){return '<ul class="'+(cls||'plain')+'">'+arr.map(x=>'<li>'+fmt(x)+'</li>').join('')+'</ul>';}
+function ol(arr){return '<ol class="steps">'+arr.map(x=>'<li>'+fmt(x)+'</li>').join('')+'</ol>';}
+function table(head,rows,cls){return '<div class="scroll"><table class="'+(cls||'')+'"><thead><tr>'+head.map(h=>'<th>'+fmt(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+fmt(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';}
+function kv(obj){return '<dl class="kv">'+Object.keys(obj).map(k=>'<dt>'+esc(k)+'</dt><dd>'+fmt(obj[k])+'</dd>').join('')+'</dl>';}
+
+/* ---------- letter catalogue (PRO_Letter_Type__mdt, MASTER 2.1 / Appendix 1) ---------- */
+const CAT=[
+ {code:'02',name:'Fax cover sheet',aud:'(none)',del:'Fax',cover:'is the cover',active:true,tpl:'PRO_Letter02_FaxCoverSheet_v1',mlr:'PP-LEM-US-0002',fam:'Cover Sheet',wave:'W1'},
+ {code:'03_b',name:'Product-only enrollment received',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter03b_ProductOnlyEnrollment_v1',mlr:'PRO-1588-US-EN-v1',fam:'Enrollment Confirmation',wave:'W1',j:'j1'},
+ {code:'04',name:'Welcome / enrollment status',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter04_WelcomeEnrollment_v1',mlr:'PRO-1595-US-EN-v2',fam:'Enrollment Confirmation',wave:'W1',j:'j1'},
+ {code:'05',name:'Missing information request',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter05_MissingInformation_v1',mlr:'PRO-1596-US-EN-v2',fam:'Action Request',wave:'W1',j:'j3'},
+ {code:'06',name:'BI research complete',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter06_BIResearchComplete_v1',mlr:'PRO-1597-US-EN-v2',fam:'Benefits Summary',wave:'W1',j:'j6'},
+ {code:'07',name:'Commercial copay approved',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter07_CopayApprovedHcp_v1',mlr:'PRO-1692-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j10'},
+ {code:'08',name:'Commercial copay denied',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter08_CopayDenied_v1',mlr:'PP-LEM-US-0008 (no date)',fam:'Determination Notice',wave:'W2',j:'j11'},
+ {code:'11',name:'PAP approved',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter11_PapApprovedHcp_v1',mlr:'PRO-1598-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j12'},
+ {code:'12',name:'PAP denied',aud:'(blank)',del:'Fax',cover:'yes',active:false,tpl:'(no template)',mlr:'',fam:'Determination Notice',wave:'W2'},
+ {code:'13',name:'PAP disenrollment',aud:'(blank)',del:'Fax',cover:'yes',active:false,tpl:'(no template)',mlr:'',fam:'Disenrollment Notice',wave:'W2'},
+ {code:'14',name:'PAP refill request',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter14_PapRefillRequest_v1',mlr:'PRO-1601-US-EN-v1',fam:'Action Request',wave:'W2',j:'j13'},
+ {code:'15',name:'BRIDGE approval notification',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter15_BridgeApprovedHcp_v1',mlr:'PRO-1683-US-EN-v1',fam:'BRIDGE Approval Notification',wave:'W1',j:'j14'},
+ {code:'17',name:'Bridge disenrollment',aud:'(blank)',del:'Fax',cover:'yes',active:false,tpl:'(no template)',mlr:'',fam:'Disenrollment Notice',wave:'W2'},
+ {code:'18',name:'Unable to contact patient',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter18_UnableToContactPatient_v1',mlr:'PRO-1603-US-EN-v3',fam:'Action Request',wave:'W1',j:'j5'},
+ {code:'25',name:'Welcome letter',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter25_WelcomePatient_v1',mlr:'PRO-1698-US-EN-v1',fam:'Enrollment Confirmation',wave:'W1',j:'j2'},
+ {code:'26',name:'Commercial copay approved (patient)',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter26_CopayApprovedPatient_v1 (v2 file 10/28)',mlr:'PRO-1700-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j10'},
+ {code:'28',name:'PAP income verification request',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter28_PapIncomeVerification_v1',mlr:'PRO-1702-US-EN-v1',fam:'Action Request',wave:'W2',j:'j13'},
+ {code:'29',name:'PAP approved (patient)',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter29_PapApprovedPatient_v1',mlr:'PRO-1703-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j12'},
+ {code:'31',name:'BRIDGE approval notification (patient)',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter31_BridgeApprovedPatient_v1',mlr:'PRO-1705-US-EN-v1',fam:'BRIDGE Approval Notification',wave:'W1',j:'j14'},
+ {code:'34',name:'Unreachable patient',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter34_UnreachablePatient_v1 (v2 file 10/28)',mlr:'PRO-1699-US-EN-v1',fam:'Action Request',wave:'W2',j:'j5'},
+ {code:'38',name:'PA approval',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter38_PriorAuthApprovedHcp_v1',mlr:'PRO-1689-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j8'},
+ {code:'39',name:'PA approval (patient)',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter39_PriorAuthApprovedPatient_v1',mlr:'PRO-1709-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j8'},
+ {code:'40',name:'PA denial',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter40_PriorAuthDenied_v1',mlr:'PRO-1690-US-EN-v1',fam:'Determination Notice',wave:'W1',j:'j9'},
+ {code:'41',name:'PA denial (patient)',aud:'Patient',del:'Mail',cover:'no',active:true,tpl:'PRO_Letter41_PriorAuthDeniedPatient_v1 (v2 file 10/28)',mlr:'PRO-1708-US-EN-v1',fam:'Determination Notice',wave:'W2',j:'j9'},
+ {code:'42',name:'Case delay missing information',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_Letter42_CaseSupportMissingInfo_v1',mlr:'PRO-1691-US-EN-v1',fam:'Action Request',wave:'W1',j:'j4'},
+ {code:'ATTEST',name:'Attestation Document',aud:'(blank)',del:'Fax (nominal)',cover:'no',active:true,tpl:'PRO_LetterATTEST_Attestation_v1 (PDF; locked, tagged)',mlr:'(none)',fam:'(none)',wave:'W1',j:'j15'},
+ {code:'SOB',name:'Summary of benefits (HCP)',aud:'HCP',del:'Fax',cover:'yes',active:true,tpl:'PRO_LetterSOB_BenefitVerificationSummaryHcp_v1',mlr:'(none)',fam:'Form',wave:'SOB',j:'j7'},
+ {code:'SOB_ARM',name:'Summary of benefits (ARM worksheet)',aud:'HCP',del:'(blank)',cover:'no',active:true,tpl:'PRO_LetterSOB_SummaryOfBenefitsArm_v1',mlr:'(none)',fam:'Form',wave:'SOB',j:'j7'}
+];
+
+/* ---------- the common back-end spine (JOURNEYS J1 step table, MASTER 3.2-3.4) ---------- */
+const SPINE=[
+ {k:'action',name:'QuickAction Case.PRO_Generate_Letter',text:'LWC screen action labelled "Generate Letter" on the Case record page (first Dynamic Action since the 10/26 install). Opens <code>proLetterGenerator</code> with <code>variant = action</code>, <code>recordId</code> = Case Id.'},
+ {k:'lwc',name:'LWC proLetterGenerator',text:'<code>@wire getLetters(caseId)</code> and <code>getRecentRequests(caseId, 5)</code>; summary line (audience · delivery · format); cover-sheet checkbox defaults to <code>Requires_Cover_Sheet__c</code>; after Generate it polls <code>getRequestStatus</code> every 3,000 ms, max 60 polls.'},
+ {k:'ctl',name:'PRO_LetterGenerationController',text:'<code>getLetters</code>: program name via <code>PRO_LetterProgramApproval.programNameOf</code> (Case.Pro_Program__r.Name), rows <code>WHERE Is_Cover_Sheet__c = false</code> kept when <code>Approved_Programs__c</code> contains the program. <code>generateLetter(caseId, code, withCoverSheet)</code> -> <code>generatePacket</code> or <code>generate</code>; exceptions become <code>AuraHandledException</code>.'},
+ {k:'svc',name:'PRO_LetterGenerationService.startGeneration',text:'<code>assertCaseVisible</code> (SOQL WITH USER_MODE), <code>assertLetterApplies</code>, <code>resolveLetterType</code> (active row with a template), cover-sheet guard, <code>PRO_LetterProgramApproval.assertApproved</code> (fails closed), <code>resolveTemplate</code> by UniqueName (mapper must match). Title handle <code>LTRGEN~code~epoch[~02]</code>; <code>omnistudio.DocumentServiceGateway().invokeMethod(\'generateDocument\')</code> returns the job id.'},
+ {k:'mdt',name:'PRO_Letter_Type__mdt',text:''},
+ {k:'lr',name:'PRO_Letter_Request__c (PRO_LetterRequestLedger.recordStarted)',text:'SYSTEM_MODE insert after the gateway call: <code>Case__c</code>, <code>Letter_Code__c</code>, <code>Cover_Letter_Code__c</code> (02 for a packet), <code>Payload_Job_Id__c</code>, <code>Handle__c</code>, <code>Status__c = Payload Generating</code>. Auto-number LR-nnnnnnn returned to the LWC.'},
+ {k:'extract',name:'DataRaptor PROLetterCommonExtract_1 (Extract, root Case)',text:'Runs inside the DocGen job as the generating user, FLS and sharing enforced (<code>EnforceDMFLSAndDataEncryption = true</code>). A field without read grant prints blank, never errors.'},
+ {k:'mapping',name:'DataRaptor PROLetterShellMapping_1 (Transform, 264 items / 109 formulas)',text:''},
+ {k:'template',name:'DocumentTemplate (.docx in library DocGen Document Template Library)',text:''},
+ {k:'job',name:'DocGen job (DocumentGenerationProcess)',text:'Asynchronous, server-side (Hyperforce). Merges the tokens into the Word template, converts to PDF when <code>outputFileFormat = pdf</code> (packet payload), writes a <code>ContentVersion</code> owned by the user, sets <code>Status = Success</code>, <code>ResponseText = 068…</code>.'},
+ {k:'trigger',name:'PRO_DocumentGenerationProcessTrigger -> completeGeneration -> PRO_LetterDocumentPersister',text:'Fires when Status = Success and ResponseText has arrived. <code>forJobs</code> finds the request by <code>Payload_Job_Id__c</code>; persister inserts <code>PRO_Files_and_Documents__c</code> {Name = code_CaseNumber_yyyymmdd, Outgoing, Draft, Source "Letter Generation", sender fax 834-784-9348}, <code>ContentDocumentLink</code> (V, AllUsers), renames the ContentVersion title. <code>PRO_DocumentContentVersionTagger</code> is a no-op for every code except ATTEST.'},
+ {k:'status',name:'Ledger status and LWC result',text:''}
+];
+
+/* ---------- journeys (JOURNEYS section B; UAT examples [V] read from fulluat 2026-11-06) ---------- */
+const J=[];
+J.push({id:'pick',nav:'The picker',kicker:'Storyboard 1',title:'Opening Generate Letter on a Lembaz case',letters:'24 active letters offered; 12, 13, 17 appear only as "3 registered letters are waiting for approval"',persona:'P1 Beren Case Manager',aud:'Enrollment 00030670 (500QL00000vBcYzYAK)',
+ moment:'The CM opens an Enrollment case and clicks Generate Letter. What appears in the modal is decided by the Case\'s program, not by its record type.',
+ steps:['Open Enrollment case 00030670 (record page <code>Enrollment_Case_Record_Page</code>; Status Complete / Sub Status Enrollment Received, Sub Type New Enrollment).','Click <b>Generate Letter</b>. The modal shows the PROspectus header and step "1 Document type".','Open the <b>Letter template</b> select: 24 letters, each with a summary line such as <code>HCP · Fax · DOCX</code> or <code>Patient · Mail · DOCX</code>.','For fax letters the checkbox <b>Include the fax cover sheet</b> is pre-ticked; patient letters have no checkbox.','"Recent letters" lists the last 5 requests on this case with Complete / In progress / Failed badges.'],
+ contains:['Nothing is generated yet. The picker is driven entirely by <code>PRO_Letter_Type__mdt</code> and the Case\'s program.'],
+ uat:{Case:'00030670 (500QL00000vBcYzYAK), L1 patient 001QL00002f7RuGYAU',Persona:'QA1025 Beren CM 005QL00000vomp7YAA (Standard User Basic)',Note:'As of 11/06 the QA1025 personas hold the full letter access set (readiness report update 9); P1-1 will not reproduce.'},
+ fill:['Case.Pro_Program__c = Lembaz Family Support (otherwise "No letters are approved for this Case\'s program")'],
+ chain:{mdt:'Query <code>WHERE Is_Cover_Sheet__c = false ORDER BY Letter_Code__c</code>; keep rows whose <code>Approved_Programs__c</code> (";"-separated, case/space-insensitive) contains "Lembaz Family Support": 24 active + 3 inactive (12, 13, 17).',
+   extract:[],mapping:[],template:'Not touched until Generate is clicked.',status:'No request row yet. <code>getRecentRequests</code> reads <code>PRO_Letter_Request__c WHERE Case__c = :caseId WITH USER_MODE ORDER BY CreatedDate DESC</code>.',
+   skip:['svc','lr','extract','mapping','job','trigger'],
+   over:{lwc:'Picker shows active letters; inactive ones only as a count. Error copy: any <code>getLetters</code> wire error becomes "We could not load the available letters. Refresh the page and try again." (QA-1025 P2-1 masks the real cause: no access to the Apex class).'}},
+ defects:'P2-1 (LPL, open): the access error is disguised as "refresh the page".'});
+
+J.push({id:'j1',nav:'J1 · 04 / 03_b',kicker:'Journey 1 · Storyboard 2',title:'Enrollment received, HCP notified',letters:'04 Welcome / enrollment status · 03_b Product-only enrollment received',persona:'P1 Beren Case Manager',aud:'HCP · Fax · DOCX (packet payload rendered PDF)',
+ moment:'A Lembaz enrollment form arrives (fax or portal), the Enrollment case is created and reviewed; the CM confirms receipt to the prescriber\'s office. 04 is the standard acknowledgement with the current enrollment status; 03_b is the variant for a product order only.',
+ steps:['Open Enrollment case 00030670; check Associated Healthcare Provider (<code>Pro_CorM_Associated_HealthCare_Provider__c</code> -> "Ali test Practitioner"), Treating Site, Case Manager (<code>Pro_Case_Manager__c</code>), Status / Sub Status, <code>Pro_Enrollment_DateTime__c</code>.','Click <b>Generate Letter</b>; choose "Welcome / enrollment status" (04) or "Product-only enrollment received" (03_b). Summary <code>HCP · Fax · DOCX</code>.','Leave <b>Include the fax cover sheet</b> ticked for a packet; untick to get only the letter.','Click <b>Generate</b>. Progress: Starting document generation -> Creating the letter -> (packet) Saving the letter -> Preparing the fax cover sheet -> Creating the fax cover sheet -> Complete.','On "Your letter is ready and saved on the Case." click <b>Open letter</b> (and <b>Open cover sheet</b>). The file also sits under Files & Documents; "Recent letters" shows LR-nnnnnnn with a Complete badge.'],
+ contains:['Header line <code>Lembaz(TM) Family Support Program | M-F 8:00 AM-8:00 PM ET | Phone: 844-237-3600 Fax: 834-784-9348 | Email lembazfamilysupport@pro-spectus.com | Website: lembazrx.com</code>, date "November 6, 2026".','<code>To: Ali test Practitioner</code>, <code>Practice/Facility: Ali test Facility for Test Practitioner</code>, patient block (name, DOB, Patient ID OTH-PT-26-028494).','Subject <b>Welcome to Lembaz Family Support – Enrollment Status Update</b> (04) or <b>Product Order Request Only</b> (03_b); status sentence "Enrollment Received"; Case Manager name / phone / e-mail; "Sincerely, Lembaz(TM) Family Support"; disclaimer; footer (c)2026 Beren Therapeutics P.B.C. + MLR <code>PRO-1595-US-EN-v2 [September 2026]</code> (04) / <code>PRO-1588-US-EN-v1</code> (03_b).','With a cover sheet: separate "Fax Cover Sheet" (02) with To / Practice / From "Lembaz Family Support" / Total pages including cover sheet: 2 (davidb QA-1025).'],
+ uat:{Case:'00030670 (500QL00000vBcYzYAK), L1, FAM One, CM set','04':'LR-0000014, file 069QL00000PHOpGYAX, Complete in 13 s','03_b':'LR-0000036, file 069QL00000PHwNqYAL, Complete in 15 s',Note:'Both generated as Ali via Apex without cover sheet; persona UI run still outstanding (TD-2329).'},
+ fill:['Case.Pro_CorM_Associated_HealthCare_Provider__c (recipient.name; otherwise "To:" and "Dear ," are blank)','Case.Treating_Site__c or HCP account (practice.name)','Case.Pro_Case_Manager__c (case_manager.*)','Status + Sub_Status__c as the business wants it worded (letter.current_status)','HCP Practitioner fax (recipient.fax for the cover)','For 04: the case must not be Cancelled / Opened in Error'],
+ chain:{mdt:'Rows <code>Letter_04</code> / <code>Letter_03_b</code>: Audience HCP, Delivery Fax, Output DOCX, <code>Requires_Cover_Sheet__c = true</code>, Pattern "Enrollment Confirmation", <code>Approved_Programs__c = Lembaz Family Support</code>, MLR date 2026-09-01.',
+   extract:['Case.CaseNumber','Case.Status','Case.Sub_Status__c','Case.IsClosed','Case.Pro_Enrollment_DateTime__c','Case.RecordType.Name','Case.PRO_Letter_Recipient_Name__c','Case.PRO_Letter_Practice_Name__c','Case.PRO_Letter_Recipient_Fax__c','Case.Parent.PRO_Letter_*','Case.Pro_Case_Manager__r.Name / Phone / Email','Case.Account.FirstName / LastName / PersonBirthdate / PRO_Patient_Unique_ID__c','Case.Pro_Program__r.Name / Program_Phone_Number__c / Program_Fax_Number__c / Customer_Support_Email__c / PRO_Program_Website__c','Config.Brand_Name__c / Support_Hours__c / Copyright_Text__c / Legal_Disclaimer__c / Prescribing_Info_Text__c'],
+   mapping:['letter.correspondence_date = FORMATDATETIME(NOW(), "MMMM d, yyyy", "America/New_York")','recipient.name (own value else parent\'s)','practice.name','recipient.fax','patient.full_name / dob / id','letter.current_status (Status + Sub_Status: New/In Process -> "Enrollment Received"; Incomplete/Missing Information -> "Additional Information Needed"; Complete/blank -> "Enrollment Complete"; Cancelled/Opened in Error -> blank)','letter.enrollment_date','case_manager.*','program.* (brand, hours, phone, fax, email, website, copyright, legal_disclaimer, pi_statement, from_display_name)'],
+   template:'<code>PRO_Letter04_WelcomeEnrollment_v1</code> / <code>PRO_Letter03b_ProductOnlyEnrollment_v1</code> (fulluat Draft, VersionNumber 1, Extract PROLetterCommonExtract, Mapper PROLetterShellMapping). MLR code typed in the footer.',
+   status:'Packet: Payload Generating -> Payload Filed -> Awaiting Cover -> Cover Generating -> Complete (see J16). Plain: Payload Generating -> Complete, <code>Completed_At__c</code>, <code>Payload_Content_Document__c</code> = 069QL00000PHOpGYAX for LR-0000014. Audit row <code>04_00030670_20261104</code>.',
+   over:{svc:'<code>assertLetterApplies</code>: <b>letter 04 only</b> is refused when <code>Case.Status IN (\'Cancelled\',\'Canceled\') AND Sub_Status__c = \'Opened in Error\'</code> (PRO rule of 5 Oct). Handle <code>LTRGEN~04~&lt;epoch ms&gt;~02</code>; <code>outputFileFormat = pdf</code> for a packet payload (page count needs a PDF), else <code>docx</code>.'},
+   bad:{extract:{id:'D7',text:'PI placeholder "[www.website.com/PI]" comes from Config.Prescribing_Info_Text__c and prints on every letter that carries the PI line (cross-cutting).'}}},
+ defects:'None of D1-D8 is specific to 04 / 03_b. Cross-cutting: %D{D7} PI placeholder; QA-1025 P2-1; <code>PRO_Letter_Recipient_Fax__c</code> is blank on 00030670 so a cover sheet would show no "To fax".'});
+
+J.push({id:'j2',nav:'J2 · 25',kicker:'Journey 2 · Storyboard 3',title:'Welcome letter to the patient',letters:'25 Welcome letter',persona:'P1 Beren Case Manager',aud:'Patient · Mail · DOCX',
+ moment:'Same moment as J1; the patient is told they are enrolled and who their Family Access Manager (FAM) is.',
+ steps:['On Enrollment 00030670 confirm <code>FAM_Contact__c</code> (QA1025 FAM One 003QL000023u41NYAQ; field on the Enrollment page and edit on the Lembaz set since 11/03, TD-2330 Done) and the patient Account address.','<b>Generate Letter</b> -> "Welcome letter" (25); summary <code>Patient · Mail · DOCX</code>; no cover-sheet checkbox.','Generate; Open letter; print and mail (no postal integration exists).'],
+ contains:['Letterhead as J1; patient-addressed ("Dear &lt;QA1025 patient&gt;,"); subject <b>Welcome to Lembaz Family Support</b>.','FAM name / phone / e-mail (proven 11/04); Case Manager contact; "Sincerely, Lembaz(TM) Family Support"; disclaimer; PI line (D7); footer + MLR <code>PRO-1698-US-EN-v1</code>.','PRO\'s drafts carry no postal address block (auditor comment).'],
+ uat:{Case:'00030670 (500QL00000vBcYzYAK)','25':'LR-0000015, file 069QL00000PHmOUYA1, Complete in 2 s',Note:'UAT has no Contact record type "FAM" (TD-1933 exists only in davidb).'},
+ fill:['Case.FAM_Contact__c on the Enrollment case (or an Enrollment ancestor)','Account FirstName / LastName / PersonBirthdate / PRO_Patient_Unique_ID__c'],
+ preview:{code:'25',title:'Letter 25 as read in UAT (LR-0000015)',to:'Dear &lt;QA1025 patient&gt;,',re:'Welcome to Lembaz Family Support',body:['Family Access Manager: <span class="hl">QA1025 FAM One · phone · e-mail</span> (printed via the 10/28 parent-chain fallback)','Case Manager: QA1025 Beren CM · phone · e-mail','Sincerely, Lembaz(TM) Family Support','Disclaimer: "This communication does not guarantee coverage, reimbursement, financial assistance, or treatment availability..."','Please see full Prescribing Information for Lembaz (adrabetadex) at <span class="bd">[www.website.com/PI]</span> &nbsp;<span class="dmark">D7</span>'],mlr:'PRO-1698-US-EN-v1',note:'No postal address block in the template.'},
+ chain:{mdt:'Row <code>Letter_25</code>: Audience Patient, Delivery Mail, Output DOCX, <code>Requires_Cover_Sheet__c = false</code> -> <code>generate()</code> path, <code>outputFileFormat = docx</code>.',
+   extract:['Case.FAM_Contact__r.Name / Phone / Email','Case.Parent.FAM_Contact__r.* + Parent.RecordType.DeveloperName','Case.Parent.Parent.FAM_Contact__r.* + RecordType','Case.Parent.Parent.Parent.FAM_Contact__r.* + RecordType (depth 5)','Case.Account.BillingStreet / City / State / PostalCode','plus the common patient / program / config / case-manager fields of J1'],
+   mapping:['fam.name / phone / email: own FAM, else the first ancestor whose record type is Enrollment (formulas #142-144, Victor 10/28)','patient.street / city / state / postal_code (auditor warns if an HCP template prints them)','patient.full_name, case_manager.*, program.*'],
+   template:'<code>PRO_Letter25_WelcomePatient_v1</code> (fulluat Draft v1).',
+   status:'Payload Generating -> Complete directly. Audit row <code>25_00030670_20261104</code>; <code>Pro_Sender_Fax_Number__c</code> is still stamped although delivery is Mail.',
+   bad:{extract:{id:'D7',text:'PI placeholder prints on 25.'}},
+   good:{mapping:{id:'Round 2 closed',text:'Rachel\'s "FAM blank on all patient letters" is closed by the 10/28 parent-chain fallback (25, 26, 31, 41 print FAM in UAT).'}}},
+ defects:'%D{D7} PI placeholder. Round 2 FAM item closed. Formatting item "Selected Option indent" concerns 18, not 25.'});
+
+J.push({id:'j3',nav:'J3 · 05',kicker:'Journey 3 · Storyboard 4',title:'Missing information request to the HCP',letters:'05 Missing information request',persona:'P1 Beren Case Manager',aud:'HCP · Fax · DOCX, cover sheet ticked',
+ moment:'Enrollment intake finds gaps (Tax ID, patient address, payor, prescriber signature...). Automation creates an Enrollment Missing Information (EMI) child case with Missing_Information_List__c and sets the parent to Incomplete / Missing Information; the CM asks the office to supply the items by a deadline.',
+ steps:['Open the <b>EMI child</b> case (record type <code>Enrollment_Missing_Information</code>; UAT 00030641, parent 00030640). Generating from the parent also works because the extract looks up the latest EMI child the user can see (P3-5 caveat).','Fill <code>Missing_Information_List__c</code> (multi-select; UAT "Tax ID;None"), <code>Missing_information_notes__c</code> (free text for "Other"), <code>Contact_Reason__c</code> (UAT "Updated insurance or coverage information needed") and <code>Contact_Reason_Other__c</code> when Other.','<b>Generate Letter</b> -> "Missing information request" (05), <code>HCP · Fax · DOCX</code>, cover sheet ticked, Generate.','Review the ticked boxes in the preview before faxing.'],
+ contains:['Subject <b>Request for Missing Information</b>; checklist of nine categories with [X] / [ ] marks and the item text after the colon, e.g. <code>[X] Prescriber information: Tax ID</code>.','Other categories: Patient information, Prescriber signature (Provider Consent), Prescription, Diagnosis, Prescriber and SOC information, Insurance information, EAP, Other (notes); contact-reason box.','<b>Please respond by 11/09/2026</b> (<code>PRO_Letter_Response_Deadline__c</code> = today + 2 business days); CM contact; MLR <code>PRO-1596-US-EN-v2</code>; cover sheet 02 when a packet.'],
+ uat:{Case:'00030641 (500QL00000vBZ87YAG), EMI child of 00030640','05':'LR-0000018, file 069QL00000PHm9zYAD, Complete in 2 s',Also:'00030733 (income-verification reason); 00030737 (Other + text; %U{no HCP on the case -> "Dear ," unless the parent 00030732 has one}); smoke runs LR-0000000 / LR-0000001 used BV 00030743'},
+ fill:['EMI child Missing_Information_List__c with recognised values (a value outside the set, e.g. "None", ticks nothing)','Missing_information_notes__c for Other (FLS-hidden for most users incl. admins, P3-6)','Contact_Reason__c (+ Contact_Reason_Other__c)','HCP on the child or its parent (recipient:parent_name fallback)','Generate from a case where the user can see the EMI child (P3-5)'],
+ preview:{code:'05',title:'Letter 05 as read in UAT (LR-0000018)',to:'To: Ali test Practitioner · Practice/Facility: Ali test Facility for Test Practitioner',re:'Request for Missing Information',body:['<span class="cb">[ ]</span> Patient information: &nbsp; <span class="cb">[X]</span> <span class="hl">Prescriber information: Tax ID</span>','<span class="cb">[ ]</span> Prescriber signature (Provider Consent) &nbsp; <span class="cb">[ ]</span> Prescription &nbsp; <span class="cb">[ ]</span> Diagnosis','<span class="cb">[ ]</span> Prescriber and SOC information &nbsp; <span class="cb">[ ]</span> Insurance information &nbsp; <span class="cb">[ ]</span> EAP &nbsp; <span class="cb">[ ]</span> Other','Contact reason: <span class="cb">[X]</span> Updated insurance or coverage information needed','<b>Please respond by 11/09/2026</b>','Case Manager: QA1025 Beren CM · phone · e-mail','Prescribing Information at <span class="bd">[www.website.com/PI]</span> <span class="dmark">D7</span>'],mlr:'PRO-1596-US-EN-v2'},
+ chain:{mdt:'Row <code>Letter_05</code>, Pattern "Action Request", HCP / Fax / DOCX, cover sheet required.',
+   extract:['seq 5 MissingInfoCase: Case WHERE ParentId = Case:Id AND RecordType.DeveloperName = \'Enrollment_Missing_Information\' ORDER BY CreatedDate DESC LIMIT 1 -> Id, Missing_Information_List__c, Missing_information_notes__c','Case.Missing_Information_List__c','Case.Missing_information_notes__c','Case.Account.Provider_Consent__c','Case.Contact_Reason__c','Case.Contact_Reason_Other__c','Case.PRO_Letter_Response_Deadline__c','recipient / practice / patient / program / config / case-manager fields'],
+   mapping:['missing.source_list = IF(ISBLANK(child_id), own list, child list); missing.source_wrapped = ";" + list + ";"','per category LIKE ";Tax ID;" etc. -> missing.prescriber = "X", missing.prescriber_detail = "Tax ID"','missing.signature = "X" when Provider Consent is blank or listed; missing.other from notes','case.reason_insurance / reason_income / reason_consent / reason_followup / reason_other ("X" for the single picklist value)','case.response_deadline formatted MM/dd/yyyy','Recognised list values: Patient DOB, Patient Address, Patient Facesheet or Demographic; Provider Name, Provider NPI, Tax ID, Physician; Prescription; Diagnosis Code; Site NPI, Provider/ Site NPI, Treating Site Details, Facility; Payor, Member ID, Insurance Name, Explanation of Benefits (EOB), Copy of Claim Submitted; EAP Information, EAP Details; Document_Number, Valid HIPAA, Previous Treatments, Clinicals, Enrollment Form, Treatment Plan, Clinical Documentation, PAP Consent, Financial Documentation; Provider Consent'],
+   template:'<code>PRO_Letter05_MissingInformation_v1</code> (davidb doc 069dx00000ERg6QAAT).',
+   status:'Packet path as J16 when the cover is ticked; UAT run was plain: Payload Generating -> Complete. Audit row <code>05_00030641_20261104</code>.',
+   bad:{extract:{id:'D7',text:'PI placeholder prints on 05. Also P3-5: an EMI child the user cannot see silently falls back to the parent\'s own list; P3-6: Missing_information_notes__c FLS-hidden.'}}},
+ defects:'%D{D7} PI placeholder. P3-5, P3-6. The 10/22 "LIKE-wildcard bug" was withdrawn 10/25 (tooling artefact).'});
+
+J.push({id:'j4',nav:'J4 · 42',kicker:'Journey 4',title:'Case-delay missing information to the HCP',letters:'42 Case delay missing information',persona:'P1 Beren Case Manager',aud:'HCP · Fax · DOCX, cover sheet ticked',
+ moment:'A downstream case (BV, Authorization, Copay) is stalled because information is missing; the office is told the case is on hold until it arrives ("Case Support Action Required").',
+ steps:['Same as J3 but choose "Case delay missing information" (42) on the same EMI case (UAT 00030641) or on the stalled case that has an EMI child.','Subject <b>Missing Information – Case Support Action Required</b>, MLR <code>PRO-1691-US-EN-v1</code>, cover sheet ticked.'],
+ contains:['Same checklist mechanics as 05 plus the case-type checkboxes <code>case.box_pa</code> (record type Authorization Case), <code>case.box_appeal</code> (Appeal Case), <code>case.box_other</code> (anything else) and the response deadline.'],
+ uat:{Case:'00030641 (500QL00000vBZ87YAG)','42':'LR-0000019, file 069QL00000PHjiMYAT, Complete in 5 s'},
+ fill:['As J3 (EMI list, notes, Contact Reason, HCP on child or parent)'],
+ chain:{mdt:'Row <code>Letter_42</code>, Pattern "Action Request", HCP / Fax / DOCX, cover required.',
+   extract:['As J3 plus Case.RecordType.Name (case.box_pa / box_appeal / box_other)'],
+   mapping:['missing.* as J3','case.box_pa / case.box_appeal / case.box_other from Case.RecordType.Name','case.response_deadline'],
+   template:'<code>PRO_Letter42_CaseSupportMissingInfo_v1</code>.',status:'As J3. File <code>42_00030641_20261104</code>.',
+   bad:{extract:{id:'D7',text:'PI placeholder (cross-cutting). P3-5 / P3-6 as J3.'}}},
+ defects:'As J3.'});
+
+J.push({id:'j5',nav:'J5 · 18 / 34',kicker:'Journey 5',title:'Unable to contact the patient: HCP notice and patient notice',letters:'18 Unable to contact patient (HCP) · 34 Unreachable patient (Patient)',persona:'P1 Beren Case Manager',aud:'18: HCP · Fax · DOCX, cover · 34: Patient · Mail · DOCX',
+ moment:'The CM has tried to reach the patient (consent, income documents, follow-up) without success; the office is asked to help (18) and the patient is sent a "we tried to reach you" letter (34).',
+ steps:['On the Enrollment case (00030670) set <code>Contact_Reason__c</code>: Updated insurance or coverage information needed; Income verification documentation needed for Patient Assistance Program; Patient consent or authorized representative consent; Scheduled follow-up or case update; Other + <code>Contact_Reason_Other__c</code>.','Generate "Unable to contact patient" (18, <code>HCP · Fax · DOCX</code>, cover sheet).','Generate "Unreachable patient" (34, <code>Patient · Mail · DOCX</code>).'],
+ contains:['18: subject <b>Unable to Contact Patient – Action Requested</b>, one ticked reason box, response deadline, CM contact, MLR <code>PRO-1603-US-EN-v3</code>; template has no PI line (QA-1025).','34: subject <b>Unable to Reach You</b>, FAM contact, MLR <code>PRO-1699-US-EN-v1</code>.'],
+ uat:{Case:'00030670 (500QL00000vBcYzYAK)','18':'LR-0000016, file 069QL00000PHrKuYAL, 3 s','34':'LR-0000017, file 069QL00000PHIGoYAP, 1 s',Note:'00030670 has no Contact_Reason__c set, so those UAT letters printed no ticked reason.'},
+ fill:['Contact_Reason__c (+ Contact_Reason_Other__c): single-select, so exactly one box by design','FAM for 34'],
+ chain:{mdt:'Rows <code>Letter_18</code> (HCP, Fax, cover) and <code>Letter_34</code> (Patient, Mail, no cover), Pattern "Action Request".',
+   extract:['Case.Contact_Reason__c','Case.Contact_Reason_Other__c','Case.PRO_Letter_Response_Deadline__c','Case.FAM_Contact__r.* + parent chain (34)','recipient / practice (18), patient, program, config, case manager'],
+   mapping:['case.reason_insurance / reason_income / reason_consent / reason_followup / reason_other ("X" / "  ")','case.contact_reason_other','case.response_deadline','fam.* (34)'],
+   template:'<code>PRO_Letter18_UnableToContactPatient_v1</code>; <code>PRO_Letter34_UnreachablePatient_v1</code> (one of the three files Victor replaced 10/28; fulluat holds it as ContentVersion 2 068QL00000QSHDYYA5 of document 069QL00000OxLCHYA3).',
+   status:'18 packet path / 34 plain path as J1 / J2.',
+   bad:{template:{id:'Round 2 open',text:'Formatting item "Selected Option indent on 18" (template, open). %U{D7 on 34 if it carries the PI line}'}}},
+ defects:'Round 2 formatting item on 18 open (template). %U{D7 on 34 if it carries the PI line}.'});
+
+J.push({id:'j6',nav:'J6 · 06',kicker:'Journey 6 · Storyboard 5',title:'Benefits investigation complete, HCP summary',letters:'06 BI research complete',persona:'P3 Payor Specialist, then P1 CM',aud:'HCP · Fax · DOCX, cover sheet ticked',
+ moment:'The Payor Specialist finishes the Primary Verification call, records the CoverageBenefit and closes the BV case; the office gets the benefits summary with deductible / OOP status, PA requirement and next step.',
+ steps:['On the BV case (UAT 00030743, Pending BV / In Process; 00030721 BV Complete / Covered) make sure the Task <b>"Primary Verification"</b> exists (Subject exactly that), is linked to the CoverageBenefit (<code>Task.Coverage_Benefit__c</code>) and carries <code>Coverage_Outcome__c</code> (Covered / PA Required / PA on file / Not Covered), <code>Payor_Type__c</code>, <code>Payor_Phone_Number__c</code>.','On the CoverageBenefit (0TLQL0000003UBG4A2 for L1) fill in-network individual deductible Limit / Applied, OOP Limit / Applied, coinsurance %, copay, benefit period; the four <code>PRO_*_Remaining__c</code> formulas compute Limit - Applied (fixed 11/05, TD-2374). MemberPlan: payer (Cigna), plan name, member/group numbers, effective dates, plan type, policy holder.','Set <code>Case.Reimbursement_Type__c</code> (Medical / Pharmacy), <code>Case_Next_Action__c</code>, <code>Sub_Status__c</code> (Covered -> "Coverage Status: Covered").','<b>Generate Letter</b> -> "BI research complete" (06), cover sheet ticked.'],
+ contains:['Subject <b>Benefits Investigation Complete</b>; plan block (plan name, type Commercial / Medicare / Medicaid / Other, member id, group, policy holder, effective date); coverage status; benefit type.','<b>Deductible $X (Met: $Y, Not Met: $Z)</b> and <b>Out-of-Pocket Maximum $X (Met: $Y, Remaining: $Z)</b>; copay / coinsurance; PA required Yes/No and PA status; next step.','"contact your dedicated Access & Reimbursement Manager at &lt;ARM name, phone&gt;"; 06 carries its own benefits disclaimer and no PI line (auditor DISCLAIMER_OMITTED / PI_STATEMENT_OMITTED expected); MLR <code>PRO-1597-US-EN-v2</code>.'],
+ uat:{Case:'00030743 (500QL00000vBcvaYAC), CB 0TLQL0000003UBG4A2, MemberPlan 0SqQL000000DMCP0A4',Runs:'LR-0000020 (069QL00000PHQ6EYAX) 11/04; LR-0000037 (069QL00000PLslQYAT) 11/05; LR-0000043 (069QL00000PMZFHYA5) after the formula fix',Values:'Deductible Limit 2,500 / Applied 1,200 / Remaining 1,300; OOP 6,000 / 1,800 / 4,200'},
+ fill:['Task "Primary Verification" linked to the CB with Coverage_Outcome__c (the extract takes the newest one)','CB limits / applied / period; MemberPlan on the CB (payer, member, group, effective, plan type, policy holder)','Case.Reimbursement_Type__c; Case.Case_Next_Action__c; Case.Sub_Status__c','ARM assignment (Case.ARM__c -> ARM_Account_Assignment__c; 0 rows in UAT)','User FLS on CoverageBenefit / MemberPlan (in the DataAccess set)'],
+ preview:{code:'06',title:'Letter 06 as read in UAT (LR-0000043, after TD-2374)',to:'To: Ali test Practitioner · Practice/Facility: Ali test Facility for Test Practitioner',re:'Benefits Investigation Complete',body:['Plan: Cigna · Commercial · member / group · policy holder · effective date','Coverage Status: <span class="bd">Pending Verification</span> when Sub_Status__c is not a mapped value although the task says Covered (P2-2)','Deductible <span class="bd">$1,200.00</span> (Met: <span class="bd">$2,500.00</span>, Not Met: <span class="hl">$1,300.00</span>) &nbsp;<span class="dmark">D1</span> amount = Applied, Met = Limit; Not Met was $-1,300.00 before 11/05','Out-of-Pocket Maximum $… (Met: $…, Remaining: <span class="hl">$4,200.00</span>) &nbsp;<span class="dmark">D1</span> headline reads IndividualInNetworkDeductibleRemaining','PA Required: Yes/No · PA status · Next step','contact your dedicated Access &amp; Reimbursement Manager at <span class="blank">&nbsp;</span>. &nbsp;<span class="dmark">D8</span>','Benefits disclaimer (own text, no PI line)'],mlr:'PRO-1597-US-EN-v2'},
+ chain:{mdt:'Row <code>Letter_06</code>, Pattern "Benefits Summary", HCP / Fax / DOCX, cover required.',
+   extract:['seq 3 PrimaryVerification: Task WHERE WhatId = Case:Id AND Subject = \'Primary Verification\' ORDER BY CreatedDate DESC LIMIT 1','Task.Coverage_Outcome__c / Payor_Type__c / Payor_Phone_Number__c','Coverage_Benefit__r.IndividualInNetworkDeductibleLimit / Applied / Remaining','Coverage_Benefit__r.IndividualInNetworkOutofPocketApplied','Coverage_Benefit__r.PRO_Individual_Deductible_Remaining__c','Coverage_Benefit__r.PRO_Individual_OOP_Remaining__c','Coverage_Benefit__r.InNetworkCoinsurancePercentage','Coverage_Benefit__r.EmergencyDepartmentCopay','Coverage_Benefit__r.BenefitPeriodStartDate / EndDate','Coverage_Benefit__r.MemberPlan.Name / MemberNumber / GroupNumber / Payer.Name / EffectiveFrom / PRO_Plan_Type__c / Pro_Subscriber_Name__c','Case.Reimbursement_Type__c','Case.Case_Next_Action__c','Case.Sub_Status__c','Case.Pro_Outcome__c','Case.Final_Auth_Outcome__c','Case.ARM__r.ARM_Contact__r.Name / Phone'],
+   mapping:['coverage.deductible = CONCAT(deductible_raw, " (Met: ", deductible_met_raw, ", Not Met: ", deductible_left_raw, ")")','coverage:deductible_raw <- IndividualInNetworkDeductibleApplied; deductible_met_raw <- ...Limit; oop_max_raw <- IndividualInNetworkDeductibleRemaining (the D1 swap)','coverage.status from Sub_Status__c (Not Covered / Covered incl. Prior Auth Required / on File / else "Pending Verification")','coverage.pa_required = IF(outcome IN (PA Required, PA on file), Yes, No); coverage.pa_status = BLANKVALUE(Final_Auth_Outcome__c, Pro_Outcome__c)','coverage.plan_type bucketed; coverage.next_step <- Case_Next_Action__c; coverage.arm_name / arm_phone'],
+   template:'<code>PRO_Letter06_BIResearchComplete_v1</code>.',status:'Packet path when the cover is ticked; UAT runs were plain. Audit rows <code>06_00030743_20261104</code> / <code>…20261105</code> (two with the same name).',
+   bad:{mapping:{id:'D1',text:'Victor\'s half open: amount printed = Applied, Met = Limit, OOP headline = DeductibleRemaining (QA-1025 P2-2, not in the 10/28 delta).'},extract:{id:'D8',text:'ARM sentence ends "at ." because Case.ARM__r.ARM_Contact__r is empty: ARM_Account_Assignment__c has 0 rows in UAT (data, Ops).'}},
+   good:{svc:{id:'TD-2374 Done',text:'Ali\'s half of D1 closed 11/05: CoverageBenefit PRO_*_Remaining__c formulas corrected in fulluat 0AfQL00000thF7O0AU, davidb 0Afdx00000Gef4rCAB, prod 0AfPl00000373FZKAY; letter 06 now prints Not Met $1,300.00 / Remaining $4,200.00.'}}},
+ defects:'%D{D1} (Victor\'s half open; Ali\'s half closed 11/05). %D{D8} ARM line blank (data). QA-1025 P2-2 second part: Coverage Status "Pending Verification" when Sub_Status is unmapped.'});
+
+J.push({id:'j7',nav:'J7 · SOB / SOB_ARM',kicker:'Journey 7 · Storyboard 6',title:'Summary of Benefits: HCP form and ARM worksheet',letters:'SOB Summary of benefits (HCP) · SOB_ARM Summary of benefits (ARM worksheet)',persona:'P3 Payor Specialist / P2 Beren Leader (ARM)',aud:'SOB: HCP · Fax · DOCX, cover · SOB_ARM: HCP · DOCX, Delivery blank, no cover',
+ moment:'After benefit verification the office wants the full SOB form (network status, codes covered, referrals, out-of-network amounts); the ARM uses the longer internal worksheet to prepare the field conversation. Both are DocGen letters since Wave 2; the older Visualforce SOB (Generate_Lembaz_SOB -> SOBLetterBeren, Generate_ARM_Lembaz_SOB) still exists on the BV page (TD-1911, Azmath).',
+ steps:['On the BV case (00030743 or 00030721) check <code>Case.CPT_HCPC_Code__c</code> (FLS-hidden for most users, P3-6), Treating Site NPI / Tax ID (<code>Treating_Site__r.PRO_Facility_NPI__c</code>, <code>HealthCloudGA__TaxId__c</code>), HCP NPI / Tax ID (<code>...Practitioner.PRO_NPI__c / PRO_Tax_ID__c</code>), CB network statuses, funding type, referrals, verified by / date, OON amounts, MemberPlan call reference, subscriber DOB.','<b>Generate Letter</b> -> "Summary of benefits (HCP)" (SOB, cover) or "Summary of benefits (ARM worksheet)" (SOB_ARM, no cover).'],
+ contains:['SOB (HCP): "BENEFIT VERIFICATION SUMMARY" form, no letterhead / footer by design; Verified by / date, payer, policy dates, network, [X] Y/N boxes for codes covered and referrals; <b>template hard-codes "J3490 / 96450"</b> (P3-4).','SOB_ARM: payer, member id, policy dates, subscriber DOB, funding type, OON deductible / OOP / remaining printed; the rest is a manual worksheet.','Neither row has <code>Letter_Subject__c</code> or <code>MLR_Job_Code__c</code> (auditor WARN REGISTRY_SUBJECT_BLANK, REGISTRY_MLR_BLANK).'],
+ uat:{Case:'00030743 (500QL00000vBcvaYAC)',SOB:'LR-0000021, file 069QL00000PHthdYAD, 1 s',SOB_ARM:'LR-0000022, file 069QL00000PHLhjYAH, 2 s',Second:'00030721 (L2, fax (407) 555-0169, CB 0TLQL0000003UBF4A2)'},
+ fill:['As J6 plus Case.CPT_HCPC_Code__c, Treating Site NPI / Tax ID, HCP NPI / Tax ID','CB network statuses, funding, referrals, verified by / date, OON amounts','MemberPlan call reference, subscriber DOB','FLS on CPT_HCPC_Code__c'],
+ preview:{code:'SOB_ARM',title:'SOB_ARM as read in UAT (LR-0000022)',to:'Summary of Benefits – ARM worksheet (form, no Re: subject in the registry)',re:'',body:['Payer: Cigna · Member ID · Policy dates (effective / termination) · Subscriber DOB · Funding type','In-network: deductible / remaining · OOP / remaining · coinsurance · copay · family amounts','Out-of-network: deductible · OOP (<code>PRO_OON_Individual_OOP_Amount__c</code>, added 10/28) · remaining · coinsurance · copay','Facility NPI / Tax ID · Provider NPI / Tax ID · network status · referrals Y/N · codes (<span class="bd">blank for users without FLS on CPT_HCPC_Code__c</span>, P3-6)','Remaining sections: manual worksheet for the ARM'],mlr:'(none in registry)',note:'Template PRO_LetterSOB_SummaryOfBenefitsArm_v1 is the largest letter template (6,260 bytes).'},
+ chain:{mdt:'Rows <code>Letter_SOB</code> (HCP, Fax, cover) and <code>Letter_SOB_ARM</code> (HCP, Delivery blank, no cover), Pattern "Form"; no subject, no MLR.',
+   extract:['All PrimaryVerification:Coverage_Benefit__r.* and .MemberPlan.* lines of dr-inputs-davidb.txt','CB.PRO_OON_Deductible__c / PRO_OON_Family_Deductible__c / PRO_OON_Family_OOP_Amount__c / PRO_OON_Individual_Coinsurance__c / PRO_OON_Individual_Copay_Amount__c / PRO_OON_Individual_OOP_Amount__c (10/28, replaced PRO_OON_Out_of_Pocket__c) / PRO_OON_Out_of_Pocket_Remaining__c','CB.PRO_Facility_network_status__c / PRO_HCP_network_status__c / PRO_Funding_Type__c / PRO_Referrals__c / PRO_Referral_description__c / PRO_Date_Verified__c / PRO_Verified_By__r.Name / BenefitNotes','CB.FamilyInNetworkOutofPocketLimit, FamilyInNetworkDeductibleRemaining, PRO_Family_Deductible_Remaining__c, PRO_Family_OOP_Remaining__c','MemberPlan.Issuer_Id__c / EffectiveFrom / EffectiveTo / PRO_Additional_Plan_Type__c / PRO_Funding_Arrangement__c / PrimarySecondaryTertiary / PrimaryCarePhysician / Pro_Policy_Holder_DOB__c / Insurance_Phone_Number__c / PRO_Call_Reference_Number__c / Type_of_Insurance__c','Case.CPT_HCPC_Code__c','Case.Treating_Site__r.HealthCloudGA__TaxId__c / PRO_Facility_NPI__c','Case.Pro_CorM_Associated_HealthCare_Provider__r.Practitioner.PRO_NPI__c / PRO_Tax_ID__c'],
+   mapping:['sob.payer_name / payer_id / payer_phone (task value preferred over plan) / payer_order / policy_dates / effective_date / termination_date / benefit_period / benefit_kind / plan_design / funding (CB value else plan)','sob.facility_network / hcp_network / facility_ids "NPI / TaxID" / provider_ids / codes / code_coverage / codes_covered_y/n / referral_required_y/n / referral_on_file_y/n / referral / pcp / subscriber_dob / call_reference / verified_by / verified_date / notes','sob.deductible / deductible_left / oop / oop_left / coinsurance / copay / family_deductible(_left) / family_oop(_left)','sob.oon_deductible / oon_family_deductible / oon_oop / oon_oop_left / oon_family_oop / oon_coinsurance / oon_copay / oon_copay_coinsurance','Cross-mapping: FamilyInNetworkOutofPocketLimit -> sob.family_deductible; FamilyInNetworkDeductibleRemaining -> sob.family_oop (MASTER 4.4)'],
+   template:'<code>PRO_LetterSOB_BenefitVerificationSummaryHcp_v1</code>; <code>PRO_LetterSOB_SummaryOfBenefitsArm_v1</code> (6,260 bytes).',status:'SOB packet path / SOB_ARM plain path.',
+   bad:{template:{id:'P3-4',text:'SOB template hard-codes "J3490 / 96450" (LPL, open).'},extract:{id:'P3-6',text:'CPT_HCPC_Code__c FLS-hidden -> codes blank for non-DataAccess users. D1 family: deductible semantics shared with 06.'}}},
+ defects:'P3-4 (hard-coded codes), P3-6, %D{D1} family. VF SOB: P1-2 fixed prod 10/25 / fulluat 11/03; P1-3 fixed (prodemo open); P2-3 VF fills 7 of ~90 keys (TD-2191 BLOCKED).'});
+
+J.push({id:'j8',nav:'J8 · 38 / 39',kicker:'Journey 8 · Storyboard 7',title:'Prior authorization approved: HCP and patient',letters:'38 PA approval (HCP) · 39 PA approval (patient)',persona:'P1 Beren Case Manager',aud:'38: HCP · Fax · DOCX, cover · 39: Patient · Mail · DOCX',
+ moment:'The payor approves the PA; the Authorization case is set to Approved with the reference number and dates; office and patient are notified.',
+ steps:['On Authorization 00030745 (Approved / No Restrictions, Sub Type Initial Authorization, Case Stage "Prior Authorization Approved") fill <code>Reference_Number__c</code> (AUTH-2026-1103-01), <code>Authorization_Start_Date__c</code> (2026-10-24), <code>Authorization_Expiration_Date__c</code> (2027-05-03), <code>Member_Plan__c</code> (Cigna plan 0SqQL000000DMCP0A4), optionally <code>Pending_Authorization_Number__c</code>, <code>Pro_Outcome_Date__c</code>, <code>Case_Next_Action__c</code>.','<b>Generate Letter</b> -> "PA approval" (38, HCP, fax, cover) then "PA approval (patient)" (39, Mail).'],
+ contains:['38 subject <b>Prior Authorization -Approval Notification</b> (MLR <code>PRO-1689-US-EN-v1</code>); 39 <b>Prior Authorization (PA) – Approval Notification</b> (<code>PRO-1709-US-EN-v1</code>).','Payer "Cigna" (<code>case.payer_name</code>, or "Payer / Plan"), reference number, authorization period start - end, outcome date, stage text, next step; 39 adds FAM contact.'],
+ uat:{Case:'00030745 (500QL00000vBgEUYA0)','38':'LR-0000023, file 069QL00000PHEl3YAH, 3 s','39':'LR-0000024, file 069QL00000PHaolYAD, 3 s',Note:'Authorization page received Case_Next_Action__c on 11/03 (0AfQL00000tbul80AA).'},
+ fill:['Case.Member_Plan__c (payer prints only then, proven 11/05)','Reference_Number__c; Authorization_Start_Date__c / Authorization_Expiration_Date__c','Case_Stage__c; Case_Next_Action__c','FAM for 39'],
+ chain:{mdt:'Rows <code>Letter_38</code> (HCP, Fax, cover) / <code>Letter_39</code> (Patient, Mail), Pattern "Determination Notice".',
+   extract:['Case.Reference_Number__c','Case.Pending_Authorization_Number__c','Case.Authorization_Start_Date__c / Authorization_Expiration_Date__c','Case.Pro_Outcome_Date__c','Case.Case_Stage__c','Case.Case_Next_Action__c','Case.Member_Plan__r.Payer.Name / Member_Plan__r.Plan.Name','Case.Pro_Outcome__c / Final_Auth_Outcome__c','FAM chain (39)'],
+   mapping:['case.reference_number, case.pending_auth_number','case.auth_start_date / auth_end_date (MM/dd/yyyy)','case.outcome_date','case.payer_name / case.payer_plan','case.stage <- Case_Stage__c','coverage.next_step, coverage.pa_status','fam.* (39)'],
+   template:'<code>PRO_Letter38_PriorAuthApprovedHcp_v1</code>; <code>PRO_Letter39_PriorAuthApprovedPatient_v1</code>.',status:'38 packet / 39 plain.',
+   bad:{mapping:{id:'Round 2 open',text:'"Current Case Stage source mismatch" (Victor) touches case.stage. %U{D7 if PI printed on 39}'}}},
+ defects:'None of D1-D8 on the approved pair. %U{D7 if PI printed on 39}. Round 2 "Current Case Stage source mismatch" open (Victor).'});
+
+J.push({id:'j9',nav:'J9 · 40 / 41',kicker:'Journey 9 · Storyboard 8',title:'Prior authorization denied: HCP and patient, with the open defects',letters:'40 PA denial (HCP) · 41 PA denial (patient)',persona:'P1 Beren Case Manager',aud:'40: HCP · Fax · DOCX, cover · 41: Patient · Mail · DOCX',
+ moment:'The payor denies the PA; the case is set to Denied with the reason, the action the office must take and the deadline.',
+ steps:['On Authorization 00030768 (Denied / Medical Necessity, Renewal Authorization, Case Stage "Prior Authorization Denied"): <code>Denial_Reason__c</code> = Not Medically Necessary, <code>Action_Required__c</code> = "Submit a letter of medical necessity and the most recent clinical notes to the payor within 30 days.", <code>Reference_Number__c</code> = AUTH-2026-1103-02, <code>Member_Plan__c</code> (Cigna L2 0SqQL000000DME10AO).','Generate "PA denial" (40, HCP, fax, cover) and "PA denial (patient)" (41, Mail; 10/28 re-cut template, fulluat ContentVersion 2 068QL00000QSGhDYAX).'],
+ contains:['40 subject <b>Prior Authorization - Denial Notification</b> (MLR <code>PRO-1690-US-EN-v1</code>): payer, denial reason, <b>Denial Reference Number: blank (D2)</b>, <b>Denial Date: blank (D3)</b>, Action Required checkboxes <b>unticked (D4)</b> with the free text, <b>Please respond by 11/06/2026</b> (recomputed to 11/09/2026 on the 11/05 regeneration).','41 <b>Prior Authorization (PA) – Denial Notification</b> (<code>PRO-1708-US-EN-v1</code>) with FAM contact and the same D2 / D3 blanks; PI line (D7).'],
+ uat:{Case:'00030768 (500QL00000vBXhPYAW)','40':'LR-0000025 / LR-0000038 (069QL00000PM345YAD), 2 s','41':'LR-0000026 / LR-0000039 (069QL00000PLnH4YAL), 2 s',Note:'D2, D3, D4 all reproduced in UAT 11/05.'},
+ fill:['Sub_Status__c (VR for Denied), Denial_Reason__c, Action_Required__c, Reference_Number__c, Member_Plan__c','FAM for 41'],
+ preview:{code:'40 / 41',title:'Letters 40 and 41 as read in UAT (LR-0000038 / LR-0000039)',to:'40: To: HCP · Practice &nbsp;|&nbsp; 41: Dear &lt;patient&gt;,',re:'Prior Authorization - Denial Notification',body:['Payer: <span class="hl">Cigna</span> (prints once Member Plan is set)','Denial Reason: Not Medically Necessary','Denial Reference Number: <span class="blank">blank</span> &nbsp;<span class="dmark">D2</span> (AUTH-2026-1103-02 is extracted as case.reference_number; placeholder not bound)','Denial Date: <span class="blank">blank</span> &nbsp;<span class="dmark">D3</span> (no source field mapped; ClosedDate is the candidate)','Action Required: <span class="cb bd">[ ] [ ] [ ]</span> &nbsp;<span class="dmark">D4</span> unticked although Action_Required__c has text: "Submit a letter of medical necessity and the most recent clinical notes to the payor within 30 days."','<b>Please respond by 11/09/2026</b> (11/06/2026 on the first run)','41 only: FAM contact; PI line <span class="bd">[www.website.com/PI]</span> <span class="dmark">D7</span>'],mlr:'PRO-1690-US-EN-v1 (40) · PRO-1708-US-EN-v1 (41)'},
+ chain:{mdt:'Rows <code>Letter_40</code> (HCP, Fax, cover) / <code>Letter_41</code> (Patient, Mail), Pattern "Determination Notice".',
+   extract:['Case.Denial_Reason__c','Case.Reference_Number__c (extracted correctly)','Case.Action_Required__c (field exists in fulluat since TD-2182)','Case.Member_Plan__r.Payer.Name','Case.PRO_Letter_Response_Deadline__c','Case.Case_Stage__c','Case.Case_Next_Action__c','Case.ClosedDate -> case:closed_date_raw (mapped today to copay.approval_date, not to a denial date)','FAM chain (41)'],
+   mapping:['case.denial_reason <- Denial_Reason__c','case.reference_number <- Reference_Number__c','case.payer_name','case.response_deadline','case.stage; coverage.next_step','no token for a denial date (D3); checkbox logic for Action Required does not tick (D4)'],
+   template:'<code>PRO_Letter40_PriorAuthDenied_v1</code>; <code>PRO_Letter41_PriorAuthDeniedPatient_v1</code> (fulluat ContentVersion 2 068QL00000QSGhDYAX).',status:'40 packet / 41 plain. Regenerated 11/05 (J17).',
+   bad:{template:{id:'D2',text:'"Denial Reference Number" placeholder is not bound to case.reference_number (Victor).'},mapping:{id:'D3 / D4',text:'D3: no source mapped for "Denial Date" (Victor + Rachel to name the field, ClosedDate?). D4: Action Required checkbox logic does not tick (Victor).'},extract:{id:'D7',text:'PI line on 41 (patient letter, Round 2).'}}},
+ defects:'%D{D2}, %D{D3}, %D{D4} (Victor; D3 also Rachel). %D{D7} on 41.'});
+
+J.push({id:'j10',nav:'J10 · 07 / 26',kicker:'Journey 10 · Storyboard 9',title:'Commercial copay approved: HCP and patient (before and after the Benefit Assignment)',letters:'07 Commercial copay approved (HCP) · 26 Commercial copay approved (patient)',persona:'P1 Beren Case Manager',aud:'07: HCP · Fax · DOCX, cover · 26: Patient · Mail · DOCX',
+ moment:'The Copay Eligibility case is approved; the patient receives the copay card details, benefit period and maximum benefit; the office gets the approval notice.',
+ steps:['On Copay Eligibility 00030750 (Approved / In Process, Sub Type Renewal, parent Authorization 00030745): <code>Copay_Card_Number__c</code> = 1234567890 (printed as Member ID on 26, Victor 10/28), <code>Member_Plan__c</code> (Cigna), <code>Benefit_Assignment__c</code> = BA 0nDQL0000001zPd2AI (eligibility 2026-11-03..2026-12-31, <code>Pro_Initial_Copay_Assistance_Amount__c</code> 2,000, <code>PRO_Enrollee_Transaction_Limit__c</code> 500).','Generate "Commercial copay approved" (07, HCP, fax, cover) and "Commercial copay approved (patient)" (26, Mail; 10/28 template, fulluat ContentVersion 2 068QL00000QSEFaYAP).'],
+ contains:['07 subject <b>Out-of-Pocket Program- Approval Notification</b> (MLR <code>PRO-1692-US-EN-v1</code>); 26 <b>Commercial Copay Program – Approval Notification</b> (<code>PRO-1700-US-EN-v1</code>).','Member ID 1234567890, <b>Benefit Period 11/03/2026 through 12/31/2026</b>, <b>Maximum Benefit $2,000.00</b> (or "$500 per claim" when only the transaction limit is set), approval date, payer, FAM (26), PI line (D7).'],
+ uat:{Case:'00030750 (500QL00000vBiPtYAK)','07':'LR-0000027, file 069QL00000PH4X8YAL, 3 s','26':'LR-0000028 (11/04, blank period), LR-0000041 (11/05, 8 s), LR-0000042 (069QL00000PMfZFYA1, after the BA, 7 s)'},
+ fill:['Copay_Card_Number__c (copay.member_id)','Benefit_Assignment__c: create the BA with eligibility dates, initial assistance amount, transaction limit (needs Benefit and ProgramEnrollment to exist)','Member_Plan__c (case.payer_name)','Close the case for the approval date (copay.approval_date <- ClosedDate)'],
+ preview:{code:'26',title:'Letter 26 before and after the Benefit Assignment (LR-0000041 vs LR-0000042)',to:'Dear &lt;QA1025 patient&gt;,',re:'Commercial Copay Program – Approval Notification',body:['Member ID: <span class="hl">1234567890</span> (Copay_Card_Number__c, fixed 10/28)','Benefit Period: <span class="blank">blank</span> -> <span class="hl">11/03/2026 through 12/31/2026</span> &nbsp;<span class="dok">D6 closed</span>','Maximum Benefit: <span class="blank">blank</span> -> <span class="hl">$2,000.00</span> &nbsp;<span class="dok">D6 closed</span>','Payer: Cigna · Approval date (ClosedDate)','Family Access Manager: name · phone · e-mail','Prescribing Information at <span class="bd">[www.website.com/PI]</span> <span class="dmark">D7</span>'],mlr:'PRO-1700-US-EN-v1'},
+ chain:{mdt:'Rows <code>Letter_07</code> (HCP, Fax, cover) / <code>Letter_26</code> (Patient, Mail), Pattern "Determination Notice".',
+   extract:['Case.Copay_Card_Number__c (added to the extract and the DataAccess set 10/28 -> 150 field grants)','Case.Benefit_Assignment__r.Pro_Eligibility_Start_Date__c / Pro_Eligibility_End_Date__c','Case.Benefit_Assignment__r.Pro_Initial_Copay_Assistance_Amount__c / PRO_Enrollee_Transaction_Limit__c','Case.ClosedDate','Case.Member_Plan__r.Payer.Name','FAM chain (26)'],
+   mapping:['copay.member_id <- Copay_Card_Number__c','copay.start_date / end_date','copay.max_benefit = IF(ISBLANK(max_benefit_raw), CONCAT(claim_cap_raw, " per claim"), max_benefit_raw)','copay.approval_date <- ClosedDate (America/New_York)','case.payer_name; fam.*'],
+   template:'<code>PRO_Letter07_CopayApprovedHcp_v1</code>; <code>PRO_Letter26_CopayApprovedPatient_v1</code> (fulluat ContentVersion 2 068QL00000QSEFaYAP).',status:'07 packet / 26 plain. Two audit rows named <code>26_00030750_20261105</code> exist.',
+   good:{extract:{id:'D6 closed',text:'BA 0nDQL0000001zPd2AI created 11/05 for 00030750. No flow creates a BA on approval in UAT; the three existing Lembaz BAs were hand-made through the copay enrolment screen flow (business process, not a defect).'}},
+   bad:{mapping:{id:'D7',text:'PI placeholder prints on 26 and 07.'}}},
+ defects:'%G{D6 closed} 11/05. %D{D7} open on 26 and 07.'});
+
+J.push({id:'j11',nav:'J11 · 08',kicker:'Journey 11 · Storyboard 10',title:'Commercial copay denied',letters:'08 Commercial copay denied',persona:'P1 Beren Case Manager',aud:'HCP · Fax · DOCX, cover',
+ moment:'The Copay Eligibility case is denied (income, insurance type, other); the office is notified.',
+ steps:['On Copay Eligibility 00030756 (Denied / Sub Status Income, reason Other; "Does Not Meet Financial Criteria" is not in that record type\'s value set in UAT): set <code>Sub_Status__c</code>, <code>Denial_Reason__c</code>, <code>Member_Plan__c</code>.','Generate "Commercial copay denied" (08, HCP, fax, cover). TD-2226 (10/27 hot fix) made Denied closable so the letter can be tested.'],
+ contains:['Subject <b>Commercial Copay Program - Denial Notification</b>, denial reason, payer, next steps, CM contact; MLR job code <code>PP-LEM-US-0008</code> with no MLR_Job_Date__c (auditor skips the date check).'],
+ uat:{Case:'00030756 (500QL00000vBijFYAS)','08':'LR-0000029, file 069QL00000PHn61YAD, 2 s'},
+ fill:['Sub_Status__c (VR), Denial_Reason__c, Member_Plan__c'],
+ chain:{mdt:'Row <code>Letter_08</code>, HCP / Fax / DOCX, cover; MLR PP-LEM-US-0008, no date.',
+   extract:['Case.Denial_Reason__c','Case.Sub_Status__c','Case.Member_Plan__r.Payer.Name','Case.Pro_Outcome_Date__c'],
+   mapping:['case.denial_reason','case.sub_status','case.payer_name','case.outcome_date'],
+   template:'<code>PRO_Letter08_CopayDenied_v1</code>.',status:'Packet path when ticked; UAT run plain.',
+   good:{svc:{id:'TD-2226 Done',text:'Copay Eligibility can close as Denied since the 10/27 hot fix.'}}},
+ defects:'No open D-item specific to 08.'});
+
+J.push({id:'j12',nav:'J12 · 11 / 29',kicker:'Journey 12 · Storyboard 11',title:'PAP (free goods) approved: HCP and patient',letters:'11 PAP approved (HCP) · 29 PAP approved (patient)',persona:'P2 Beren Leader approves, P1 CM generates',aud:'11: HCP · Fax · DOCX, cover · 29: Patient · Mail · DOCX',
+ moment:'Leadership approves the Patient Assistance Program request (Free Goods case, Sub Type PAP); office and patient are told the approved dose, quantity and frequency and the approval date.',
+ steps:['Free Goods 00030688 (Approved / No Restrictions, PAP): <code>Approved_Dose__c</code> 2 g/kg, <code>Approved_Quantity__c</code> 4 vials, <code>Approved_Dispensing_Frequency__c</code> Every 4 weeks, <code>Leadership_Approval_Date__c</code> 2026-11-03 (set by the leadership gate, TD-1967 / TD-2202).','Generate "PAP approved" (11, HCP, fax, cover) and "PAP approved (patient)" (29, Mail).'],
+ contains:['11 subject <b>Patient Assistance Program (PAP)- Approval Notification</b> (MLR <code>PRO-1598-US-EN-v1</code>); 29 <b>Patient Assistance Program (PAP) – Approval Notification</b> (<code>PRO-1703-US-EN-v1</code>).','Approved product line <b>"4 vials / 2 g/kg / Every 4 weeks"</b>, approval date 11/03/2026, assistance period if <code>Effective_Date__c</code> / <code>Eligibility_End_Date__c</code> are set (blank in UAT), FAM (29).'],
+ uat:{Case:'00030688 (500QL00000vBdjZYAS)','11':'LR-0000030, file 069QL00000PHVNhYAP, 2 s','29':'LR-0000031, file 069QL00000PHj7HYAT, 1 s'},
+ fill:['Approved_Dose__c, Approved_Quantity__c, Approved_Dispensing_Frequency__c','Leadership_Approval_Date__c via the leadership gate','Effective_Date__c / Eligibility_End_Date__c if the period must print (%U{whether the business wants them})'],
+ chain:{mdt:'Rows <code>Letter_11</code> (HCP, Fax, cover) / <code>Letter_29</code> (Patient, Mail), Pattern "Determination Notice".',
+   extract:['Case.Approved_Dose__c / Approved_Quantity__c / Approved_Dispensing_Frequency__c','Case.Leadership_Approval_Date__c','Case.Effective_Date__c / Eligibility_End_Date__c','FAM chain (29)'],
+   mapping:['approved.quantity = CONCAT(quantity_raw, " / ", dose_raw, " / ", frequency_raw) (blank-safe, formula #72)','pap.approval_date <- Leadership_Approval_Date__c','assistance.approval_date / start_date / end_date <- Effective_Date__c / Eligibility_End_Date__c'],
+   template:'<code>PRO_Letter11_PapApprovedHcp_v1</code>; <code>PRO_Letter29_PapApprovedPatient_v1</code>.',status:'11 packet / 29 plain.',
+   bad:{extract:{id:'D5 family',text:'Period lines blank because Effective_Date__c / Eligibility_End_Date__c are not filled on Free Goods (same root cause as D5 on Bridge).'}}},
+ defects:'None listed for 11 / 29 in D1-D8; period lines blank for the D5 reason.'});
+
+J.push({id:'j13',nav:'J13 · 14 / 28',kicker:'Journey 13 · Storyboard 11',title:'PAP refill request to the HCP and income verification request to the patient',letters:'14 PAP refill request (HCP) · 28 PAP income verification request (patient)',persona:'P1 Beren Case Manager',aud:'14: HCP · Fax · DOCX, cover · 28: Patient · Mail · DOCX',
+ moment:'14: a PAP patient is due for a refill and the office must send a new prescription / confirmation. 28: the PAP re-enrolment needs updated income documents from the patient by a date.',
+ steps:['On the same Free Goods PAP case 00030688: for 28 make sure a Task of record type <b>Document_Checklist</b> with an <code>ActivityDate</code> (the income-documents due date) exists on the case.','Generate "PAP refill request" (14, HCP, fax, cover) and "PAP income verification request" (28, Mail).'],
+ contains:['14 subject <b>Patient Assistance Program (PAP)- Refill Request</b> (MLR <code>PRO-1601-US-EN-v1</code>): approved regimen "4 vials / 2 g/kg / Every 4 weeks", response deadline, CM contact.','28 <b>Patient Assistance Program (PAP) - Income Verification Request</b> (<code>PRO-1702-US-EN-v1</code>): documents needed, <b>due date case.income_due</b> (Document Checklist task ActivityDate), FAM contact.'],
+ uat:{Case:'00030688 (500QL00000vBdjZYAS)','14':'LR-0000032, file 069QL00000PHnCSYA1, 13 s (DocGen service variance)','28':'LR-0000033, file 069QL00000PHVImYAP, 4 s',Note:'%U{UAT state of the Document Checklist task on 00030688 not re-verified}'},
+ fill:['As J12','Document Checklist task with ActivityDate (28)'],
+ chain:{mdt:'Rows <code>Letter_14</code> (HCP, Fax, cover) / <code>Letter_28</code> (Patient, Mail), Pattern "Action Request".',
+   extract:['seq 6 DocumentChecklist: Task WHERE WhatId = Case:Id AND RecordType.DeveloperName = \'Document_Checklist\' ORDER BY CreatedDate DESC LIMIT 1 -> ActivityDate','Case.Approved_* (14)','Case.PRO_Letter_Response_Deadline__c (14)','FAM chain (28)'],
+   mapping:['approved.quantity; case.response_deadline (14)','case:income_due_raw -> case.income_due (MM/dd/yyyy) (28)','fam.* (28)'],
+   template:'<code>PRO_Letter14_PapRefillRequest_v1</code>; <code>PRO_Letter28_PapIncomeVerification_v1</code>.',status:'14 packet / 28 plain.',
+   bad:{extract:{id:'D7',text:'%U{PI line on 28}'}}},
+ defects:'%U{D7 on 28 (PI line)}; nothing else listed.'});
+
+J.push({id:'j14',nav:'J14 · 15 / 31',kicker:'Journey 14 · Storyboard 12',title:'Bridge program approved: HCP and patient, and D5',letters:'15 BRIDGE approval notification (HCP) · 31 BRIDGE approval notification (patient)',persona:'P1 Beren Case Manager',aud:'15: HCP · Fax · DOCX, cover · 31: Patient · Mail · DOCX',
+ moment:'Leadership approves bridge supply while coverage is pending (Free Goods, Sub Type Bridge).',
+ steps:['Free Goods 00030711 (Under Review / Pending Exception, Bridge; dose 2 g/kg, 2 vials, Every 2 weeks, <code>Leadership_Approval_Date__c</code> 2026-11-04).','Generate "BRIDGE approval notification" (15, HCP, fax, cover; MLR <code>PRO-1683-US-EN-v1</code>) and "BRIDGE approval notification (patient)" (31, Mail; <code>PRO-1705-US-EN-v1</code>).'],
+ contains:['Subject <b>Bridge Program – Approval Notification</b> (15) / <b>BRIDGE Program - Approval Notification</b> (31): regimen <b>"2 vials / 2 g/kg / Every 2 weeks"</b> (proven 11/05); <b>Approval Date blank and Bridge Period blank (D5)</b>; FAM on 31.'],
+ uat:{Case:'00030711 (500QL00000vBeirYAC)','15':'LR-0000034, file 069QL00000PHYRxYAP, 2 s','31':'LR-0000035 / LR-0000040 (069QL00000PM3AXYA1), 2 s'},
+ fill:['As J12 (dose / quantity / frequency, leadership gate)','The bridge date fields once D5 names them'],
+ preview:{code:'31',title:'Letter 31 as read in UAT (LR-0000040)',to:'Dear &lt;QA1025 patient&gt;,',re:'BRIDGE Program - Approval Notification',body:['Approved: <span class="hl">2 vials / 2 g/kg / Every 2 weeks</span>','Approval Date: <span class="blank">blank</span> &nbsp;<span class="dmark">D5</span>','Bridge Period: <span class="blank">blank</span> through <span class="blank">blank</span> &nbsp;<span class="dmark">D5</span> (bridge.* read Case.Effective_Date__c / Eligibility_End_Date__c, never populated on Free Goods)','Family Access Manager: name · phone · e-mail','Prescribing Information at <span class="bd">[www.website.com/PI]</span> <span class="dmark">D7</span>'],mlr:'PRO-1705-US-EN-v1'},
+ chain:{mdt:'Rows <code>Letter_15</code> (HCP, Fax, cover) / <code>Letter_31</code> (Patient, Mail), Pattern "BRIDGE Approval Notification".',
+   extract:['Case.Approved_Dose__c / Approved_Quantity__c / Approved_Dispensing_Frequency__c','Case.Effective_Date__c / Eligibility_End_Date__c (what bridge.* reads)','Case.Leadership_Approval_Date__c (read, but mapped to pap.approval_date only)','FAM chain (31)'],
+   mapping:['approved.quantity as J12','bridge.approval_date / start_date / end_date <- Case.Effective_Date__c / Eligibility_End_Date__c, not Leadership_Approval_Date__c nor the CoverageBenefit benefit period the business set'],
+   template:'<code>PRO_Letter15_BridgeApprovedHcp_v1</code>; <code>PRO_Letter31_BridgeApprovedPatient_v1</code>.',status:'15 packet / 31 plain.',
+   bad:{mapping:{id:'D5',text:'bridge.* bound to Effective_Date__c / Eligibility_End_Date__c; Victor + Rachel to agree the sources (Leadership_Approval_Date__c? CB benefit period?).'},extract:{id:'D7',text:'PI line on 31.'}}},
+ defects:'%D{D5} (Victor + Rachel). %D{D7} on 31.'});
+
+J.push({id:'j15',nav:'J15 · ATTEST',kicker:'Journey 15 · Storyboard 13',title:'The silent one: enrollment attestation generated on e-signature',letters:'ATTEST Attestation Document (PDF, locked)',persona:'System (patient signs); CM sees the file',aud:'PDF · tagged Enrollment · locked · no picker',
+ moment:'The patient (or representative) accepts the enrollment terms electronically; Case.eSignature_Accepted__c becomes true on an Enrollment case (%U{which component writes it}). Nobody clicks anything in Salesforce.',
+ steps:['No user steps. A CM later sees on the Enrollment case Files a locked PDF "Attestation Document" tagged Document Type Enrollment and linked to the patient.','Trying to upload a new version or delete it is refused ("This document is locked and cannot be revised / deleted.").'],
+ contains:['PDF from <code>PRO_LetterATTEST_Attestation_v1</code> (36,796 bytes, the only template with real layout): case number, patient name, program name, acceptance date, IP address, terms version and the modal text of the enrollment terms (<code>PRO_Enrollment_Term__c.Modal_Text__c</code>).'],
+ uat:{UAT:'None in fulluat; not run in UAT ("flow-driven, not generated"). Mark as to be exercised by accepting an e-signature on a test Enrollment.',Prod:'Old build\'s flow Case_Enrollment_Attestation (un-prefixed) is the live one; 0 Letter_Request__c rows.',Open:'Carlos re-deployed the old LetterAttestCase* mappers into Pro Demo on 10/29 (question to LPL open).'},
+ fill:['Nothing manual; ensure eSignature fields and Enrollment record type'],
+ chain:{over:{action:'Flow <code>PRO_Case_EnrollmentAttestation</code> (AutoLaunched, RecordAfterSave on Case, CreateAndUpdate, filter <code>eSignature_Accepted__c = true</code>). Decision <code>Is_Enrollment_RT</code>: <code>$Record.RecordType.DeveloperName = \'Enrollment\'</code> -> action Generate_Attestation.',
+     lwc:'Invocable <code>PRO_AttestationGenerationInvocable.generateAttestation(List&lt;Id&gt;)</code>: skips cases that already have a PRO_Letter_Request__c with Letter_Code__c = ATTEST; enqueues the queueable.',
+     ctl:'<code>PRO_AttestationGenerationQueueable</code> (AllowsCallouts): <code>PRO_LetterGenerationService.generate(caseId, \'ATTEST\')</code> per case, exceptions logged not thrown. Runs as the user whose save fired the flow.',
+     svc:'<code>PRO_LetterProgramApproval</code> skips the approval check for AUTOMATED_LETTER_CODES = {ATTEST} (row has blank Approved_Programs__c, so it never appears in the picker).',
+     trigger:'Trigger -> completeGeneration -> persister as J1, then <code>PRO_DocumentContentVersionTagger.tag</code> sets <code>Document_Type__c = Enrollment</code>, <code>Related_Patient__c = Case.AccountId</code>, <code>PRO_Is_Locked__c = true</code>. <code>ContentVersionTrigger</code> (before insert / before delete -> PRO_ContentVersionLockHandler) and <code>PRO_ContentDocumentTrigger</code> (before delete -> PRO_ContentDocumentLockHandler) reject new versions and deletes. Kill switch <code>PRO_Automation_Control__mdt.Content_Version_Lock</code> (missing = enabled).'},
+   names:{action:'Flow PRO_Case_EnrollmentAttestation',lwc:'PRO_AttestationGenerationInvocable',ctl:'PRO_AttestationGenerationQueueable',extract:'DataRaptor PROLetterAttestCaseExtract_1',mapping:'DataRaptor PROLetterAttestCaseMapping_1 (9 items, no formulas)'},
+   mdt:'Row <code>Letter_ATTEST</code>: Common_Extract_Name__c = PROLetterAttestCaseExtract, Mapping_Data_Mapper_Name__c = PROLetterAttestCaseMapping, Output_Format__c = PDF, Lock_Document__c = true, Tag_Document_Type__c = Enrollment, Tag_Related_Patient__c = true, File_Naming_Pattern__c blank (persister default -> ATTEST_&lt;CaseNumber&gt;_&lt;date&gt;).',
+   extract:['Case.Id','Case.CaseNumber','Case.Account.FirstName / LastName','Case.Pro_Program__r.Name','Case.eSignature_Accepted__c','Case.eSignature_Accepted_Date__c','Case.eSignature_IP_Address__c','Case.eSignature_Terms_Version__c','PRO_Enrollment_Term__c.Modal_Text__c'],
+   mapping:['esig.*','patient.first_name / last_name','case.number','program.name','terms.modal_text'],
+   template:'<code>PRO_LetterATTEST_Attestation_v1</code> (PDF). Prodemo also holds an immutable Active <code>LetterATTEST_Attestation_v1</code> from the old slice.',
+   status:'Payload Generating -> Complete; one attestation per case.'},
+ defects:'None in D1-D8; not run in UAT. Open LPL question on the Pro Demo 10/29 old-mapper re-deploy.'});
+
+J.push({id:'j16',nav:'J16 · 02 fax packet',kicker:'Journey 16 · Storyboard 14',title:'Fax it: cover sheet (02) and sending the fax',letters:'02 Fax cover sheet, generated automatically after any HCP letter with the box ticked',persona:'P1 Beren Case Manager',aud:'Packet: letter rendered PDF + cover sheet DOCX',
+ moment:'Any HCP letter generated with "Include the fax cover sheet" ticked; then the CM sends the packet to the office.',
+ steps:['Generate the HCP letter with the cover-sheet box ticked. Progress path Letter -> Page count -> Cover sheet -> Complete. Result has two files: the letter (PDF) and "Fax Cover Sheet" (DOCX).','Open the cover sheet: To / Practice / <b>To fax</b> (recipient.fax) / From "Lembaz Family Support" / <b>Total pages including cover sheet: N</b> / program contact line.','Confirm the destination fax is right (field description requires the user to confirm before any real send; UAT cases except 00030721 have it blank).','Send the fax. <b>How, today:</b> the framework only files the documents (PRO_Files_and_Documents__c row, Pro_Status__c = Draft) and publishes no fax event. The active fax path in fulluat is screen flow <code>Pro_Screen_Flow_Create_Files_Documents_Record</code>, which creates a new Files & Documents record (Pro_To_Fax_Number__c, sender, uploaded file, Pro_SR_Fax_Sent_Status__c = In Progress) and publishes <code>Pro_FaxPlatformEvent__e</code> via invocable <code>Pro_FaxPublishPlatformEvent</code>. %U{The brief\'s "Fax Documents flow" is taken to mean this screen flow.}'],
+ contains:['HCP receives the cover page then the letter via SRFax (caller id = program fax 834-784-9348, sender e-mail required by SRFax, cover page "Standard"). Status returns on the Files & Documents record (Pro_SR_Fax_Sent_Status__c Sent / Failed, Pro_SR_Fax_Details_ID__c, Pro_SR_Fax_Date_Queued__c) written by the MuleSoft user.','<b>Only the first linked file of a record is faxed</b> (MuleSoft map), so a two-file packet needs a merged PDF or two sends.'],
+ uat:{UAT:'None yet. All 33 fulluat requests have Cover_Content_Document__c and Total_Pages__c empty (admin Apex generate, no packets). Packet proven only in davidb (QA-1025: "Total pages including cover sheet: 2").',Recommended:'05 on 00030641 or 06 on 00030721 (the only test case with a fax number, (407) 555-0169) as a persona with the box ticked.'},
+ fill:['Practitioner fax so Case.PRO_Letter_Recipient_Fax__c resolves (Practitioner fax / PRO_Prescriber__r.Fax / Treating_Site__r.Fax / HCP Account fax / Contact fax)','Pro_Program__c.Program_FaxCoverPage_Contact_Information__c (NULL in fulluat and prod)','Keep letters under 2.5 MB'],
+ chain:{over:{trigger:'<code>completeGeneration</code> for a payload with coverCode 02: files the payload (Payload Filed), builds <code>Packet(caseId, \'02\', payloadVersionId)</code>, <code>enqueueOrAbandon(new CoverSheetChain(packets))</code> (checks Limits.getQueueableJobs(); abandons with a "PACKET FAILED - ..." audit row and status Abandoned if the limit is hit).',
+     job:'Queueable <code>CoverSheetChain.countPages</code>: loads ContentVersion.VersionData of the PDF; refuses files over MAX_COUNTABLE_BYTES = 2,500,000 (Abandoned / Payload Too Large); hex-scans for <code>/Count n</code> inside a <code>&lt;&lt; … /Type /Pages … &gt;&gt;</code> dictionary; exactly one count required else Failed Page Count. Writes Payload_Page_Count__c = n, Total_Pages__c = n + 1, Status Awaiting Cover ("Counting" exists but is never written). Chains <code>CoverSheetRender</code> so the count is committed first: <code>startGeneration(caseId, \'02\', isPacketCoverLeg = true, renderObjectId = request.Id)</code>, outputFileFormat docx, objectId = the PRO_Letter_Request__c id -> Cover Generating, Cover_Job_Id__c, Cover_Requested_At__c. Second DocGen job renders the cover.'},
+   names:{extract:'DataRaptor PROLetterPacketExtract_1 (36 items, rooted on PRO_Letter_Request__c)',job:'CoverSheetChain -> CoverSheetRender (Queueables) -> second DocGen job'},
+   mdt:'Exactly one active row with Is_Cover_Sheet__c = true: <code>Letter_02</code> (Fax Cover Sheet, MLR PP-LEM-US-0002, Pattern "Cover Sheet"); 02 cannot be generated alone.',
+   extract:['Request:Total_Pages__c -> letter:total_pages','Request:Case__r.PRO_Letter_Recipient_Fax__c -> recipient:fax','Request:Case__r.Parent.PRO_Letter_Recipient_Fax__c -> recipient:parent_fax','Request:Case__r.Pro_Program__r.Program_FaxCoverPage_Contact_Information__c -> program:faxcover_contact (NULL in fulluat and prod)','Request:Case__r... same program / config / patient / recipient / practice / case-manager nodes as the common extract'],
+   mapping:['Shared PROLetterShellMapping reused unchanged: recipient.name, practice.name, recipient.fax, program.from_display_name ("Lembaz Family Support"), letter.total_pages'],
+   template:'<code>PRO_Letter02_FaxCoverSheet_v1</code> (Extract PROLetterPacketExtract, Mapper PROLetterShellMapping).',
+   status:'Payload Generating -> Payload Filed -> Awaiting Cover -> Cover Generating -> Complete (Cover_Content_Version__c / Cover_Content_Document__c, Completed_At__c). Cover filed as its own audit row <code>02_&lt;CaseNumber&gt;_&lt;date&gt;</code>. If the cover fails after the letter landed: LWC isPartialSuccess, badge "No cover sheet", Open letter / Try again. Then, outside the framework: PRO_Files_and_Documents__c (In Progress) -> Pro_FaxPlatformEvent__e -> MuleSoft prod-pros-sf-sapi (CometD) -> prod-pros-srfax-sf-sync-papi POST /api/events -> pros-srfax-sapi -> SRFax Queue_Fax; status webhook -> /api/updateStatus.',
+   bad:{status:{id:'Gap',text:'%U{No Send path from the Draft letter row to the fax chain; design decision needed before go-live (merge letter + cover into one PDF, or a Send action that publishes Pro_FaxPlatformEvent__e for the letter row).}'},extract:{id:'Data',text:'Program_FaxCoverPage_Contact_Information__c NULL; PRO_Letter_Recipient_Fax__c resolves on 1 of 12 UAT cases.'}}},
+ defects:'Not run in UAT. Design gap on sending (unverified). Fax-cover contact NULL; recipient fax blank on most UAT cases.'});
+
+J.push({id:'j17',nav:'J17 · Regenerate',kicker:'Journey 17 · Storyboard 15',title:'Regenerate / re-issue a letter after a data fix',letters:'Any letter; UAT examples 06 x3 and 26 x3',persona:'P1 Beren Case Manager',aud:'Same letter, new request, new file',
+ moment:'The first letter printed a blank or wrong value (Member Plan missing, Benefit Assignment missing, formula fixed), the CM fixes the data and generates again; or the business wants a fresh dated copy.',
+ steps:['Fix the field (e.g. set Member_Plan__c on 00030768, link the BA on 00030750).','Open <b>Generate Letter</b>; "Recent letters" shows the earlier request(s) with Complete badges and eye / document icons to open the old files.','Pick the same letter, Generate. A new request row and a new file appear; the old file stays on the case under the same name pattern (date suffix changes only across days).'],
+ contains:['The recipient receives whichever file the CM sends; nothing marks the earlier file as superseded.'],
+ uat:{'06 on 00030743':'LR-0000020 (11/04), LR-0000037 and LR-0000043 (11/05)','26 on 00030750':'LR-0000028, LR-0000041, LR-0000042; two audit rows named 26_00030750_20261105 exist'},
+ fill:['Fix the data first; note the time of the new request to tell the files apart'],
+ chain:{over:{svc:'Every click is a new generate() / generatePacket(): new handle, new DocGen job.',lr:'New PRO_Letter_Request__c each time (LR-0000041 then LR-0000042 for 26 on 11/05).',mapping:'Date-driven tokens recompute: letter.correspondence_date, case.response_deadline (40 printed 11/06/2026 then 11/09/2026).',trigger:'New ContentVersion / ContentDocument and a new PRO_Files_and_Documents__c row. Persister idempotency is per ContentDocument (replayed trigger), not per letter. No versioning, supersede flag or lock (lock only for ATTEST).'},
+   extract:[],mapping:[],mdt:'Unchanged.',template:'Unchanged (same Draft template).',
+   status:'Complete again. Retention: Purge_After__c = Completed_At + 90 days / Failed_At + 365 days is a formula proposal; no purge batch ships in the package.',
+   bad:{trigger:{id:'Process gap',text:'Duplicate Draft audit rows with identical names; the Recent list distinguishes them only by time.'}}},
+ defects:'None functional; process gap on duplicate names.'});
+
+J.push({id:'j18',nav:'J18 · When it fails',kicker:'Journey 18 · Storyboard 16',title:'Failed generation and retry',letters:'Any letter',persona:'P1 Beren CM / P2 Beren Leader',aud:'LWC FAILURE_COPY map, Letter Requests tab',
+ moment:'Something refuses or breaks: user lacks a grant, case has no program, letter inactive, template misconfigured, DocGen job fails, file cannot be filed, page count unreadable.',
+ steps:['Read the message in the modal (table below) and "Show technical details" (status · code · detail).','<b>Try again</b> re-runs handleGenerate with the same letter and cover choice -> a new request row (J17 semantics).','Leader / admin: tab <b>Letter Requests</b> with list views In flight (Requested, Payload Generating, Payload Filed, Counting, Awaiting Cover, Cover Generating) and Failed and abandoned (Failed Generation, Failed No Output, Failed Page Count, Failed Filing, Abandoned). Error_Code__c is a restricted picklist so failures group in reports. Abandoned packets also leave a PRO_Files_and_Documents__c row "PACKET FAILED - &lt;reason&gt;" with Pro_Status__c = Failed.'],
+ contains:[],
+ messages:[['Modal opens, picker fails','"We could not load the available letters. Refresh the page and try again."','getLetters wire error, in practice "You do not have access to the Apex class named PRO_LetterGenerationController" (no PRO_LetterGeneration_DocGenRuntime) - QA-1025 P1-1 / P2-1'],['Modal opens, empty','"No letters are approved for this Case\'s program. Contact your administrator."','Case has no Pro_Program__c or program not in any Approved_Programs__c (YCANTH case 00020568 in davidb)'],['Modal opens, counts','"No letters are available yet. N registered letters are waiting for approval."','only inactive rows approved'],['Click Generate, immediate','text passed through when it matches "is not generated for / is not approved for / has no program" (e.g. "Letter 04 is not generated for a Case cancelled as Opened in Error.")','assertLetterApplies, assertApproved'],['','"This letter is not available yet. Choose another letter or contact your administrator."','resolveLetterType: row inactive'],['','"You do not have access to generate letters for this Case. Contact your administrator."','assertCaseVisible'],['','"This letter is not set up correctly. Contact your administrator."','template missing / no mapper / registry-template mapper mismatch / no cover-sheet row ("DocGen did not return a job id ... List has no rows for assignment to SObject" = not a library member)'],['','"We could not start generating the letter. Please try again."','anything else'],['After start, red','"The document could not be generated. Please try again." (Job Failed); "The document service did not return a file." (No Output); "The document was generated but could not be saved to the Case." (Filing Failed, e.g. INSUFFICIENT_ACCESS_ON_CROSS_REFERENCE_ENTITY on the program lookup)','request Failed Generation / Failed No Output / Failed Filing with Error_Code__c, Error_Detail__c (<= 32,000 chars)'],['Amber','"The letter is saved on the Case, but the fax cover sheet could not be created. <reason>" + Open letter + Try again','packet: Failed Page Count / Page Count Unreadable, Abandoned / Payload Too Large, Failed Generation / Gateway Refused on the cover leg'],['Blue','"Generation has started. It cannot be tracked here, but the file will appear on the Case when it is ready."','gateway returned a job but the ledger insert failed (requestId null)'],['','"Generation is taking longer than expected. It will continue in the background ..."','60 polls x 3 s = 3 min exceeded']],
+ uat:{UAT:'No failed rows exist in fulluat (all 33 Complete). davidb QA-1025 has the P1-1 screenshots.',Demo:'A persona without the PSG reproduces P1-1; a YCANTH case reproduces "No letters are approved".'},
+ fill:['Read "Show technical details"; check the Letter Requests tab; do not retry a "not approved / no program" refusal'],
+ chain:{over:{trigger:'Trigger branch justFailed (Status = Failure transition) -> <code>PRO_LetterRequestLedger.jobsFailed</code> -> fail(row, Failed Generation, Job Failed, "DocGen job ... ended in Failure. &lt;ResponseText&gt;"). completeGeneration writes Failed No Output when ResponseText holds no 068 id, Failed Filing when the persister reports an error.',lr:'advance() never moves a terminal row and never goes backwards (a replayed trigger cannot pull Awaiting Cover back to Payload Filed). Ledger writes are Database.insert/update(..., false, AccessLevel.SYSTEM_MODE) and never throw into DocGen\'s transaction.'},
+   extract:[],mapping:[],mdt:'Inactive row -> "This letter is not available yet".',template:'Missing template / mapper mismatch -> "This letter is not set up correctly".',
+   status:'Failed Generation (Gateway Refused | Job Failed), Failed No Output (No Output), Failed Page Count (Page Count Unreadable), Failed Filing (Filing Failed), Abandoned (Payload Too Large | queueable limit | no request row).',
+   bad:{lwc:{id:'P2-1',text:'Access error disguised as "refresh the page"; td-1582 suggestion #8 (surface the real cause before calling the gateway) open with LPL.'}}},
+ defects:'P2-1 (LPL). td-1582 suggestion #8 open.'});
+
+J.push({id:'j19',nav:'J19 · Admin: template version',kicker:'Journey 19 · Storyboard 17',title:'Admin promotes a new template version (LPL delivers a fixed .docx / mapping)',letters:'Example: Victor\'s 10/28 delta (26 / 34 / 41 + DataRaptors + permission set)',persona:'P7 Salesforce admin (Ali)',aud:'davidb -> fulluat -> prodemo -> prod',
+ moment:'Victor fixes D2 (bind case.reference_number in templates 40/41) or re-cuts a letter after MLR re-approval; the fix exists in davidb and must reach fulluat, then prod.',
+ steps:['Identify what changed in davidb: ContentVersion LastModifiedDate on the template documents, OmniDataTransform LastModifiedDate, SetupAuditTrail for permission-set edits; ask Victor to confirm scope.','<b>Same registry row, new file</b>: upload the .docx as a new ContentVersion of the existing fulluat ContentDocument (Title = UniqueName, e.g. 069QL00000OxCynYAF for 26); DocumentTemplate registration untouched; verify byte size (26 = 4,516; 34 = 4,383; 41 = 4,451 bytes).','<b>New version name (_v2)</b> only when both versions must be selectable or MLR requires it: upload, link to library DocGen Document Template Library (fulluat 058QL0000097CTtYAM), run register-letter-templates.apex, deploy the PRO_Letter_Type.Letter_nn row with Document_Template_Name__c = ..._v2, MLR_Job_Code__c, MLR_Job_Date__c. Never activate a template: Active = immutable.','If tokens changed: deploy PROLetterShellMapping_1 (and PROLetterCommonExtract_1) in their own deploy request; re-retrieve and diff the input list (dr-inputs-&lt;org&gt;.txt: 148 lines) and item counts (158 / 264); for every new input field retrieve the target\'s PRO_LetterGeneration_DataAccess in full, merge the fieldPermissions block, deploy the whole set (full replace).','Run <code>PRO_LetterTemplateAuditor.report()</code> and read the log: FAIL on SUBJECT_MISMATCH, MLR_MISMATCH, MLR_DATE_MISMATCH, UNBOUND_TOKEN, MAPPER_MISMATCH, EXTRACT_MISMATCH, TEMPLATE_MISSING, NO_CONTENT, LEAKED_COMMENT, AUDIENCE_DELIVERY_CONFLICT; WARN on LETTERHEAD_DRIFT, CLOSING_DRIFT, HEADER_FOOTER_DRIFT, DISCLAIMER_OMITTED, PI_STATEMENT_OMITTED, NO_FOOTER, HCP_LETTER_PRINTS_PATIENT_ADDRESS, AUDIENCE_BLANK.','Smoke as the deployer (smoke-generate.apex) then as a persona; record in docs/releases/, comment ids on the TD sub-task (TD-2328 for the 10/28 delta).'],
+ contains:['Users see nothing change in the picker (same letter name) unless a new row is activated; the next generation uses the new file immediately (%U{the gateway resolves the latest version of the linked document}).'],
+ uat:{Example:'11/03 promotion of the 10/28 delta: deploys 0AfQL00000tbvsU0AQ (DRs + merged PS), 0AfQL00000tbul80AA (Authorization page); ContentVersions 068QL00000QSEFaYAP / 068QL00000QSHDYYA5 / 068QL00000QSGhDYAX; smoke LR-0000001 (05) and LR-0000002 (41).'},
+ fill:['Admin is a library member with Content flag (Ali is Library Administrator)','Deploy user holds the PSG (P3 tests fail on FLS otherwise)','OmniStudio DR versioning off in target'],
+ chain:{over:{svc:'<code>resolveTemplate</code> matches DocumentTemplate.UniqueName; DocumentTemplateContentDoc links template -> ContentDocument; DocGen renders the latest ContentVersion of that document.',trigger:'The auditor reads .docx parts with Compression.ZipReader (word/document.xml, header*, footer*) and compares against PRO_LetterShell_v1 and the registry.'},
+   names:{trigger:'PRO_LetterTemplateAuditor (QA tool)'},
+   skip:['action','lwc','ctl','lr','job'],
+   mdt:'Registry row changes only for a _v2 name or new MLR code / date.',
+   extract:['Deploy PROLetterCommonExtract_1 in its own request; diff 148 inputs'],mapping:['Deploy PROLetterShellMapping_1 in its own request; item count 264'],
+   template:'New ContentVersion on the existing ContentDocument; registration stays Draft.',
+   status:'Smoke LR row Complete as deployer, then as persona.',
+   bad:{template:{id:'Asks',text:'td-1582 suggestions #10 (Data Mapper deploy path), #11 (tag and freeze), #13 (activation policy) open with LPL.'}}},
+ defects:'td-1582 suggestions #10, #11, #13 open with LPL.'});
+
+J.push({id:'j20',nav:'J20 · Admin: grant a user',kicker:'Journey 20 · Storyboard 18',title:'Admin grants a new user access to letters',letters:'The nine-item checklist (each item proven by removal on 10/22)',persona:'P7 Salesforce admin (Ali)',aud:'Target: a Beren CM, a UAT tester, or the QA1025 personas',
+ moment:'A new Beren CM joins, or a UAT tester is named by Ms. Nicole Cross, or the QA1025 personas must be enabled for the persona run.',
+ steps:['<b>Program membership</b>: permission set Lembaz_Family_Support (fulluat 0PSQL00000JbENe4AN; 10 holders) and public group Lembaz_Family_Support (sharing). Gives Case field edit (Action_Required__c, Reference_Number__c, Contact_Reason__c, Case_Next_Action__c, FAM_Contact__c) and the SOB Visualforce access.','<b>Licences</b>: PSLs DocGenDesignerPsl and OmniStudioDesigner (fulluat 122 each; 2 / 32 used on 10/26).','<b>Packaged permission sets</b>: DocGenUser, OmniStudioExecution (not deployable; ALI-RUNS-setup-users-&lt;org&gt;.apex).','<b>PSG PRO_LetterGeneration_User</b> (= PRO_LetterGeneration_DataAccess + PRO_LetterGeneration_DocGenRuntime); fulluat assignees: Ali, Krystal, Lindsay, Maria, Nicole, Rachel, Savannah, MiKayla.','<b>Content User flag</b> User.UserPermissionsSFContentUser = true.','<b>Library Viewer</b> on DocGen Document Template Library (fulluat members: Krystal, Savannah, Maria, MiKayla, Lindsay Viewer; Ali, Rachel, Nicole Library Administrator).','<b>Read on the Pro_Program__c record</b>: sharing rule PRO_LetterGeneration_ProgramRead (Read, all internal users, Name = Lembaz Family Support OR key LEMBAZFAMILYSUPPORT) ships in the package; fulluat also has its own criteria rule to the Lembaz group.','<b>Case access</b> through role / Case sharing; the persona must see the EMI child for 05 (P3-5).','Verify as the user <b>without Login_As</b> (Login_As grants Modify All on programs and masks sharing failures): open a Lembaz case -> Generate Letter -> 24 letters listed; generate 25 and 05; read the files.'],
+ contains:['Before: "We could not load the available letters..." (step 4 missing), "This letter is not set up correctly" (step 6 missing: library), blank letterhead / "Failed Filing" (step 7 missing). After: the picker with 24 active letters.'],
+ uat:{Personas:'QA1025 Beren CM 005QL00000vomp7YAA, Beren Leader 005QL00000voo9oYAA, Payor Specialist 005QL00000vqSozYAE now hold the full set (readiness report update 9, 2026-11-06).',Example:'10/26 fulluat run: ALI-RUNS-setup-users-fulluat (PSL 16/16, packaged PS 22/22, Content flag 8/8), ALI-RUNS-assign-psg-fulluat (8/8), library 058QL0000097CTtYAM with 7 members.',Prod:'Emily, Lauren, MiKayla hold none of the grants; the prod button is hidden behind custom permission Letter_Generation_Enabled (held by nobody).'},
+ fill:['Free PSLs; admin with "Manage Salesforce CRM Content" to edit library members'],
+ chain:{over:{ctl:'PRO_LetterGenerationController is the only class in classAccesses of the Runtime set; the Runtime set also grants DocumentGenerationProcess create/edit, DocumentTemplate read, GeneratedDocument, PRO_Files_and_Documents__c read/create, PRO_Letter_Request__c read/create/edit and the tab.',extract:'The DataAccess set is read-only FLS on 149-150 fields across 17 objects ("a missing grant renders blank, not an error"). The extract runs with the user\'s FLS and sharing -> program read needed.',template:'DocGen\'s gateway reads the template ContentVersion as the user -> library membership + Content flag.'},
+   skip:['lwc','mdt','lr','mapping','job','status'],
+   extract:[],mapping:[],
+   bad:{action:{id:'Open',text:'td-1582 suggestion #4 (ship public group Letter_Generation_Users as library Viewer + Content-flag script) open.'}}},
+ defects:'td-1582 suggestion #4 open; prod gaps for Emily / Lauren / MiKayla.'});
+
+J.push({id:'j21',nav:'J21 · Leader monitors',kicker:'Journey 21',title:'Leader monitors correspondence on a case and across the program',letters:'Letter Requests tab, Recent letters, Files & Documents',persona:'P2 Beren Leader',aud:'Reports on PRO_Letter_Request__c (no PHI)',
+ moment:'Weekly review: which letters went out, which failed, which cases have no welcome letter.',
+ steps:['On a case: Generate Letter -> "Recent letters" (last 5, badge Complete / In progress / Failed / No cover sheet, open request or file); Files & Documents related list filtered Pro_Source__c = Letter Generation.','Tab <b>Letter Requests</b>: list views All / In flight / Failed and abandoned; report on PRO_Letter_Request__c by Letter_Code__c, Status__c, Error_Code__c, Completed_At__c - CreatedDate.','The row carries no PHI (Case lookup, codes, ids, timestamps) so it can be shared widely.'],
+ contains:[],
+ uat:{UAT:'33 rows LR-0000000..LR-0000043 (numbering gaps 3-13 from deleted or failed inserts), all created by Ali.'},
+ fill:['Sharing on PRO_Letter_Request__c for leaders (see gap)'],
+ chain:{over:{ctl:'getRecentRequests (USER_MODE, max 50, default 5).',lr:'OWD Private on PRO_Letter_Request__c -> leaders need sharing or the rows they created; sharing of request rows is not addressed in the package.'},
+   skip:['action','svc','mdt','extract','mapping','template','job','trigger'],extract:[],mapping:[],
+   status:'Audit rows PRO_Files_and_Documents__c visible by their own sharing.',
+   bad:{lr:{id:'Gap',text:'%U{A leader sees only their own rows unless a sharing rule or role hierarchy covers it; to confirm in UAT.}'}}},
+ defects:'Request-row sharing gap (unverified).'});
+
+/* ---------- other scene data ---------- */
+const PERF_DAVIDB=[['03_b',7,'fax'],['04',7,'fax'],['05',5,'fax'],['06',7,'fax'],['07',5,'fax'],['08',7,'fax'],['11',6,'fax'],['14',6,'fax'],['15',6,'fax'],['18',6,'fax'],['38',6,'fax'],['40',5,'fax'],['42',5,'fax'],['SOB',7,'fax'],['25',2,'mail'],['26',2,'mail'],['28',2,'mail'],['29',3,'mail'],['31',3,'mail'],['34',2,'mail'],['39',3,'mail'],['41',3,'mail'],['SOB_ARM',2,'mail'],['ATTEST',2,'mail']];
+const PERF_FULLUAT={'03_b':15,'04':13,'05':6,'06':2,'07':3,'08':2,'11':2,'14':13,'15':2,'18':3,'25':2,'26':7,'28':4,'29':1,'31':2,'34':1,'38':3,'39':3,'40':2,'41':2,'42':6,'SOB':2,'SOB_ARM':2};
+const PERF_N={'03_b':3,'04':7,'05':14,'06':7,'07':6,'08':3,'11':2,'14':4,'15':5,'18':3,'25':8,'26':8,'28':2,'29':2,'31':5,'34':4,'38':4,'39':3,'40':4,'41':3,'42':6,'SOB':5,'SOB_ARM':7,'ATTEST':4};
+const PERF_P90={'03_b':12,'04':37,'05':10,'06':17,'07':13,'08':14,'11':7,'14':8,'15':11,'18':7,'25':8,'26':3,'28':2,'29':3,'31':12,'34':13,'38':13,'39':4,'40':6,'41':3,'42':20,'SOB':9,'SOB_ARM':6,'ATTEST':3};
+
+const DEFECTS=[
+ ['D1','06','"Deductible $1,200.00 (Met: $2,500.00, Not Met: $-1,300.00)" with Limit 2,500 / Applied 1,200 (00030743)','mapping: coverage:deductible_raw <- IndividualInNetworkDeductibleApplied, deductible_met_raw <- ...Limit, oop_max_raw <- ...DeductibleRemaining (QA-1025 P2-2); negatives from CoverageBenefit PRO_*_Remaining__c formulas','Victor (mapping) + Ali (formulas)','%A{half open} Ali\'s half closed 11/05 (fulluat 0AfQL00000thF7O0AU, davidb 0Afdx00000Gef4rCAB, prod 0AfPl00000373FZKAY, TD-2374 Done); Victor\'s half open'],
+ ['D2','40, 41','"Denial Reference Number:" blank although Reference_Number__c = AUTH-2026-1103-02 is extracted as case.reference_number (00030768)','template placeholder not bound','Victor','%R{open}'],
+ ['D3','40, 41','"Denial Date:" blank','no source field mapped; ClosedDate likely','Victor + Rachel to name the field','%R{open}'],
+ ['D4','40','Action Required checkboxes unticked although Action_Required__c has text','checkbox logic (Rachel Round 2 item)','Victor','%R{open}'],
+ ['D5','15, 31','Approval Date and Bridge Period blank although Leadership_Approval_Date__c and the CB benefit period are set (00030711)','bridge.* read Case.Effective_Date__c / Eligibility_End_Date__c, not those fields','Victor + Rachel (which fields)','%R{open}'],
+ ['D6','26','Benefit Period / Maximum Benefit blank','copay case had no Benefit Assignment (no flow creates one on approval; existing BAs hand-made)','Ali (data)','%K{closed} 11/05: BA 0nDQL0000001zPd2AI; letter 26 prints 11/03/2026-12/31/2026, $2,000.00'],
+ ['D7','05, 26 (all letters with PI)','"[www.website.com/PI]" prints','Prescribing_Info_Text__c placeholder (QA-1025 P3-3)','Victor / business supplies URL','%R{open}'],
+ ['D8','06','"...Access & Reimbursement Manager at ." blank','Case.ARM__r.ARM_Contact__r; no ARM_Account_Assignment__c rows in UAT','Ops (data)','%R{open}']
+];
+
+const JIRA=[
+ ['TD-2198','Epic','FY26 Q4 Hypercare - Beren, Fennec & Verrica; parent of the correspondence stories','-'],
+ ['TD-1582','Story','Beren Program Configure Correspondence - Wave 1; Rachel Johnson, S20; deployment fields Off-cycle 2026-10-21 YES record the prerequisite deploy, not the framework; 22 sub-tasks (18 Done); Round 3 announced here 11/05','In Progress'],
+ ['TD-1921','Story','Beren Lembaz Configure Correspondence - Wave 2; moved to UAT by Rachel 11/04 08:58; sub-tasks TD-1922 Done, TD-1924 Done, TD-1951 Canceled, TD-2255 In Progress, TD-2347 New','UAT'],
+ ['TD-1911','Story','Beren ARM Summary of Benefit Letters (Visualforce, Azmath Fathima); Off-cycle 2026-10-25 YES; "fixed changes are in Prod" 10/29','In Review'],
+ ['TD-2086','Sub-task','[Testing] Letter Configuration and General Output (Wave 1 content test); Rachel; Round 2 table posted 11/01; Round 3 to run in UAT','In Progress'],
+ ['TD-2255','Sub-task','[Test] Validate build Wave 2; Rachel, 4h; Round 2 findings + Victor\'s Asana replies copied 11/01','In Progress'],
+ ['TD-2191','Sub-task','[Test] Validate build SOB; BLOCKED on Rachel\'s 10/29 finding (plain Lembaz SOB rendered the ARM version, only payer name mapped); no re-test recorded','BLOCKED'],
+ ['TD-1974','Sub-task','[Testing] Data model adds; Rachel','In Progress'],
+ ['TD-1975','Sub-task','[UAT] Business users validate Wave 1; unassigned; the sign-off record Ms. Nicole Cross needs before prod','New'],
+ ['TD-2347','Sub-task','[UAT] Business Sign-off Wave 2; Rachel; auto-created when TD-1921 moved to UAT','New'],
+ ['TD-2328','Sub-task','[Deploy] UAT = davidb build; Ali, 8h (1h left); deploys 0AfQL00000tbvsU0AQ, 0AfQL00000tbul80AA; waits only on Victor\'s scope confirmation','In Progress'],
+ ['TD-2329','Sub-task','[Data] UAT test data + pre-flight; Ali, 4h (1h left); 30 letters generated; persona UI run outstanding','In Progress'],
+ ['TD-2330','Sub-task','[Config] FAM field on case pages; field already on Enrollment page, business sets lacked edit -> fixed; prod verified 11/04','Done'],
+ ['TD-2374','Bug','CoverageBenefit PRO_*_Remaining__c formulas inverted; prod 0AfPl00000373FZKAY (Off-cycle, 2026-11-05, YES); prod-first with Ali as approver, noted on TD-1582','Done'],
+ ['TD-1933','Sub-task','Contact record type FAM (davidb only; UAT and prod have none)','-'],
+ ['TD-1934','Sub-task','Case fields Reference_Number__c, Case_Stage__c, Contact_Reason__c, Contact_Reason_Other__c, FAM_Contact__c (Niti; davidb 10/05, fulluat 10/13, prod 10/22 0AfPl00000339OPKAY)','-'],
+ ['TD-1945','Task','Case Next Action (Case.Case_Next_Action__c + Authorization / Appeal / Pre-D pages, Ali); build-only 10/09; fulluat page 11/03','Done'],
+ ['TD-2181','Task','Contact Reason picklist value "Updated insurance or coverage information needed" for letter 18 (Niti); Off-cycle 2026-10-21 YES','Done'],
+ ['TD-2182','Story','Action_Required__c for letters 40/42 on Authorization, Appeal, Pre-D (Niti); Off-cycle 2026-10-25 YES','Done'],
+ ['TD-2226','Bug','Copay Eligibility could not close Denied (Denial Reason missing), blocked the Copay Denial letter test; Hot Fix 2026-10-27 YES (Ali)','Done'],
+ ['TD-1923 / TD-1924','Sub-tasks','Wave 1 / Wave 2 data mapping; Done 10/15 / 10/30; Victor\'s fax and patient-letter delivery answers (10/04) live on TD-1923','Done'],
+ ['TD-1767 / TD-1738','Tasks','DocGen licences synced to sandboxes + PS for LPL (Ms. Nicole Cross, Done 09/14); Salesforce access for Victor in davidb (Azmath, Done 09/03)','Done'],
+ ['TD-1585','Task','Spike DocGen vs custom VF/Apex architecture','Done'],
+ ['TD-2286 / TD-2287','Story / Sub-task','D/C sub-status for Beren (Ali, waiting on Ms. Myra Reinhardt); not a letter item','To Do / In Progress'],
+ ['TD-1706, TD-1400, TD-1586, TD-2303, TD-1905','Stories / tasks','Verrica YCANTH standard correspondence (On-hold / New), Phase 2 Correspondence, CorMedix correspondence, YcanthRx automate approved letters, Klara spike: future consumers of the same framework, no build','-']
+];
+
+const ENV=[
+ ['Framework / build','PRO_ build (LPL re-deploy 10/22 18:32Z-10/23 02:23Z: 0Afdx00000GS6kQCAT 97 comps, 0Afdx00000GSS1lCAH 72, 0Afdx00000GSSzRCAX 7) + Victor\'s 10/28 delta (PS 0Afdx00000GWgxOCAT + 0Afdx00000GX5hFCAT, templates 26/34/41, DataRaptors 19:30Z, Authorization page). No change since 10/28','PRO_ build installed 10/26 (P1 0AfQL00000tHrhm0AC, P2 0AfQL00000tI4n50AC, P3 0AfQL00000tIihF0AS, P3b 0AfQL00000tI4Tj0AK, P5 0AfQL00000tIjQP0A0, pages 0AfQL00000tIkBB0A0) + 10/28 delta 11/03 (0AfQL00000tbvsU0AQ, 0AfQL00000tbul80AA). Level with davidb: 148/148 inputs, 158 + 264 items','PRO_ build 10/26 after retiring Carlos\'s 10/21 old-naming partial install (0Afdx00000GQrx7CAD, 63 comps); P1 0Afdx00000GUVMvCAP (116), P2 0Afdx00000GUVTNCA5, P3 0Afdx00000GUaclCAD, P3b 0Afdx00000GUaZXCA1, P5 0Afdx00000GUofhCAD, pages 0Afdx00000GUeJmCAL. <b>10/28 delta not promoted</b>','<b>Old un-prefixed build 10/22</b>: P1 0AfPl00000339WTKAY (100 comps), mappers 0AfPl00000339cvKAA, code 0AfPl00000339wHKAQ (18 classes, 3 triggers, LWC letterGenerator, flow Case_Enrollment_Attestation, action Generate_Letter), auditor 0AfPl0000033D5RKAU; P3b 0AfPl00000339xtKAA / P5 0AfPl00000339zVKAQ validated (%U{P3b final deploy}). Dormant; retire then install'],
+ ['Letter rows active','25 (24 + ATTEST); PRO_Letter_Type__mdt 28 rows','25; LR-0000000..43, 33 rows all Complete','25 + config row Beren; Approved_Programs__c = Lembaz Family Support;Beren','Letter_Type__mdt 27 rows, 11 active (Wave 1) + ATTEST; Letter_Request__c 0 rows'],
+ ['Templates','26 PRO_Letter*_v1 Draft, library 058dx0000016ctFAAQ; 26/34/41 re-registered 10/28 on docs 069dx00000EitfEAAR / 069dx00000EinOUAAZ / 069dx00000EjGQTAA3','26 Draft v1, library 058QL0000097CTtYAM (8 members); 26/34/41 = ContentVersion 2 (068QL00000QSEFaYAP / 068QL00000QSHDYYA5 / 068QL00000QSGhDYAX)','26 Draft, library 058dx000001CX1FAAW (Ali admin; Savannah, Kyle Hacker viewers) + immutable Active LetterATTEST_Attestation_v1 from the old slice','12 old Letter*_v1 Draft (Wave 1 + shell), library 058Pl000001tvptIAA, 7 members'],
+ ['DataRaptors','5 PRO_, 10/28 versions (PROLetterCommonExtract 158 items, PROLetterShellMapping 264)','same five, 10/28 versions','5 PRO_ (10/26) + old LetterAttestCaseExtract_1 / Mapping_1 re-deployed by Carlos 10/29 (0Afdx00000GYB9VCAX, 0Afdx00000GYBe9CAH, 0Afdx00000GYBsfCAH, 0Afdx00000GYCITCA5)','5 old (LetterCommonExtract_1, LetterPacketExtract_1, LetterShellMapping_1, LetterAttestCase*); IsActive flag false everywhere (not meaningful)'],
+ ['Program record','Lembaz Family Support a1Ldx000001ev5REAQ (key LEMBAZFAMILYSUPPORT) + test "Beren" a1Ldx000001qSNpEAM','Lembaz a1LQL00000931Oz2AI; contacts filled 11/03 (phone 844-237-3600, fax 834-784-9348, e-mail, website lembazrx.com); fax-cover contact NULL','"Beren" a1Ldx0000016Mi1EAE key Beren (no Lembaz program)','Lembaz a1LPl00000O41xNMAR created 10/22; contacts filled by 11/03'],
+ ['Quick action / pages','Case.PRO_Generate_Letter on Case / Enrollment / EMI / BV pages + BV layout; SOB action Generate_Beren_SOB','PRO_Generate_Letter first in Dynamic Actions on 11 pages + 3 layouts (0AfQL00000tIkBB0A0); Generate_Lembaz_SOB -> SOBLetterBeren since 11/03 (0AfQL00000tb7nf0AA)','same 11 + 3 (0Afdx00000GUeJmCAL); SOB retarget still open','old Generate_Letter on Enrollment + EMI pages, hidden by custom permission Letter_Generation_Enabled (0AfPl0000033nfBKAQ, 0AfPl0000033nldKAA); Generate_Lembaz_SOB -> SOBLetterBeren since 10/25 (0AfPl0000033nbxKAA)'],
+ ['Grants','PSG PRO_LetterGeneration_User; sharing rule PRO_LetterGeneration_ProgramRead; manual program shares for 4 CM testers','PSG 8 (Ali, Krystal, Lindsay, Maria, Nicole, Rachel, Savannah, MiKayla; PSL 16/16, packaged PS 22/22, Content flag 8/8); Lembaz set 10; QA1025 personas granted the full set on 11/06','PSG 3 (Ali, Savannah Chatfield, Kyle Hacker); PSL 5/5, PS 8/8, Content flag 3/3','old PSG Letter_Generation_User + DocGenUser + licence + library Viewer + Content User: Krystal, Lindsay, Maria, Savannah; Emily, Lauren, MiKayla none; Letter_Generation_Enabled held by nobody'],
+ ['Dependency fields','all present (Beren data model, TD-1945, TD-2181, TD-2182, Copay_Card_Number__c)','deps 10/26 0AfQL00000tHviA0AS (Case_Next_Action__c, FAM_Contact__c, Products__c); Action_Required__c, Case_Stage__c, Reference_Number__c, Contact_Reason__c present','deps 10/26 0Afdx00000GUT3OCAX (16 fields)','0AfPl00000339OPKAY 10/22 (FAM_Contact__c + others), TD-2181 10/21, TD-2182 10/25; %U{Case_Next_Action__c / Products__c in prod}'],
+ ['CoverageBenefit remaining formulas','fixed 11/05 0Afdx00000Gef4rCAB','fixed 11/05 0AfQL00000thF7O0AU','%U{not fixed}','fixed 11/05 0AfPl00000373FZKAY (TD-2374 Done)'],
+ ['Other setup','OmniStudio 264.7; DocGen setting; Omni FLS config','OmniInteractionConfig 0yYQL0000005fAb2AI; DocumentGenerationSetting 0AfQL00000tIKS10AO','OmniInteractionConfig 0yYdx0000002l1FEAQ (DocGen setting pre-existed)','DocGen setting deployed 10/22 (P4), library created 10/22; %U{OmniInteractionConfig EnforceDMFLSAndDataEncryption in prod}; OmniStudio 264.7'],
+ ['Letters generated','119 as of 11/03 (Rachel 62); QA-1025 LR-0000028..56','33 since 10/26 (LR-0000000..43), all Complete, no packets; 13 read','smoke 05 on case 00058225 (LR-0000000 a3qdx00000Rtke2AAB, job 0nndx000000E4jhAAC)','none (only ATTEST could ever run)'],
+ ['Test data','QA-1025 patient 001dx00000t9taJAAQ, cases 00020562-00020569','L1 001QL00002f7RuGYAU, L2 001QL00002f7J3kYAE; FAM contacts 003QL000023u41NYAQ / 003QL000023u41OYAQ; CBs 0TLQL0000003UBF4A2 (L2) / 0TLQL0000003UBG4A2 (L1); member plans 0SqQL000000DMCP0A4 (L1) / 0SqQL000000DME10AO (L2); BA 0nDQL0000001zPd2AI; cases 00030670, 00030641, 00030733, 00030737, 00030743, 00030721, 00030745, 00030768, 00030750, 00030756, 00030688, 00030711','Beren BV 00058225 (500dx00000cmqfxAAA)','-']
+];
+
+/* data contract groups (MASTER section 4; 148 input paths in dr-inputs-davidb.txt, 158 items) */
+const CONTRACT=[
+ {obj:'Case (seq 1, root Id = Id): letter, case, approved, copay, fam, recipient, practice',rows:[
+  ['Case.Id, CaseNumber, Status, IsClosed, Pro_Enrollment_DateTime__c, RecordType.Name','letter:case_id, case_number, case_status_raw, is_closed_raw, enrollment_date; case:record_type','letter.case_number, letter.enrollment_status, letter.enrollment_date, letter.current_status (formula #115), case.box_pa / box_appeal / box_other','all; 04 status, 40/42 checkboxes'],
+  ['Case.Sub_Status__c','case:sub_status, coverage:sub_status_raw','case.sub_status; coverage.status','04, 06'],
+  ['Case.Case_Stage__c','case:stage_raw','case.stage','Current Case Stage letter (Round 2: source mismatch)'],
+  ['Case.Reference_Number__c','case:reference_number','case.reference_number','38/39/40/41 (D2: 40/41 placeholder unbound)'],
+  ['Case.Pending_Authorization_Number__c','case:pending_auth_number','case.pending_auth_number','PA letters'],
+  ['Case.Authorization_Start_Date__c / Authorization_Expiration_Date__c','case:auth_start_date_raw / auth_end_date_raw','case.auth_start_date / auth_end_date','38, 39'],
+  ['Case.Denial_Reason__c','case:denial_reason','case.denial_reason','08, 40, 41'],
+  ['Case.ClosedDate','case:closed_date_raw','copay.approval_date','07, 26 (D3 candidate for Denial Date)'],
+  ['Case.Pro_Outcome_Date__c, Pro_Outcome__c, Final_Auth_Outcome__c','case:outcome_date_raw, coverage:case_outcome_raw, coverage:case_final_outcome_raw','case.outcome_date, coverage.pa_status','PA letters, 06'],
+  ['Case.Effective_Date__c, Eligibility_End_Date__c','case:effective_date_raw, case:eligibility_end_date_raw','bridge.approval_date / start_date / end_date, assistance.*','15, 31, 11, 29 (D5)'],
+  ['Case.Leadership_Approval_Date__c','case:leadership_approval_raw','pap.approval_date','11, 29'],
+  ['Case.Approved_Dose__c, Approved_Quantity__c, Approved_Dispensing_Frequency__c','approved:dose_raw / quantity_raw / frequency_raw','approved.quantity (formula #72)','11, 14, 15, 29, 31'],
+  ['Case.Contact_Reason__c, Contact_Reason_Other__c','case:contact_reason_raw, case:contact_reason_other','case.reason_insurance / reason_income / reason_consent / reason_followup / reason_other, case.contact_reason_other','18, 34, 05, 42'],
+  ['Case.Case_Next_Action__c','coverage:next_action_raw','coverage.next_step','06 and PA letters (TD-1945)'],
+  ['Case.Reimbursement_Type__c','coverage:benefit_type_raw','coverage.benefit_type','06, SOB'],
+  ['Case.Member_Plan__r.Payer.Name, Member_Plan__r.Plan.Name','case:payer_name, case:plan_name','case.payer_name, case.payer_plan','38-41, 07, 26'],
+  ['Case.Benefit_Assignment__r.Pro_Eligibility_Start_Date__c / End / Pro_Initial_Copay_Assistance_Amount__c / PRO_Enrollee_Transaction_Limit__c','copay:start_raw, end_raw, max_benefit_raw, claim_cap_raw','copay.start_date, end_date, max_benefit','07, 26 (D6 closed)'],
+  ['Case.Copay_Card_Number__c (added 10/28)','copay:member_id','copay.member_id','26'],
+  ['Case.CPT_HCPC_Code__c','sob:codes','sob.codes','SOB, SOB_ARM (P3-6)'],
+  ['Case.Missing_Information_List__c, Missing_information_notes__c','missing:list_raw, notes_raw','missing.source_list / source_notes (only if no MI child)','05, 42'],
+  ['Case.FAM_Contact__r.Name / Phone / Email','fam:name / phone / email','fam.*','25, 31, 39, 41, 18, 34'],
+  ['Case.Parent.FAM_Contact__r.* + Parent.RecordType.DeveloperName, Parent.Parent.*, Parent.Parent.Parent.* (added 10/28; depth 5)','fam:p1_*, p1_type, p2_*, p2_type, p3_*, p3_type','fam.* formulas #142-144 (first Enrollment ancestor)','FAM parent-chain fallback'],
+  ['Case.PRO_Letter_Recipient_Name__c / Practice_Name__c / Recipient_Fax__c, Parent.PRO_Letter_*','recipient:name / parent_name, practice:name / parent_name, recipient:fax / parent_fax','recipient.name, practice.name, recipient.fax (formulas #40-42)','all HCP letters; cover sheet'],
+  ['Case.PRO_Letter_Response_Deadline__c','case:response_deadline_raw','case.response_deadline','05, 40, 42'],
+  ['Case.PRO_Letter_Total_Pages__c (deprecated)','letter:total_pages','letter.total_pages','02 reads the request row instead'],
+  ['Case.Pro_Case_Manager__r.Name / Phone / Email','case_manager:name / phone / email','case_manager.*','CM-signed letters'],
+  ['Case.ARM__r.ARM_Contact__r.Name / Phone','coverage:arm_name / arm_phone','coverage.arm_name / arm_phone','06 (D8)'],
+  ['Case.Treating_Site__r.HealthCloudGA__TaxId__c, PRO_Facility_NPI__c','sob:facility_tax_id, facility_npi','sob.facility_ids','SOB, SOB_ARM'],
+  ['Case.Pro_CorM_Associated_HealthCare_Provider__r.Practitioner.PRO_NPI__c / PRO_Tax_ID__c','sob:provider_npi / provider_tax_id','sob.provider_ids','SOB, SOB_ARM']]},
+ {obj:'Account (patient, via Case.Account)',rows:[
+  ['Account.FirstName, LastName','patient:first_name, last_name','patient.first_name, last_name, full_name','all'],
+  ['Account.PersonBirthdate','patient:dob','patient.dob (MM/dd/yyyy)','all'],
+  ['Account.PRO_Patient_Unique_ID__c','patient:id','patient.id','all'],
+  ['Account.BillingStreet / City / State / PostalCode','patient:street / city / state / postal_code','patient.*','patient letters (HCP letters must not print them)'],
+  ['Account.Provider_Consent__c','missing:provider_consent_raw','missing.signature','05, 42']]},
+ {obj:'Pro_Program__c and PRO_Letter_Program_Config__mdt (seq 2, Program_Name__c = Case:Pro_Program__r.Name)',rows:[
+  ['Pro_Program__r.Name','program:name, program:from_display_name','program.name, program.from_display_name','all; key into the config row and Approved_Programs__c'],
+  ['Pro_Program__r.Program_Phone_Number__c, Program_Fax_Number__c, Customer_Support_Email__c, PRO_Program_Website__c, Program_FaxCoverPage_Contact_Information__c','program:phone, fax, email, website, faxcover_contact','program.*','header line of every letter; 02 cover'],
+  ['Config.Brand_Name__c, Support_Hours__c, Copyright_Text__c, Legal_Disclaimer__c, Prescribing_Info_Text__c','program:brand_name, hours, copyright, legal_disclaimer, pi_statement','program.*','header, "Sincerely", hours, footer, disclaimer, PI line (D7)']]},
+ {obj:'Task "Primary Verification" (seq 3) -> CoverageBenefit -> MemberPlan',rows:[
+  ['Task.Coverage_Outcome__c, Payor_Type__c, Payor_Phone_Number__c','coverage:outcome_raw, sob:payer_order_task, sob:payer_phone_task','coverage.pa_required, sob.code_coverage, sob.codes_covered_y/n, sob.payer_order, sob.payer_phone','06, SOB'],
+  ['CB.IndividualInNetworkDeductibleApplied','coverage:deductible_raw','coverage.deductible headline; sob.deductible','06, SOB (D1: Applied printed as the amount)'],
+  ['CB.IndividualInNetworkDeductibleLimit','coverage:deductible_met_raw','"Met:" in coverage.deductible','06 (D1: Limit printed as Met)'],
+  ['CB.PRO_Individual_Deductible_Remaining__c (Limit - Applied since 11/05)','coverage:deductible_left_raw','"Not Met:"; sob.deductible_left','06, SOB'],
+  ['CB.IndividualInNetworkDeductibleRemaining','coverage:oop_max_raw','coverage.oop_max headline; sob.oop','06, SOB (semantic swap, D1)'],
+  ['CB.IndividualInNetworkOutofPocketApplied','coverage:oop_met_raw','"Met:"','06'],
+  ['CB.PRO_Individual_OOP_Remaining__c','coverage:oop_left_raw','"Remaining:"; sob.oop_left','06, SOB'],
+  ['CB.InNetworkCoinsurancePercentage, EmergencyDepartmentCopay','coverage:coinsurance_raw, copay_raw','coverage.copay_coinsurance, sob.copay, sob.coinsurance','06, SOB'],
+  ['CB.BenefitPeriodStartDate / EndDate','coverage:effective_date_raw, sob:benefit_end_raw','coverage.effective_date, sob.benefit_end, sob.benefit_period','06, SOB'],
+  ['CB.FamilyInNetworkOutofPocketLimit, FamilyInNetworkDeductibleRemaining, PRO_Family_Deductible_Remaining__c, PRO_Family_OOP_Remaining__c','sob:family_*','sob.family_deductible(_left), sob.family_oop(_left) (cross-mapped)','SOB, SOB_ARM'],
+  ['CB.PRO_OON_Deductible__c, PRO_OON_Family_Deductible__c, PRO_OON_Family_OOP_Amount__c, PRO_OON_Individual_Coinsurance__c, PRO_OON_Individual_Copay_Amount__c, PRO_OON_Individual_OOP_Amount__c (10/28), PRO_OON_Out_of_Pocket_Remaining__c','sob:oon_*','sob.oon_deductible, oon_family_deductible, oon_family_oop, oon_coinsurance, oon_copay, oon_oop, oon_oop_left, oon_copay_coinsurance','SOB, SOB_ARM'],
+  ['CB.PRO_Facility_network_status__c, PRO_HCP_network_status__c, PRO_Funding_Type__c, PRO_Referrals__c, PRO_Referral_description__c, PRO_Date_Verified__c, PRO_Verified_By__r.Name, BenefitNotes','sob:facility_network, hcp_network, funding_benefit, referrals_raw, referral_description, verified_date_raw, verified_by, notes','sob.*, referral_required_y/n, referral_on_file_y/n','SOB, SOB_ARM'],
+  ['MemberPlan (via CB.MemberPlan): Name, MemberNumber, GroupNumber, Payer.Name, Issuer_Id__c, EffectiveFrom / EffectiveTo, PRO_Plan_Type__c, PRO_Additional_Plan_Type__c, PRO_Funding_Arrangement__c, PrimarySecondaryTertiary, PrimaryCarePhysician, Pro_Subscriber_Name__c, Pro_Policy_Holder_DOB__c, Insurance_Phone_Number__c, PRO_Call_Reference_Number__c, Type_of_Insurance__c','coverage:plan_name, member_id, group_number, plan_type_raw, policy_holder_raw; sob:payer_name, payer_id, effective_from/to_raw, plan_design, funding_plan, payer_order_plan, pcp, subscriber_dob_raw, payer_phone_plan, call_reference, benefit_kind','coverage.plan_name, member_id, group_number, plan_type, policy_holder; sob.payer_name, payer_id, policy_dates, effective_date, termination_date, plan_design, funding, payer_order, pcp, subscriber_dob, call_reference, benefit_kind','06, SOB, SOB_ARM']]},
+ {obj:'Missing Information child case (seq 5) and Document Checklist task (seq 6)',rows:[
+  ['MissingInfoCase.Id, Missing_Information_List__c, Missing_information_notes__c (latest EMI child the user can see)','missing:child_id_raw, child_list_raw, child_notes_raw','missing.source_list / source_notes -> missing.patient / prescriber / prescription / diagnosis / soc / insurance / eap / signature / other + *_detail','05, 42 (P3-5)'],
+  ['DocumentChecklist.ActivityDate','case:income_due_raw','case.income_due','28']]}
+];
+
+/* ---------- Mermaid sources (MASTER 3.6, JOURNEYS C.2 / C.3) ---------- */
+const MM_COMPONENT=`flowchart LR
+    subgraph UI
+        PAGES[Case record pages / layouts<br/>Enrollment, EMI, BV, Authorization, Appeal, Pre-D,<br/>Copay Elig, Copay Claim, GI, MI, Treatment] --> QA[QuickAction Case.PRO_Generate_Letter] --> LWC[LWC proLetterGenerator]
+    end
+    subgraph Apex
+        LWC --> CTL[PRO_LetterGenerationController]
+        CTL --> SVC[PRO_LetterGenerationService]
+        SVC --> APPR[PRO_LetterProgramApproval]
+        SVC --> LED[PRO_LetterRequestLedger]
+        SVC --> PER[PRO_LetterDocumentPersister]
+        SVC --> TAG[PRO_DocumentContentVersionTagger]
+        TRG[PRO_DocumentGenerationProcessTrigger] --> SVC
+        FLOW[Flow PRO_Case_EnrollmentAttestation] --> INV[PRO_AttestationGenerationInvocable] --> QUE[PRO_AttestationGenerationQueueable] --> SVC
+        CVT[ContentVersionTrigger merged] --> LOCK1[PRO_ContentVersionLockHandler]
+        CDT[PRO_ContentDocumentTrigger] --> LOCK2[PRO_ContentDocumentLockHandler]
+        AUD[PRO_LetterTemplateAuditor QA tool]
+    end
+    subgraph Config
+        REG[(PRO_Letter_Type__mdt 28 rows)]
+        CFG[(PRO_Letter_Program_Config__mdt<br/>Lembaz_Family_Support)]
+        KILL[(PRO_Automation_Control__mdt<br/>Content_Version_Lock)]
+    end
+    subgraph Data
+        LR[(PRO_Letter_Request__c LR-xxxxxxx)]
+        FD[(PRO_Files_and_Documents__c<br/>Outgoing / Draft / Letter Generation)]
+        CV[(ContentVersion + PRO_Is_Locked__c,<br/>Document_Type__c, Related_Patient__c)]
+        CASE[(Case + PRO_Letter_* formulas,<br/>FAM_Contact__c, Reference_Number__c ...)]
+        PROG[(Pro_Program__c Lembaz Family Support<br/>phone / fax / email / website / fax-from)]
+    end
+    subgraph DocGen["OmniStudio DocGen (managed package)"]
+        GW[omnistudio.DocumentServiceGateway] --> JOB[(DocumentGenerationProcess)]
+        JOB --> EX[DataRaptor PROLetterCommonExtract_1<br/>FLS + sharing enforced]
+        JOB --> PX[DataRaptor PROLetterPacketExtract_1<br/>rooted on PRO_Letter_Request__c]
+        JOB --> AX[PROLetterAttestCaseExtract_1 / Mapping_1]
+        EX --> MAP[DataRaptor PROLetterShellMapping_1]
+        PX --> MAP
+        MAP --> TPL[(DocumentTemplate x26 Draft<br/>.docx in library DocGenDocumentTemplateLibrary)]
+        SET[DocumentGenerationSetting DocGen<br/>OmniInteractionConfig EnforceDMFLSAndDataEncryption]
+    end
+    subgraph Security
+        PSG[PSG PRO_LetterGeneration_User] --> DA[PS PRO_LetterGeneration_DataAccess]
+        PSG --> RT[PS PRO_LetterGeneration_DocGenRuntime]
+        PKG[DocGenUser + OmniStudioExecution + PSLs]
+        LIB[Library Viewer + Content User flag]
+        SHR[Sharing rule PRO_LetterGeneration_ProgramRead]
+        LFS[PS Lembaz_Family_Support + group]
+    end
+    SVC --> REG
+    SVC --> GW
+    EX --> CASE
+    EX --> PROG
+    EX --> CFG
+    LED --> LR
+    PER --> FD
+    PER --> CV
+    JOB --> TRG
+    LOCK1 --> KILL
+    FD -. Pro_FaxPlatformEvent__e, MuleSoft, SRFax .-> FAX[(SRFax)]`;
+
+const MM_SEQ=`sequenceDiagram
+    autonumber
+    actor CM as Beren CM
+    participant Page as Case record page<br/>QuickAction Case.PRO_Generate_Letter
+    participant LWC as LWC proLetterGenerator
+    participant Ctl as PRO_LetterGenerationController
+    participant Svc as PRO_LetterGenerationService
+    participant Appr as PRO_LetterProgramApproval
+    participant MDT as PRO_Letter_Type__mdt
+    participant Tpl as DocumentTemplate
+    participant Led as PRO_LetterRequestLedger<br/>(PRO_Letter_Request__c)
+    participant GW as omnistudio.DocumentServiceGateway
+    participant DG as DocGen job<br/>(DocumentGenerationProcess)
+    participant DR as PROLetterCommonExtract then<br/>PROLetterShellMapping
+    participant Trg as PRO_DocumentGenerationProcessTrigger
+    participant Per as PRO_LetterDocumentPersister
+    participant FD as PRO_Files_and_Documents__c + ContentDocumentLink
+    participant Q as CoverSheetChain / CoverSheetRender (Queueable)
+
+    CM->>Page: click Generate Letter
+    Page->>LWC: open (recordId)
+    LWC->>Ctl: getLetters(caseId) / getRecentRequests(caseId,5)
+    Ctl->>Appr: programNameOf(caseId) = Case.Pro_Program__r.Name
+    Ctl->>MDT: rows WHERE Is_Cover_Sheet__c=false, Approved_Programs__c contains program
+    Ctl-->>LWC: 24 active options (+3 inactive count)
+    CM->>LWC: pick 05, keep "Include the fax cover sheet", Generate
+    LWC->>Ctl: generateLetter(caseId,'05',true)
+    Ctl->>Svc: generatePacket(caseId,'05')
+    Svc->>Svc: assertCaseVisible (WITH USER_MODE), assertLetterApplies
+    Svc->>MDT: resolveLetterType('05'), resolveCoverSheetCode() = '02'
+    Svc->>Appr: assertApproved(caseId, row)
+    Svc->>Tpl: WHERE UniqueName='PRO_Letter05_MissingInformation_v1' (mapper check)
+    Svc->>GW: generateDocument(objectId=caseId, templateId, outputFileFormat='pdf', title='LTRGEN~05~ms~02')
+    GW-->>Svc: jobId
+    Svc->>Led: recordStarted(...) LR row, Status 'Payload Generating'
+    Svc-->>LWC: Result{requestId}
+    loop every 3 s (max 60)
+        LWC->>Ctl: getRequestStatus(requestId)
+    end
+    DG->>DR: run extract as the user (FLS + sharing) then mapping
+    DR-->>DG: tokens (recipient.*, practice.*, missing.*, case.response_deadline, program.*)
+    DG->>DG: merge template, write ContentVersion (PDF), Status=Success, ResponseText=068...
+    DG->>Trg: after update (ResponseText arrived)
+    Trg->>Svc: completeGeneration(jobs)
+    Svc->>Led: forJobs(jobIds) request by Payload_Job_Id__c
+    Svc->>Per: persistAll(caseId, ContentDocumentId, '05')
+    Per->>FD: insert audit row '05_CaseNumber_yyyymmdd' (Outgoing, Draft, Letter Generation, sender fax) + link (V, AllUsers) + rename title
+    Svc->>Led: advance 'Payload Filed' (+ Payload_Content_*, Payload_Audit__c)
+    Svc->>Q: enqueue CoverSheetChain(packet)
+    Q->>Q: countPages(PDF): Payload_Page_Count__c, Total_Pages__c=n+1, 'Awaiting Cover'
+    Q->>Q: chain CoverSheetRender
+    Q->>Svc: startGeneration(caseId,'02', isPacketCoverLeg=true, renderObjectId=LR.Id)
+    Svc->>GW: generateDocument(objectId=LR.Id, template PRO_Letter02_FaxCoverSheet_v1, 'docx')
+    Svc->>Led: 'Cover Generating', Cover_Job_Id__c
+    DG->>DR: PROLetterPacketExtract (Request:Total_Pages__c, Case__r.*) then ShellMapping
+    DG->>Trg: Success + ResponseText
+    Trg->>Svc: completeGeneration, isCoverJob, persist '02_CaseNumber_date'
+    Svc->>Led: 'Complete', Cover_Content_*, Completed_At__c
+    LWC->>Ctl: getRequestStatus = isFinished
+    LWC-->>CM: "Your letter is ready and saved on the Case." Open letter / Open cover sheet`;
+
+const MM_STATE=`stateDiagram-v2
+    [*] --> PayloadGenerating : recordStarted() after gateway returns jobId (picklist default 'Requested' is never persisted by code)
+    PayloadGenerating --> Complete : plain letter filed (no cover)
+    PayloadGenerating --> PayloadFiled : packet payload filed
+    PayloadGenerating --> FailedGeneration : DocGen job Status=Failure (Error_Code 'Job Failed')
+    PayloadGenerating --> FailedNoOutput : Success but no readable 068 id ('No Output')
+    PayloadGenerating --> FailedFiling : persister error ('Filing Failed')
+    PayloadFiled --> AwaitingCover : CoverSheetChain.countPages OK, Payload_Page_Count__c, Total_Pages__c = n+1 ('Counting' value exists, never written)
+    PayloadFiled --> FailedPageCount : page tree unreadable / ambiguous ('Page Count Unreadable')
+    PayloadFiled --> Abandoned : PDF over 2,500,000 bytes ('Payload Too Large') or queueable limit / no request row
+    AwaitingCover --> CoverGenerating : CoverSheetRender started 02 (Cover_Job_Id__c)
+    AwaitingCover --> FailedGeneration : gateway refused the cover ('Gateway Refused')
+    CoverGenerating --> Complete : cover filed (Cover_Content_*, Completed_At__c)
+    CoverGenerating --> FailedGeneration : cover job Failure
+    CoverGenerating --> FailedNoOutput : cover job no output
+    CoverGenerating --> FailedFiling : cover filing error
+    Complete --> [*] : Purge_After__c = Completed_At + 90 d (proposal, no batch)
+    FailedGeneration --> [*] : Purge_After__c = Failed_At + 365 d
+    FailedNoOutput --> [*]
+    FailedPageCount --> [*]
+    FailedFiling --> [*]
+    Abandoned --> [*]
+    note right of Complete
+        Terminal rows never change;
+        advance() refuses backward moves
+        (PROGRESS map 0..5), so trigger replays are safe.
+        LWC: isFailed + letterDocumentId = "No cover sheet" (partial success).
+    end note`;
+
+let mmReady=false, mmCounter=0;
+if(window.mermaid && !window.__mmFail){try{mermaid.initialize({startOnLoad:false,theme:'neutral',securityLevel:'loose',flowchart:{htmlLabels:true,curve:'basis'},sequence:{useMaxWidth:true,wrap:true,width:160},themeVariables:{fontFamily:'Segoe UI, system-ui, sans-serif',fontSize:'13px',primaryColor:'#E2EDF3',primaryBorderColor:'#2F6F8F',lineColor:'#5B6B73'}});mmReady=true;}catch(e){mmReady=false;}}
+function mmBlock(src,caption){const id='mm'+(++mmCounter);return '<div class="mm" data-mm="'+id+'"><button class="zoombtn" type="button" data-zoom aria-pressed="false">Zoom</button><div class="fb">'+esc(caption||'')+'</div><div class="mm-out" id="'+id+'"></div><details><summary>Diagram source (Mermaid)</summary><pre>'+esc(src)+'</pre></details></div>';}
+const MM_SRC={};
+function mmRegister(id,src){MM_SRC[id]=src;}
+async function mmRenderIn(root){
+  const blocks=(root||document).querySelectorAll('.mm[data-mm]');
+  for(const b of blocks){
+    const id=b.getAttribute('data-mm'); const out=b.querySelector('.mm-out'); if(!out||out.dataset.done)continue;
+    const src=MM_SRC[id]; if(!src)continue;
+    if(!mmReady){out.innerHTML='<p class="unv">Mermaid could not be loaded from the CDN (offline?). The diagram source is shown below in text form.</p>';out.dataset.done='1';continue;}
+    try{const r=await mermaid.render(id+'svg',src);out.innerHTML=r.svg;out.dataset.done='1';}
+    catch(e){out.innerHTML='<p class="unv">Diagram failed to render ('+esc(e&&e.message||e)+'). Source shown below.</p>';out.dataset.done='1';}
+  }
+}
+function mm(src,caption){const html=mmBlock(src,caption);const id='mm'+mmCounter;mmRegister(id,src);return html;}
+
+/* ---------- SVG charts (dataviz: two validated slots #2a78d6 / #eb6834, thin marks, hover layer, table view) ---------- */
+function chartPerCode(){
+  const data=PERF_DAVIDB.slice(); const W=980,H=312,ml=46,mr=12,mt=16,mb=58; const n=data.length;
+  const iw=W-ml-mr, ih=H-mt-mb; const band=iw/n; const bw=Math.min(22,band-6); const max=8;
+  const y=v=>mt+ih-(v/max)*ih;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Median seconds per letter code, davidb, 119 requests">';
+  for(let t=0;t<=max;t+=2){s+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="'+(t===0?'var(--axis)':'var(--grid)')+'" stroke-width="1"/><text x="'+(ml-8)+'" y="'+(y(t)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">'+t+'</text>';}
+  data.forEach((d,i)=>{const x=ml+i*band+(band-bw)/2; const h=ih*(d[1]/max); const col=d[2]==='fax'?'var(--s1)':'var(--s2)';
+    const yy=y(d[1]); const r=Math.min(4,h/2);
+    const path='M'+x+' '+(yy+ih*0+ (y(0)-yy))+' V'+(yy+r)+' Q'+x+' '+yy+' '+(x+r)+' '+yy+' H'+(x+bw-r)+' Q'+(x+bw)+' '+yy+' '+(x+bw)+' '+(yy+r)+' V'+y(0)+' Z';
+    const tip='Letter '+d[0]+': median '+d[1]+' s (n='+PERF_N[d[0]]+', p90 '+PERF_P90[d[0]]+' s) in davidb'+(PERF_FULLUAT[d[0]]!=null?'; fulluat median '+PERF_FULLUAT[d[0]]+' s (singles only)':'');
+    s+='<g class="bar" data-tip="'+esc(tip)+'"><rect x="'+(x-3)+'" y="'+mt+'" width="'+(bw+6)+'" height="'+ih+'" fill="transparent"/><path d="'+path+'" fill="'+col+'"/></g>';
+    s+='<text x="'+(x+bw/2)+'" y="'+(H-mb+16)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)"'+(d[0].length>4?' transform="rotate(-35 '+(x+bw/2)+' '+(H-mb+16)+')"':'')+'>'+esc(d[0])+'</text>';
+  });
+  s+='<text x="'+ml+'" y="'+(H-4)+'" font-size="11" fill="var(--muted)">Letter code (davidb, 2026-10-22 to 10-28, n=119; wall time Created to Complete, seconds)</text>';
+  s+='</svg>';
+  const legend='<div class="legend"><span><i style="background:var(--s1)"></i>Fax-delivered codes (packet: letter PDF + page count + cover sheet)</span><span><i style="background:var(--s2)"></i>Mail / single-file codes (one DocGen job)</span></div>';
+  const tbl=table(['Code','davidb n','davidb median s','davidb p90 s','fulluat median s (singles)'],PERF_DAVIDB.map(d=>[d[0],PERF_N[d[0]],d[1],PERF_P90[d[0]],PERF_FULLUAT[d[0]]!=null?PERF_FULLUAT[d[0]]:'-']),'tight');
+  return legend+'<div class="chart">'+s+'</div><details><summary>Table view</summary>'+tbl+'</details>';
+}
+function chartStages(){
+  const rows=[
+   {l:'DocGen job alone (median)',lo:0,hi:2,k:'m',tip:'DocumentGenerationProcess Created to LastModified: median 2 s in both orgs'},
+   {l:'Single letter filed on the Case (median)',lo:0,hi:3,k:'m',tip:'fulluat Created to Completed_At__c: median 3 s (job 2 s + trigger/persister 1 s)'},
+   {l:'Fax packet filed, letter + cover (median)',lo:0,hi:6,k:'m',tip:'davidb packets: median 6 s = 2 (payload PDF) + 1 (file) + 1-2 (two Queueables) + 2 (cover) + under 1 (file)'},
+   {l:'Perceived, single letter',lo:4,hi:7,k:'p',tip:'Roughly 4-7 s: adds the synchronous Apex leg (estimated 0.5-1.5 s, unverified) and 0-3 s of LWC poll wait'},
+   {l:'Perceived, fax packet',lo:9,hi:16,k:'p',tip:'Roughly 9-16 s; tails of 15-40 s when the DocGen service is slow (p90 of PDF jobs 9 s, max 49 s under burst load)'}
+  ];
+  const W=980,H=230,ml=300,mr=50,mt=10,mb=34; const iw=W-ml-mr, ih=H-mt-mb; const max=16; const band=ih/rows.length; const bh=Math.min(22,band-8);
+  const x=v=>ml+(v/max)*iw;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Measured server time versus perceived time, seconds">';
+  for(let t=0;t<=max;t+=2){s+='<line y1="'+mt+'" y2="'+(mt+ih)+'" x1="'+x(t)+'" x2="'+x(t)+'" stroke="'+(t===0?'var(--axis)':'var(--grid)')+'" stroke-width="1"/><text x="'+x(t)+'" y="'+(mt+ih+16)+'" text-anchor="middle" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">'+t+'</text>';}
+  rows.forEach((r,i)=>{const yy=mt+i*band+(band-bh)/2; const x0=x(r.lo), x1=x(r.hi); const col=r.k==='m'?'var(--s1)':'var(--s2)'; const rad=4;
+    const path=r.k==='m'?('M'+x0+' '+yy+' H'+(x1-rad)+' Q'+x1+' '+yy+' '+x1+' '+(yy+rad)+' V'+(yy+bh-rad)+' Q'+x1+' '+(yy+bh)+' '+(x1-rad)+' '+(yy+bh)+' H'+x0+' Z'):('M'+(x0+rad)+' '+yy+' H'+(x1-rad)+' Q'+x1+' '+yy+' '+x1+' '+(yy+rad)+' V'+(yy+bh-rad)+' Q'+x1+' '+(yy+bh)+' '+(x1-rad)+' '+(yy+bh)+' H'+(x0+rad)+' Q'+x0+' '+(yy+bh)+' '+x0+' '+(yy+bh-rad)+' V'+(yy+rad)+' Q'+x0+' '+yy+' '+(x0+rad)+' '+yy+' Z');
+    s+='<text x="'+(ml-10)+'" y="'+(yy+bh/2+4)+'" text-anchor="end" font-size="12.5" fill="var(--ink)">'+esc(r.l)+'</text>';
+    s+='<g class="bar" data-tip="'+esc(r.tip)+'"><rect x="'+ml+'" y="'+(yy-4)+'" width="'+iw+'" height="'+(bh+8)+'" fill="transparent"/><path d="'+path+'" fill="'+col+'"/></g>';
+    s+='<text x="'+(x1+6)+'" y="'+(yy+bh/2+4)+'" font-size="12" fill="var(--ink)" style="font-variant-numeric:tabular-nums">'+(r.k==='m'?r.hi+' s':r.lo+'-'+r.hi+' s')+'</text>';
+  });
+  s+='<text x="'+ml+'" y="'+(H-4)+'" font-size="11" fill="var(--muted)">Seconds</text></svg>';
+  const legend='<div class="legend"><span><i style="background:var(--s1)"></i>Measured on the server (ledger / job timestamps)</span><span><i style="background:var(--s2)"></i>Perceived by the user (range; adds Apex leg + 3 s polling)</span></div>';
+  const tbl=table(['Stage','Seconds','Basis'],rows.map(r=>[r.l,r.k==='m'?r.hi:(r.lo+'-'+r.hi),r.tip]),'tight');
+  return legend+'<div class="chart">'+s+'</div><details><summary>Table view</summary>'+tbl+'</details>';
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-zoom]');if(!b)return;const box=b.closest('.mm');const on=box.classList.toggle('zoom');b.setAttribute('aria-pressed',on);b.textContent=on?'Fit':'Zoom';});
+document.addEventListener('mousemove',e=>{const g=e.target.closest&&e.target.closest('.bar[data-tip]');const tip=$('#tip');if(g){tip.textContent=g.getAttribute('data-tip');tip.style.opacity=1;tip.style.left=Math.min(window.innerWidth-280,e.clientX+12)+'px';tip.style.top=(e.clientY+14)+'px';}else{tip.style.opacity=0;}});
+
+/* ---------- scene builders ---------- */
+function journeyScene(j){
+  const chain=j.chain||{}; const skip=new Set(chain.skip||[]); const names=chain.names||{}; const over=chain.over||{}; const bad=chain.bad||{}; const good=chain.good||{};
+  const items=SPINE.filter(s=>!skip.has(s.k)).map(s=>{
+    let text=over[s.k]!=null?over[s.k]:s.text;
+    if(s.k==='mdt'&&chain.mdt)text=chain.mdt;
+    if(s.k==='template'&&chain.template)text=chain.template;
+    if(s.k==='status'&&chain.status)text=chain.status;
+    if(s.k==='mapping'&&!over.mapping)text=(chain.mapping&&chain.mapping.length?'Tokens for this letter:':'')+(s.text||'');
+    let extra='';
+    if(s.k==='extract'&&chain.extract&&chain.extract.length)extra='<div class="fields">'+chain.extract.map(f=>'<code>'+esc(f)+'</code>').join('')+'</div>';
+    if(s.k==='mapping'&&chain.mapping&&chain.mapping.length)extra='<div class="fields">'+chain.mapping.map(f=>'<code>'+esc(f)+'</code>').join('')+'</div>';
+    const b=bad[s.k], g=good[s.k];
+    const cls=(b?' bad':'')+(g&&!b?' good':'');
+    return '<li class="'+cls+'" data-k="'+s.k+'"><b>'+esc(names[s.k]||s.name)+'</b><span>'+fmt(text)+'</span>'+extra+(b?'<span class="dnote"><span class="dmark">'+esc(b.id)+'</span>'+fmt(b.text)+'</span>':'')+(g?'<span class="gnote"><span class="dok">'+esc(g.id)+'</span>'+fmt(g.text)+'</span>':'')+'</li>';
+  }).join('');
+  let left='<div class="col"><h3>What the user does and gets</h3>';
+  left+='<p><span class="badge persona">'+esc(j.persona)+'</span> <span class="badge aud">'+esc(j.aud)+'</span></p>';
+  left+='<p>'+fmt(j.moment)+'</p>';
+  left+='<h4>Steps</h4>'+ol(j.steps);
+  if(j.contains&&j.contains.length)left+='<h4 style="margin-top:10px">What the letter contains</h4>'+li(j.contains);
+  if(j.messages)left+='<h4 style="margin-top:10px">What the CM sees</h4>'+table(['Moment','Screen text (LWC)','Underlying cause'],j.messages,'tight');
+  if(j.preview){const p=j.preview;left+='<div class="letter"><div class="lh">Lembaz(TM) Family Support Program | M-F 8:00 AM-8:00 PM ET | Phone: 844-237-3600 Fax: 834-784-9348 | Email lembazfamilysupport@pro-spectus.com | Website: lembazrx.com</div><div>November 6, 2026</div><div>'+p.to+'</div>'+(p.re?'<div class="re">Re: '+p.re+'</div>':'')+p.body.map(b=>'<div>'+b+'</div>').join('')+'<div class="ft">(c)2026 Beren Therapeutics P.B.C. All rights reserved. Beren, Mandos, and Lembaz and their respective logos are trademarks of Beren Therapeutics P.B.C. &nbsp;·&nbsp; MLR '+esc(p.mlr)+'</div></div><div class="lcap">'+esc(p.title)+'. Structure and merged values from the readiness report and the journeys file; not a pixel copy.'+(p.note?' '+esc(p.note):'')+'</div>';}
+  left+='<div class="box"><h4>UAT case to open</h4>'+kv(j.uat)+'</div>';
+  left+='<div class="box"><h4>Good practice: fill first</h4>'+li(j.fill)+'</div>';
+  left+='</div>';
+  let right='<div class="col"><h3>What happens in the back end</h3><ol class="chain" data-anim>'+items+'</ol>';
+  right+='<div class="box"><h4>Defects as of 2026-11-05</h4><p style="margin:0">'+fmt(j.defects)+'</p></div></div>';
+  return '<div class="card"><div class="head"><span class="kicker">'+esc(j.kicker)+'</span><h2>'+esc(j.title)+'</h2></div><p class="sub">'+esc(j.letters)+'</p><div class="two">'+left+right+'</div></div>';
+}
+
+function titleScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Scene 1 · Title</span><h2>One button, 25 letters, one data contract</h2></div>'+
+  '<p>A registry-driven Salesforce Industries Document Generation (DocGen) solution for the Lembaz Family Support program (Beren Therapeutics): a Case quick action lets a case manager pick one of 25 active letters, HCP fax letters with a generated cover sheet or patient mail letters, plus a system-generated e-signature attestation. Apex resolves the letter in <code>PRO_Letter_Type__mdt</code>, checks the Case\'s program, starts a DocGen job against a Word template, and files the result on the Case with an audit row and a request ledger.</p>'+
+  '<div class="tiles"><div class="tile"><b>25</b><span>active letters (24 + ATTEST; 12 / 13 / 17 registered, inactive)</span></div><div class="tile"><b>33</b><span>UAT requests in fulluat, all Complete, 23 codes</span></div><div class="tile"><b>148</b><span>extract input paths read by PROLetterCommonExtract</span></div><div class="tile"><b>3 s</b><span>median server time, single letter (UAT)</span></div><div class="tile"><b>8</b><span>content defects D1-D8; 2 closed (D6, Ali\'s half of D1)</span></div></div>'+
+  '<div class="two"><div class="col"><h3>Who built it</h3>'+kv({'Vendor':'LaunchpadLab (LPL)','Victor':'João Victor Montmann Guidio (victor@launchpadlab.com.davidb): framework, Apex, DataRaptors, templates, READMEs','Carlos':'Carlos Eduardo Lino: attestation slice and portal work','Business owner':'Ms. Nicole Cross','Tester':'Rachel Johnson','PRO admin / release owner':'Ali Mammadov','Jira':'Neither Victor nor Carlos has a Jira account; their work shows only through davidb (Victor, last change 10/28) and prodemo (Carlos, 10/29)'})+'</div>'+
+  '<div class="col"><h3>Where it stands today</h3>'+kv({'UAT':'Open since 2026-11-05 (readiness report: "UAT is ready to start today"); Round 3 announced on TD-1582; fulluat is level with davidb (10/28 delta promoted 11/03)','Prod':'Dormant un-prefixed 10/22 build hidden behind custom permission Letter_Generation_Enabled (held by nobody); retire-then-install after sign-off on TD-1975 / TD-2347','Pro Demo':'PRO_ build 10/26 with a "Beren" program name; 10/28 delta not promoted','Personas':'QA1025 Beren CM / Leader / Payor Specialist hold the full access set since 11/06; persona UI run still to do (TD-2329)'})+
+  '<div class="box"><h4>One-line verdict</h4><p style="margin:0">Back end proven end to end in UAT (33 requests, 23 codes, every one filed on the Case, median 3 s); what remains is content (D1 Victor\'s half, D2-D5, D7, D8), the fax-packet and ATTEST paths that UAT has not exercised, the persona UI run, and the prod migration after business sign-off.</p></div></div></div></div>';
+}
+
+function bigScene(){
+  const groups=[['Wave 1 (TD-1582): 02, 03_b, 04, 05, 06, 15, 18, 25, 31, 40, 42 + ATTEST (12)','W1'],['Wave 2 (TD-1921): PAP (11, 14, 28, 29), Copay (07, 08, 26), PA (38, 39, 41), 34; 12 / 13 / 17 registered without template','W2'],['SOB forms (DocGen since Wave 2; Visualforce SOB TD-1911 still on the BV page)','SOB']];
+  let cat='';
+  groups.forEach(g=>{cat+='<div class="grp"><h4>'+esc(g[0])+'</h4><div class="cat">'+CAT.filter(c=>c.wave===g[1]).map(c=>'<div class="lt'+(c.active?'':' off')+'"><b><span class="code">'+esc(c.code)+'</span>'+esc(c.name)+'</b><span class="badge aud">'+esc(c.aud)+' · '+esc(c.del)+(c.cover==='yes'?' · cover':'')+'</span>'+(c.active?'':' <span class="badge dim">inactive</span>')+'<div class="hint">'+esc(c.tpl)+(c.mlr?' · MLR '+esc(c.mlr):'')+'</div></div>').join('')+'</div></div>';});
+  return '<div class="card"><div class="head"><span class="kicker">Scene 2 · Big picture</span><h2>Functional architecture: the letter catalogue</h2></div><p class="sub">PRO_Letter_Type__mdt, 29 rows (28 letters + 1 Program Config). Audience and delivery drive the path: HCP / Fax letters are generated as a packet (letter rendered PDF, page count, cover sheet 02); Patient / Mail letters are DOCX filed for print and mail; ATTEST is a locked PDF produced by a flow. Nothing in the framework transmits a fax or mails a letter.</p>'+cat+
+  '<div class="box"><h4>Delivery</h4>'+li(['HCP (Fax): packet filed on a <code>PRO_Files_and_Documents__c</code> row (Outgoing / Draft / Letter Generation / sender fax 834-784-9348). Transmission is the existing chain PRO_Files_and_Documents__c -> <code>Pro_FaxPlatformEvent__e</code> -> MuleSoft prod-pros-sf-sapi -> prod-pros-srfax-sf-sync-papi /api/events -> SRFax. %U{Which flow or action moves a letter audit row from Draft to a sent fax}; the recipient fax is <code>Case.PRO_Letter_Recipient_Fax__c</code> and must be confirmed before any real send.','Patient (Mail): DOCX, no cover sheet, filed on the Case for print and mail. No postal integration exists.','ATTEST: PDF tagged Document_Type__c = Enrollment, Related_Patient__c = Case.AccountId, PRO_Is_Locked__c = true; locked documents reject new versions and deletes.'])+'</div></div>'+
+  '<div class="card"><h3>Technical architecture: component diagram (MASTER 3.6)</h3>'+mm(MM_COMPONENT,'159 files in the PRO_ package: 20 Apex classes, 3 triggers, 3 objects, 29 CMDT rows, 1 LWC, 1 quick action, 1 flow, 5 OmniDataTransforms, 2 permission sets + PSG, 1 sharing rule; plus 26 DocumentTemplates in the Content library.')+'</div>'+
+  '<div class="card"><h3>One generation, step by step: fax packet 05 with cover 02 (JOURNEYS C.2)</h3>'+mm(MM_SEQ,'Sequence of a fax packet: synchronous Apex leg, asynchronous DocGen job, trigger-driven filing, then two Queueables and a second DocGen job for the cover sheet.')+'</div>';
+}
+
+function stateScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Technical</span><h2>PRO_Letter_Request__c.Status__c: state machine with error codes</h2></div><p class="sub">Statuses: Requested (default, never persisted), Payload Generating, Payload Filed, Counting (in the picklist, never written), Awaiting Cover, Cover Generating, Complete, Failed Generation, Failed No Output, Failed Page Count, Failed Filing, Abandoned. Error codes (restricted picklist): None, Gateway Refused, Job Failed, No Output, Page Count Unreadable, Page Count Ambiguous, Payload Too Large, Filing Failed. Progress is monotonic; terminal rows never change; ledger writes are SYSTEM_MODE and never throw.</p>'+mm(MM_STATE,'JOURNEYS C.3, reflecting the code rather than the picklist.')+
+  '<div class="two" style="margin-top:12px"><div class="box"><h4>Timing fields</h4>'+li(['Payload_Filed_At__c, Cover_Requested_At__c, Completed_At__c, Failed_At__c; formulas Is_Packet__c, Purge_After__c (Completed_At + 90 d / Failed_At + 365 d; no purge batch ships)','Payload_Job_Id__c / Cover_Job_Id__c (DocumentGenerationProcess 0nn…), Payload/Cover_Content_Version__c and _Document__c, Payload_Audit__c, Payload_Page_Count__c, Total_Pages__c, Handle__c (legacy)'])+'</div><div class="box"><h4>Where the row is visible</h4>'+li(['Tab Letter Requests (Runtime set) with list views All / In flight / Failed and abandoned','OWD Private; created by the generating user; carries no PHI','davidb\'s copy of the object has only Case__c, Letter_Code__c, Status__c (describe 2026-11-06); fulluat has the full 22-field ledger'])+'</div></div></div>';
+}
+
+function contractScene(){
+  let html='<div class="card"><div class="head"><span class="kicker">Technical</span><h2>Data contract: what PROLetterCommonExtract reads</h2></div><p class="sub">148 input paths (<code>letter-delta-1028/dr-inputs-davidb.txt</code>, Victor\'s 10/28 extract; identical in fulluat after 11/03), 158 items, 5 SOQL blocks, root Case (Id = Id), FLS and sharing enforced. Relationship depth of the 152 field paths: depth 1: 54, depth 2: 62, depth 3: 27, depth 4: 5, depth 5: 4. Mapping PROLetterShellMapping: 264 items, 109 formulas (27,092 characters; longest 3,551). Grouped below by source object from the MASTER data-contract tables (section 4); expand a group to see source field, extract node, token and consuming letters.</p>';
+  html+='<p class="hint">Query blocks: seq 1 Case; seq 2 PRO_Letter_Program_Config__mdt WHERE Program_Name__c = Case:Pro_Program__r.Name; seq 3 Task WHERE WhatId = Case:Id AND Subject = \'Primary Verification\' ORDER BY CreatedDate DESC LIMIT 1; seq 5 Case WHERE ParentId = Case:Id AND RecordType.DeveloperName = \'Enrollment_Missing_Information\' … LIMIT 1; seq 6 Task WHERE RecordType.DeveloperName = \'Document_Checklist\' … LIMIT 1.</p>';
+  CONTRACT.forEach((g,i)=>{html+='<details'+(i===0?' open':'')+'><summary>'+esc(g.obj)+' ('+g.rows.length+' rows)</summary>'+table(['Source field','Extract node','Token(s)','Consumed by'],g.rows,'tight')+'</details>';});
+  html+='<div class="box"><h4>Other extracts</h4>'+li(['<code>PROLetterPacketExtract_1</code>: 36 items, rooted on PRO_Letter_Request__c (Request:Total_Pages__c + the same program / config / patient / recipient / case-manager nodes via Case__r) so the shared mapping is reused unchanged.','<code>PROLetterAttestCaseExtract_1</code> (11 items) / <code>PROLetterAttestCaseMapping_1</code> (9 items, no formulas): Case Id, CaseNumber, Account.FirstName / LastName, Pro_Program__r.Name, eSignature_Accepted__c / _Date__c / _IP_Address__c / _Terms_Version__c; PRO_Enrollment_Term__c.Modal_Text__c.'])+'</div></div>';
+  return html;
+}
+
+function securityScene(){
+  const items=['<b>PSG PRO_LetterGeneration_User</b> = PS PRO_LetterGeneration_DataAccess (read on 17 objects: Case, Account, Contact, Pro_Program__c, CoverageBenefit, MemberPlan, PurchaserPlan, ARM_Account_Assignment__c, Pro_Authorization__c, BenefitAssignment, Benefit, BenefitType, ProgramEnrollment, Program, HealthcareProvider, PRO_Letter_Request__c, PRO_Enrollment_Term__c; 149 field reads in the 10/26 cut, 150 after 10/28) + PS PRO_LetterGeneration_DocGenRuntime (Apex class PRO_LetterGenerationController; DocumentGenerationProcess / GeneratedDocument R/C/E; DocumentTemplate R; PRO_Files_and_Documents__c R/C; PRO_Letter_Request__c R/C/E + tab). Missing a field grant = token prints blank; missing the runtime set = "could not load the available letters". The PRO_Letter_* Case formulas have no profile FLS at all, including System Administrator (admin Apex runs print blank To / Practice / Dear: expected, not a defect). Permission-set deploys are full replace: retrieve the target\'s set, merge, deploy whole.',
+  '<b>Packaged permission sets DocGenUser + OmniStudioExecution</b> (licences DocGenDesignerPsl, OmniStudioDesigner; designers also DocGenDesigner + OmniStudioAdmin). Without them: "This letter is not set up correctly" / "sObject type DocumentTemplate is not supported". Not deployable; granted by ALI-RUNS-setup-users-&lt;org&gt;.apex. Licence counts 10/22-26: prod DocGen Designer 122 (1 used), OmniStudio Designer 122 (40 used); fulluat 122 (2 used) / 122 (32 used).',
+  '<b>Salesforce CRM Content User flag</b> (User.UserPermissionsSFContentUser = true). Even an admin without it cannot see the library via API.',
+  '<b>Viewer on Content library "DocGen Document Template Library"</b> (API DocGenDocumentTemplateLibrary; davidb 058dx0000016ctFAAQ, fulluat 058QL0000097CTtYAM, prodemo 058dx000001CX1FAAW, prod 058Pl000001tvptIAA with 7 members). Without it DocGen fails with "DocGen did not return a job id ... List has no rows for assignment to SObject" (cost a day on 10/21). Members are users or public groups, never profiles. Suggested durable fix (td-1582 #4): ship public group Letter_Generation_Users as Viewer.',
+  '<b>PS Lembaz_Family_Support + public group</b> (fulluat 0PSQL00000JbENe4AN, group 00GQL00000N3mUH2AZ; 10 users on 11/03; prod 7): program membership, Case field edit (Action_Required__c, Reference_Number__c, Contact_Reason__c; Case_Next_Action__c and FAM_Contact__c edit added 11/03), SOB class / page access. Persona findings X5 / X14: the set over-grants Account View All and Program Create/Edit.',
+  '<b>Read on the Pro_Program__c record</b> (OWD Private in every org). No read = blank header contacts and Failed Filing (INSUFFICIENT_ACCESS_ON_CROSS_REFERENCE_ENTITY on the audit row\'s program lookup). Fixes: sharing rule PRO_LetterGeneration_ProgramRead (Read, all internal users, Name = Lembaz Family Support OR key LEMBAZFAMILYSUPPORT) in the package; fulluat\'s own rule to the Lembaz group; prod relies on Standard User Basic Modify All (TD-1577 risk). A Case on a program with no PRO_Letter_Program_Config__mdt row is refused ("not approved for the ... program").',
+  '<b>Read on the Case</b> (and through it the patient): otherwise "You do not have access to generate letters for this Case."',
+  '<b>Prod custom permission Letter_Generation_Enabled</b> (prod only, 10/25, 0AfPl0000033nfBKAQ) with visibility rule on Enrollment_Case_Record_Page and Enrollment_Missing_Information_Case_Record_Page (0AfPl0000033nldKAA). Held by nobody, so the old Generate_Letter action is invisible. Not present in sandboxes or in the PRO_ package; decide whether to reuse it on the new PSG at go-live.'];
+  return '<div class="card"><div class="head"><span class="kicker">Technical</span><h2>Security: the access checklist</h2></div><p class="sub">Each dependency was proven by removal on 2026-10-22 (docs/qa-1021/FIX-letters-davidb-2026-10-22.md). Test as a persona without Login_As: that set grants Modify All on programs and masks sharing failures.</p><ul class="check">'+items.map(i=>'<li class="ok">'+fmt(i)+'</li>').join('')+'</ul>'+
+  '<div class="two" style="margin-top:12px"><div class="box"><h4>Generated files</h4>'+li(['Owned by the generating user; ContentDocumentLink to the audit row forced to Visibility AllUsers, so who sees the letter = who sees the PRO_Files_and_Documents__c row','Title and audit Name carry CaseNumber, never the Shield-encrypted patient id','Only ATTEST is locked (PRO_Is_Locked__c, lock handlers, kill switch PRO_Automation_Control__mdt.Content_Version_Lock)'])+'</div><div class="box"><h4>Still FLS-hidden from most users (incl. admins)</h4>'+li(['Case.CPT_HCPC_Code__c, Case.Missing_information_notes__c (P3-6)','fulluat Account PII is Shield-encrypted (no LIKE / ORDER BY on names)','Ledger runs without sharing / SYSTEM_MODE because DocGen completes the job as a user who may not own the row'])+'</div></div></div>';
+}
+
+function envScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Technical · Storyboard 19</span><h2>Environment matrix as of 2026-11-05 (fulluat re-checked 2026-11-06)</h2></div>'+table(['Item','davidb (build)','fulluat (UAT)','prodemo (Pro Demo)','prod'],ENV,'tight')+
+  '<div class="box"><h4>Road to prod: retire then install (MASTER 6.1; Ms. Nicole Cross\'s 10/30 rule: UAT before prod)</h4>'+ol(['Freeze and confirm scope with LPL: Victor confirms the davidb change set (10/28 + fixes for D1-D5 / D7); Carlos answers whether the old attestation flow is needed anywhere; LPL tags the release.','Retire the old build in prod: remove Case.Generate_Letter from the two Enrollment pages; deactivate flow Case_Enrollment_Attestation and delete its versions via Tooling; destructive package for the un-prefixed classes, triggers, LWC letterGenerator, quick action, OmniScript, CMDT rows, objects, Case fields, ContentVersion.Is_Locked__c, permission sets, PSG (unassign first), 5 old OmniDataTransforms; interim ContentVersionTrigger keeping the Azure block and PortalFileAccountLinkHandler. Old Draft DocumentTemplates: %U{deletion}; always confirm before deletion.','Dependency fields prod lacks (check first): Case.Case_Next_Action__c, Pro_Program__c.Products__c; FLS to the Lembaz set after deploy.','Install PRO_ validate-then-quick per stage with RunSpecifiedTests: P1-model (+ merged Pro_Program__c sharing rules), grants to the deployer, P2-datamappers in their own request, P3-code with a merged ContentVersionTrigger, P3b-runtime-perm, templates (26 uploads with the 10/28 files for 26/34/41), P5-auditor, pages (prod\'s own 11 Case pages + 3 layouts), preflight.mjs prod.','Grants: PSG + DocGenUser + OmniStudioExecution + PSLs + Content flag + library Viewer for Krystal, Lindsay, Maria, Savannah, Emily, Lauren, MiKayla (and admins).','Smoke as a Lembaz CM without Login_As: 05 (packet with cover), 25, 06, SOB_ARM on real Lembaz cases.','Jira: comment deploy ids on TD-1582 / TD-1921, move the deployment fields, tag dev + Rachel; notify Carrie Hatcher / Nicki White of any new Case fields (Snowflake views).'])+'</div></div>';
+}
+
+function perfScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Technical</span><h2>Render time: where the seconds go</h2></div><p class="sub">Read-only analysis of 33 fulluat requests and 119 davidb requests plus 514 DocumentGenerationProcess rows (2026-11-06). Production was not read. Percentiles are nearest-rank on whole-second timestamps (+/- 1 s).</p>'+
+  '<div class="tiles"><div class="tile"><b>2 s</b><span>DocGen job median, both orgs</span></div><div class="tile"><b>3 s</b><span>fulluat request median (33 singles); p75 5, p90 8, max 15</span></div><div class="tile"><b>5 s</b><span>davidb request median (119); singles 2 s, packets 6 s; max 37</span></div><div class="tile"><b>1 s</b><span>filing overhead after DocGen (trigger + persister), max 4</span></div><div class="tile"><b>3,000 ms</b><span>LWC poll interval and first check; 60 polls max</span></div></div>'+
+  '<h3>Median seconds per letter code</h3><p class="hint">davidb carries the only fax-packet measurements (fulluat has never run a packet). Hover a bar for n, p90 and the fulluat median.</p>'+chartPerCode()+
+  '<h3 style="margin-top:16px">Single letter vs fax packet vs what the user perceives</h3>'+chartStages()+
+  '<div class="two" style="margin-top:14px"><div class="box"><h4>Explanation</h4>'+li(['DocGen (server-side, Hyperforce) renders a 4-5 KB DOCX in ~2 s median; PDF conversion (GenerateAndConvert) costs ~1 s more and has a fatter tail (p90 9 s vs 5 s, max 49 s).','A fax packet is two DocGen jobs: payload rendered PDF, Apex hex-scan page count in Queueable CoverSheetChain, CoverSheetRender starts the cover job. Median 6 s = 2 + 1 + 1-2 + 2 + under 1.','The LWC first checks status 3 s after the Apex call returns, then every 3 s: adds 0-3 s (average ~1.5 s) of pure waiting per letter. The synchronous Apex leg before the job exists is %U{estimated 0.5-1.5 s} (no debug logs retained).','Outliers (15-40 s) are single slow DocGen jobs, not Pro-Spectus code: LR-0000029 (04 packet, 37 s, payload PDF 30 s), LR-0000070 (42, 20 s), LR-0000101 (06, 17 s); fulluat LR-0000036 / 14 / 32 (15 / 13 / 13 s on plain DOCX). Bursts of 11-25 jobs pushed p90 from 5-7 s to 16 s and max to 49 s.','Extract size is irrelevant: the 11-item ATTEST extract renders in the same 2 s as the 158-item common extract. Trimming is a maintainability gain, not latency. %U{Inference from job timings; the service exposes no per-phase timing.}','One davidb DocGen job (REQ-0268, 0nndx000000DOe1AAG) has been InProgress since 2026-10-12: the Setup option "InProgress DocGen Request Time Out" is %U{probably not enabled}.'])+'</div>'+
+  '<div class="box"><h4>Recommendations (owner)</h4>'+li(['%B{LPL} Adaptive polling in proLetterGenerator.js: first check ~750 ms, then 1 s for 15 s, then 3 s. Gain 1-3 s per letter.','%B{LPL} Push instead of poll: Platform Event or CDC on PRO_Letter_Request__c + lightning/empApi (%B{PRO} enables CDC if chosen).','%B{LPL} Single-job fax packet: cover as page 1 with a Word NUMPAGES field rendered to PDF; packet median 6 s to ~3 s. %U{Feasibility: needs a probe that the converter evaluates NUMPAGES.} Fallback 3b: collapse the two Queueables and pass the page count as token data (~1 s).','%B{LPL} Keep DOCX for single letters (no change).','%B{PRO} Enable "InProgress DocGen Request Time Out" in Setup > Document Generation Settings; %B{LPL} scheduled reaper that fails Payload Generating / Cover Generating rows older than N minutes.','%B{LPL} Space out bulk generation (attestation queueable one case per job).','%B{LPL} Progress UX: elapsed seconds, honest copy, auto-open the preview.','%B{PRO} decision + %B{LPL} Pre-generate predictable letters (04, 25) from record-triggered flows.','%B{LPL} Trim / split the extract per pattern family for maintainability (%U{under 0.5 s gain}).','%B{PRO} Measure the synchronous leg once (debug log) or %B{LPL} stamp Requested_At__c from the LWC.','Not recommended: client-side DocGen (loses trigger filing, audit, PHI-safe rename, locking, ledger).','Recommended order: 1 (or 2), 7, 5, 6 now; 3 next; 9 opportunistically; 8 as a product decision.'])+'</div></div></div>';
+}
+
+function defectsScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Status · Storyboard 20</span><h2>Defects D1-D8 and open items</h2></div><p class="sub">Readiness report 11/05 section 4 with the 11/05-11/06 updates; MASTER 8.1 / 8.4.</p>'+table(['#','Letter(s)','Symptom (UAT case)','Cause','Owner','Status 11/06'],DEFECTS,'tight')+
+  '<div class="two" style="margin-top:12px"><div class="box"><h4>With Victor (LPL)</h4>'+li(['Confirm the 10/28 delta is complete (e-mail drafted 11/03; message 11/06)','Fix D1 (mapping half), D2, D3, D4, D5, D7','P2-1 (access error masked as "refresh"), P3-4 (SOB hard-coded codes), Round 2 "Current Case Stage source mismatch", "Selected Option indent on 18"','Carlos: why the old attestation mappers were re-deployed into Pro Demo 10/29; is the old attestation flow needed anywhere (blocks the retire plan)','td-1582 packaging suggestions 1-14 sent 10/22; partially adopted (PRO_ prefix, program-approval gate, auditor); no formal reply recorded'])+'</div>'+
+  '<div class="box"><h4>With Ms. Nicole Cross</h4>'+li(['Letter set for sign-off: Wave 1\'s 12 vs all 25 active (open since 10/26)','Business tester names for UAT','D7: the PI URL to replace [www.website.com/PI]'])+'</div>'+
+  '<div class="box"><h4>With Rachel</h4>'+li(['Round 3 on the UAT cases, recorded on TD-2086 (Wave 1) and TD-2255 (Wave 2)','Sign-off on TD-1975 and TD-2347','Name the source field for D3 (Denial Date) and agree the D5 bridge dates with Victor','Re-test SOB in prod for TD-2191'])+'</div>'+
+  '<div class="box"><h4>With Ali / Ops</h4>'+li(['Persona UI run as QA1025 Beren CM without Login_As (TD-2329, 1h left)','D8: Ops to create an ARM_Account_Assignment__c in UAT','Fax packet (J16) and ATTEST (J15) not yet exercised in UAT; no Send path from the Draft letter row (design decision)','Prodemo: 10/28 delta, SOB retarget, CoverageBenefit formulas, old attestation mappers clean-up (low priority)','Prod migration after sign-off, realistically week of 11/10; then Jira deployment fields on TD-1582 / TD-1921'])+'</div></div></div>';
+}
+
+function jiraScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Status</span><h2>Jira map (TD project), statuses as read 2026-11-05 01:30 ET</h2></div><p class="sub">No new comment from Ms. Nicole Cross, Rachel, Victor or Carlos since 11/01 on any correspondence ticket as of the readiness report. Transition ids: 2 = Prod Ready, 51 = UAT, 31 = Done (REST fallback).</p>'+table(['Key','Type','One line','Status'],JIRA.map(r=>[r[0],r[1],r[2],r[3]==='-'?'<span class="badge dim">-</span>':r[3]==='Done'?'<span class="badge green">Done</span>':r[3]==='BLOCKED'?'<span class="badge red">BLOCKED</span>':r[3]==='New'?'<span class="badge dim">New</span>':'<span class="badge amber">'+esc(r[3])+'</span>']),'tight')+'</div>';
+}
+
+function closeScene(){
+  return '<div class="card"><div class="head"><span class="kicker">Closing</span><h2>What is proven, what is open, what happens next</h2></div>'+
+  '<div class="two"><div class="col"><h3>Proven in UAT (fulluat)</h3>'+li(['Framework level with davidb: 148/148 extract inputs, 158 + 264 mapping items identical; templates 26/34/41 at Victor\'s 10/28 versions (deploys 0AfQL00000tbvsU0AQ, 0AfQL00000tbul80AA)','33 requests, all Complete, each with a file on the Case; 23 of 28 codes (not 02 stand-alone, 12, 13, 17, ATTEST)','Lembaz letterhead and footer print (phone 844-237-3600, fax 834-784-9348, e-mail, website, hours, copyright)','FAM on patient letters 25, 26, 31, 41; MI checkbox "[X] Prescriber information: Tax ID"; Copay Member ID 1234567890; payer "Cigna" on 40/41; bridge quantity "2 vials / 2 g/kg / Every 2 weeks"; response deadline recomputed 11/06 then 11/09; D6 closed; Ali\'s half of D1 closed in fulluat, davidb and prod (TD-2374 Done)','QA1025 personas hold the full letter access set (11/06)'])+'</div>'+
+  '<div class="col"><h3>Open</h3>'+li(['Content: %D{D1} Victor\'s half, %D{D2}, %D{D3}, %D{D4}, %D{D5}, %D{D7} (Victor / Rachel / business), %D{D8} (Ops data)','Not exercised in UAT: fax packet + cover sheet (J16), ATTEST (J15), persona UI run (TD-2329)','Design: no Send path from the Draft letter row to the SRFax chain; recipient fax resolves on 1 of 12 UAT cases; fax-cover contact NULL','Business: letter set for sign-off (12 vs 25) and tester names (Ms. Nicole Cross)','Prod: dormant 10/22 build; retire-then-install after sign-off on TD-1975 / TD-2347'])+'</div></div>'+
+  '<div class="box"><h4>Next steps</h4>'+ol(['Victor confirms the 10/28 scope and fixes D1 (mapping), D2, D3, D4, D5, D7 in davidb; Ali promotes the delta to fulluat with the J19 recipe and records it on TD-2328.','Rachel runs Round 3 on the 12 UAT cases (TD-2086 / TD-2255), including one fax packet (05 on 00030641 or 06 on 00030721) and an e-signature attestation.','Ali runs the persona UI run as QA1025 Beren CM without Login_As; Ops creates an ARM assignment in UAT (D8).','Ms. Nicole Cross names the sign-off letter set and testers; sign-off recorded on TD-1975 / TD-2347.','Prod retire-then-install (MASTER 6.1), grants for the seven Lembaz CMs, smoke 05 / 25 / 06 / SOB_ARM, Jira deployment fields and Snowflake notification.','Performance follow-ups for LPL: adaptive polling or push, honest progress copy, DocGen request time-out + stale-request reaper, single-job fax packet probe.'])+'</div></div>';
+}
+
+/* ---------- scene list ---------- */
+const SCENES=[];
+SCENES.push({id:'title',nav:'Title',group:'Overview',sub:'What, who, where it stands',build:titleScene,ms:12000});
+SCENES.push({id:'big',nav:'Big picture',group:'Overview',sub:'Catalogue, component and sequence diagrams',build:bigScene,ms:16000});
+J.forEach(j=>SCENES.push({id:j.id,nav:j.nav,group:'Journeys',sub:j.title,build:()=>journeyScene(j),ms:14000}));
+SCENES.push({id:'state',nav:'State machine',group:'Technical',sub:'PRO_Letter_Request__c.Status__c',build:stateScene,ms:12000});
+SCENES.push({id:'contract',nav:'Data contract',group:'Technical',sub:'148 extract inputs by object',build:contractScene,ms:12000});
+SCENES.push({id:'security',nav:'Security',group:'Technical',sub:'Access checklist',build:securityScene,ms:12000});
+SCENES.push({id:'env',nav:'Environments',group:'Technical',sub:'davidb / fulluat / prodemo / prod',build:envScene,ms:14000});
+SCENES.push({id:'perf',nav:'Performance',group:'Technical',sub:'Render time analysis',build:perfScene,ms:14000});
+SCENES.push({id:'defects',nav:'Defects and open items',group:'Status',sub:'D1-D8, owners',build:defectsScene,ms:12000});
+SCENES.push({id:'jira',nav:'Jira map',group:'Status',sub:'Statuses 2026-11-05',build:jiraScene,ms:10000});
+SCENES.push({id:'close',nav:'Closing',group:'Status',sub:'Next steps',build:closeScene,ms:12000});
+
+/* ---------- engine ---------- */
+let cur=0; const built={};
+function buildRail(){
+  const rail=$('#rail'); let html='';let g='';
+  SCENES.forEach((s,i)=>{if(s.group!==g){g=s.group;html+='<h4>'+esc(g)+'</h4>';}html+='<button class="nav" data-i="'+i+'" type="button"><b>'+esc(s.nav)+'</b><small>'+esc(s.sub)+'</small></button>';});
+  rail.innerHTML=html;
+  rail.addEventListener('click',e=>{const b=e.target.closest('.nav');if(b){go(+b.dataset.i,true);}});
+}
+function ensureBuilt(i){
+  const s=SCENES[i]; if(built[s.id])return built[s.id];
+  const el=document.createElement('section'); el.className='scene'; el.id='scene-'+s.id; el.innerHTML=s.build(); $('#stage').appendChild(el); built[s.id]=el; return el;
+}
+function animateChain(el){
+  const lists=el.querySelectorAll('.chain[data-anim]');
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  lists.forEach(list=>{const items=list.querySelectorAll('li');items.forEach(li=>li.classList.remove('lit'));
+    if(reduce){items.forEach(li=>li.classList.add('lit'));return;}
+    items.forEach((li,k)=>setTimeout(()=>li.classList.add('lit'),120+k*260));});
+}
+function go(i,user){
+  if(i<0||i>=SCENES.length)return;
+  cur=i;
+  document.querySelectorAll('.scene.on').forEach(x=>x.classList.remove('on'));
+  const el=ensureBuilt(i); el.classList.add('on');
+  document.querySelectorAll('.nav').forEach(b=>{const bi=+b.dataset.i;b.setAttribute('aria-current',bi===i?'true':'false');b.classList.toggle('done',bi<i);});
+  const nb=document.querySelector('.nav[data-i="'+i+'"]'); if(nb)nb.scrollIntoView({block:'nearest'});
+  $('#prog').textContent='Scene '+(i+1)+' of '+SCENES.length;
+  $('#prev').disabled=i===0; $('#next').disabled=i===SCENES.length-1;
+  if(!AP.on){$('#pfill').className='';$('#pfill').style.width=Math.round(100*(i+1)/SCENES.length)+'%';}
+  window.scrollTo({top:0,behavior:'auto'});
+  animateChain(el);
+  mmRenderIn(el);
+  if(AP.on&&user){apSchedule();}
+  if(typeof VOICE!=='undefined'&&VOICE.on){speakScene(i);}
+  try{history.replaceState(null,'','#'+SCENES[i].id);}catch(e){}
+}
+$('#prev').addEventListener('click',()=>go(cur-1,true));
+$('#next').addEventListener('click',()=>go(cur+1,true));
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,textarea,select'))return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();go(cur+1,true);}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1,true);}
+  else if(e.key==='Home'){e.preventDefault();go(0,true);}
+  else if(e.key==='End'){e.preventDefault();go(SCENES.length-1,true);}
+  else if(e.key===' '){e.preventDefault();if(typeof VOICE!=='undefined'&&VOICE.on&&speechSynthesis.speaking){if(speechSynthesis.paused){speechSynthesis.resume();VOICE.paused=false;}else{speechSynthesis.pause();VOICE.paused=true;}}else if(AP.on){apToggle();}}
+});
+
+/* auto-play: one scene per interval, speed-scaled, progress fill shows time left in the scene */
+const AP={on:false,timer:null,raf:null,start:0,dur:0};
+function speed(){return parseFloat($('#speed').value)||1;}
+function apSchedule(){
+  clearTimeout(AP.timer); cancelAnimationFrame(AP.raf);
+  if(!AP.on)return;
+  if(typeof VOICE!=='undefined'&&VOICE.on){const f=$('#pfill');f.className='ap';f.style.width=Math.round(100*(cur+1)/SCENES.length)+'%';return;}
+  AP.dur=SCENES[cur].ms/speed(); AP.start=performance.now();
+  const fill=$('#pfill'); fill.className='ap';
+  const tick=()=>{if(!AP.on)return;const p=Math.min(1,(performance.now()-AP.start)/AP.dur);fill.style.width=Math.round(p*100)+'%';if(p<1)AP.raf=requestAnimationFrame(tick);};
+  AP.raf=requestAnimationFrame(tick);
+  AP.timer=setTimeout(()=>{if(cur<SCENES.length-1){go(cur+1,false);apSchedule();}else{apStop();}},AP.dur);
+}
+function apStart(){AP.on=true;if(typeof VOICE!=='undefined'&&VOICE.on&&!speechSynthesis.speaking){speakScene(cur);}$('#auto').setAttribute('aria-pressed','true');$('#auto').textContent='Pause';apSchedule();}
+function apStop(){AP.on=false;clearTimeout(AP.timer);cancelAnimationFrame(AP.raf);$('#auto').setAttribute('aria-pressed','false');$('#auto').textContent='Auto-play';const f=$('#pfill');f.className='';f.style.width=Math.round(100*(cur+1)/SCENES.length)+'%';}
+function apToggle(){AP.on?apStop():apStart();}
+$('#auto').addEventListener('click',apToggle);
+$('#speed').addEventListener('change',()=>{if(AP.on)apSchedule();});
+
+
+/* ---------- voice narration (Web Speech API; no audio files, works offline with Edge voices) ---------- */
+const VOICE={on:false,utt:null,paused:false};
+function plain(s){return String(s||'').replace(/<[^>]+>/g,'').replace(/%[A-Z]\{([^}]*)\}/g,'$1').replace(/\s+/g,' ').trim();}
+const NARR={
+ title:"Welcome. This demo walks through the Beren correspondence feature: the DocGen letter framework built by LaunchpadLab, Victor and Carlos, for the Lembaz Family Support program. One button on a case offers twenty-five letters. Apex resolves the program, starts a Salesforce document generation job against a Word template, and files the result on the case. As of the fifth of November the full build is in UAT, thirty-three letters have been generated there, and production still runs the dormant October build. Use the arrows or Auto-play; every journey shows the user's steps on the left and the back-end chain on the right.",
+ big:"The big picture. Letters fall into three families. Wave one: enrollment, welcome, missing information, benefits investigation, bridge approval, unable to contact, prior authorization denied and case support. Wave two: copay, patient assistance, prior authorization approved, refill and income verification. And the two Summary of Benefits worksheets. Provider letters go by fax with a cover sheet; patient letters are printed and mailed. The component diagram shows the path: quick action, Lightning web component, Apex controller and service, letter type metadata, the request record, the DataRaptor extract and mapping, the Word template, the DocGen job, and the trigger that files the document. The sequence diagram shows a fax packet, which runs two DocGen jobs: one for the letter and one for the cover sheet.",
+ state:"The state machine. Every click creates a letter request record. It moves from Payload Generating to Complete when the document is filed. Fax packets pass through cover generation first. Failures land in Failed with an error code that the screen translates into a message. The Counting status exists in the picklist but is never written by code.",
+ contract:"The data contract. The extract reads one hundred and forty-eight input paths across five query blocks: the case and its parents up to three levels, the patient account, the program and its letter configuration, the primary verification task with its coverage benefit and member plan, and the missing information child case. This is the full list of fields a case manager must fill for a letter to come out complete. Expand a group to see the exact API names.",
+ security:"Security. A user needs eight things to generate a letter: the letter permission set group, the packaged DocGen and OmniStudio sets, the two designer licences, the Content User flag, Viewer membership of the template library, the Lembaz program set, read access to the program record through the sharing rule, and read on the case. In production the Generate Letter button is additionally hidden behind a custom permission that nobody holds yet. Testing with Login As masks the sharing problems, so always test as a real persona.",
+ env:"Environments. Davidb is LaunchpadLab's build org and the source of truth. Fulluat, our UAT, was brought level with davidb on the third of November, including Victor's changes of the twenty-eighth of October. Pro Demo has the same build under a program named Beren. Production still holds the un-prefixed build from the twenty-second of October, dormant: templates in draft, DataRaptors inactive, button hidden. Promotion to production is a retire-then-install: remove the old classes, objects, metadata and templates, then install the PRO build in the same stage order used for UAT.",
+ perf:"Performance. We measured rather than guessed. Across thirty-three letters in UAT and one hundred and nineteen in davidb, the DocGen job itself finishes in about two seconds at the median. A single letter is filed on the case about three seconds after the click. Fax letters take about six seconds, because the packet renders the letter to PDF, counts pages in Apex, and then runs a second job for the cover sheet. On top of that, the Generate Letter window polls every three seconds, starting three seconds after the click, so a user perceives roughly four to seven seconds for a mail letter and nine to sixteen for a fax packet. The outliers of fifteen to forty seconds trace to slow runs on Salesforce's document service, especially when twenty or more jobs fire in a burst. The size of the extract is not the driver: the eleven-field attestation extract renders in the same two seconds. The cheapest wins are faster or push-based polling and a single-job fax packet, both LaunchpadLab changes, plus enabling the DocGen request time-out on our side so nobody is left with an endless spinner.",
+ defects:"Defects and open items. Eight were found in UAT. D one: letter six prints the applied amount as the headline and the limit as met; the extract nodes are crossed; our half, the negative remaining values, is already fixed in all orgs including production. D two and D three: denial reference number and denial date are blank on the prior authorization letters. D four: action required check boxes never tick. D five: bridge approval date and period read fields that free goods cases never populate. D six, the missing benefit assignment, is closed. D seven: the prescribing information placeholder still prints. D eight: the ARM contact line is blank because UAT has no ARM assignments. Six items sit with Victor, the letter set and tester names with Nicole Cross, and round three with Rachel.",
+ jira:"The Jira map. TD fifteen eighty-two is the wave one story, in progress with the testing and sign-off sub-tasks open. TD nineteen twenty-one, wave two, moved to UAT on the fourth of November. TD nineteen eleven covers the Summary of Benefits letters and is blocked on a retest. Our deploy, data and configuration sub-tasks are TD twenty-three twenty-eight, twenty-nine and thirty. TD twenty-three seventy-four, the coverage formula bug, is done in production.",
+ close:"Closing. What is proven: the UAT build generates every wave one and wave two letter end to end on realistic data, with letterhead, FAM contact, copay member ID and check boxes working. What is open: six mapping defects with Victor, the letter set and testers with Nicole Cross, round three and sign-off with Rachel. Then production: retire the old build, install the new one, unhide the button, and grant the Beren users. Thank you."
+};
+function journeyNarration(j){
+  const parts=[];
+  parts.push(plain(j.nav)+'. '+plain(j.title)+'.');
+  if(j.persona) parts.push('Persona: '+plain(j.persona).replace(/^P\d+\s*/,'')+'.');
+  if(j.moment) parts.push(plain(j.moment));
+  if(Array.isArray(j.steps)&&j.steps.length){const n=Math.min(4,j.steps.length);parts.push('On screen: '+j.steps.slice(0,n).map((s,k)=>'step '+(k+1)+', '+plain(s).replace(/\.$/,'')).join('. ')+'.');}
+  if(j.contains) parts.push('The letter contains: '+plain(Array.isArray(j.contains)?j.contains.slice(0,4).join('; '):j.contains)+'.');
+  parts.push('Behind the button: the quick action opens the Lightning component, the controller calls the generation service, the letter type metadata selects the template, a request record is created, the DataRaptor extract reads the case, account, program and coverage data, the shell mapping shapes the tokens, DocGen renders the Word template, and the trigger files the document on the case.');
+  if(Array.isArray(j.defects)&&j.defects.length) parts.push('Known defects on this journey: '+j.defects.map(d=>plain(d)).join('. ')+'.');
+  else if(j.defects&&typeof j.defects==='string') parts.push('Known defects on this journey: '+plain(j.defects)+'.');
+  if(j.uat) parts.push('UAT example: '+plain(Array.isArray(j.uat)?j.uat[0]:j.uat)+'.');
+  if(Array.isArray(j.fill)&&j.fill.length) parts.push('Good practice before generating: fill '+j.fill.slice(0,4).map(plain).join(', ')+'.');
+  return parts.join(' ');
+}
+function narrationFor(i){
+  const s=SCENES[i]; if(NARR[s.id]) return NARR[s.id];
+  const j=(typeof J!=='undefined')?J.find(q=>q.id===s.id):null;
+  if(j) return journeyNarration(j);
+  const el=built[s.id]; return el?plain(el.innerText).slice(0,1200):s.nav;
+}
+function pickVoice(){
+  const vs=speechSynthesis.getVoices(); if(!vs.length)return null;
+  const sel=$('#vsel'); const want=sel.value;
+  if(want){const v=vs.find(v=>v.name===want); if(v)return v;}
+  const score=v=>(/en-US/i.test(v.lang)?4:/^en/i.test(v.lang)?2:0)+(/Natural/i.test(v.name)?3:0)+(/Aria|Jenny|Guy|Davis|Ava|Andrew|Emma/i.test(v.name)?1:0)+(/Microsoft/i.test(v.name)?1:0);
+  return vs.slice().sort((a,b)=>score(b)-score(a))[0];
+}
+function fillVoices(){
+  const vs=speechSynthesis.getVoices(); const sel=$('#vsel'); if(!vs.length)return;
+  const cur=sel.value; const en=vs.filter(v=>/^en/i.test(v.lang)); const list=(en.length?en:vs).slice().sort((a,b)=>(/Natural/i.test(b.name)?1:0)-(/Natural/i.test(a.name)?1:0));
+  sel.innerHTML=list.map(v=>'<option value="'+esc(v.name)+'">'+esc(v.name.replace(/^Microsoft /,'').replace(/ Online \(Natural\) - .*$/,' (Natural)'))+'</option>').join('');
+  const best=pickVoice(); if(best){sel.value=cur&&list.some(v=>v.name===cur)?cur:best.name;}
+}
+function speakScene(i){
+  if(!VOICE.on||!('speechSynthesis' in window))return;
+  speechSynthesis.cancel();
+  const text=narrationFor(i); if(!text)return;
+  const u=new SpeechSynthesisUtterance(text);
+  const v=pickVoice(); if(v){u.voice=v;u.lang=v.lang;}
+  u.rate=Math.min(1.6,Math.max(0.7,0.95*speed())); u.pitch=1;
+  u.onend=()=>{if(VOICE.utt!==u)return;VOICE.utt=null;if(AP.on){if(cur<SCENES.length-1){go(cur+1,false);}else{apStop();}}};
+  u.onerror=e=>{if(e.error!=='interrupted'&&e.error!=='canceled'){console.warn('speech',e.error);}};
+  VOICE.utt=u; VOICE.paused=false;
+  setTimeout(()=>{if(VOICE.utt===u)speechSynthesis.speak(u);},350);
+}
+function voiceStart(){VOICE.on=true;$('#voice').setAttribute('aria-pressed','true');$('#voice').textContent='Voice on';speakScene(cur);}
+function voiceStop(){VOICE.on=false;$('#voice').setAttribute('aria-pressed','false');$('#voice').textContent='Voice off';VOICE.utt=null;try{speechSynthesis.cancel();}catch(e){}}
+function voiceToggle(){VOICE.on?voiceStop():voiceStart();}
+if('speechSynthesis' in window){
+  fillVoices(); speechSynthesis.onvoiceschanged=fillVoices;
+  $('#voice').addEventListener('click',voiceToggle);
+  $('#say').addEventListener('click',()=>{if(!VOICE.on)voiceStart();else speakScene(cur);});
+  $('#vsel').addEventListener('change',()=>{if(VOICE.on)speakScene(cur);});
+  $('#speed').addEventListener('change',()=>{if(VOICE.on)speakScene(cur);});
+  document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.key==='v'||e.key==='V'){e.preventDefault();voiceToggle();}});
+  window.addEventListener('beforeunload',()=>{try{speechSynthesis.cancel();}catch(e){}});
+}else{
+  $('#voice').disabled=true;$('#voice').title='Speech synthesis is not available in this browser';$('#vsel').disabled=true;$('#say').disabled=true;
+}
+
+/* footer */
+$('#foot').innerHTML='Sources (all on the Desktop, read 2026-11-06; nothing in this demo was read live from an org): <code>Correspondence-Letters-JOURNEYS-and-Technical-2026-11-06.md</code> · <code>Correspondence-Letters-MASTER-Technical-2026-11-06.md</code> · <code>Correspondence-Letters-RENDER-TIME-Analysis-2026-11-06.md</code> · <code>Correspondence-UAT-Readiness-Report-2026-11-05.md</code>. Grey italics marked "unverified" repeat the sources\' own [U] / unverified markers. Mermaid diagrams load from cdn.jsdelivr.net; offline, the diagram source is shown as text.';
+
+/* print: build every scene so Ctrl+P has them all */
+window.addEventListener('beforeprint',()=>{SCENES.forEach((s,i)=>ensureBuilt(i));document.querySelectorAll('.chain li').forEach(l=>l.classList.add('lit'));mmRenderIn(document);});
+
+buildRail();
+(function(){const h=location.hash.replace('#','');const i=SCENES.findIndex(s=>s.id===h);go(i>=0?i:0,false);})();
+</script>
+</body>
+</html>

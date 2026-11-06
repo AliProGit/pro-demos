@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product replacement: how a request travels through Salesforce</title>
+<style>
+:root{
+  --bg:#F2F5F6; --surface:#FFFFFF; --ink:#142536; --muted:#55666F; --line:#D3DCE1;
+  --teal:#0B7473; --teal-soft:#DAEEED; --amber:#A8700F; --amber-soft:#FBEFD3;
+  --rose:#B0364A; --rose-soft:#F9E0E4; --green:#2A7449; --green-soft:#DCEFE3; --slate-soft:#E6EBEE;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0E1923; --surface:#16242F; --ink:#E6EEF3; --muted:#9DAFBC; --line:#2A3B47;
+    --teal:#56C6C3; --teal-soft:#14393A; --amber:#E5B34D; --amber-soft:#3A2F14;
+    --rose:#F28C9D; --rose-soft:#411D26; --green:#6FCC96; --green-soft:#17382A; --slate-soft:#1D2D39;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.2;margin:0}
+h1{font-size:clamp(2rem,4.6vw,3.2rem);letter-spacing:-.01em;max-width:21ch}
+h2{font-size:clamp(1.5rem,3vw,2.0rem);margin-bottom:.4rem}
+h3{font-size:1.15rem}
+p{margin:.4rem 0 .8rem}
+a{color:var(--teal)}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+section{padding:56px 0 8px}
+.lede{font-family:var(--serif);font-size:1.15rem;color:var(--muted);max-width:62ch}
+.small{font-size:.88rem;color:var(--muted)}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;gap:16px;align-items:center;justify-content:space-between;min-height:54px;flex-wrap:wrap}
+.bar nav{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:.9rem}
+.bar nav a{color:var(--ink);text-decoration:none;padding:4px 2px;border-bottom:2px solid transparent}
+.bar nav a:hover{border-color:var(--teal)}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;font-size:.85rem}
+.toggle button{border:0;background:transparent;color:var(--ink);padding:6px 12px;cursor:pointer;font:inherit}
+.toggle button[aria-pressed="true"]{background:var(--teal);color:#fff}
+@media (prefers-color-scheme:dark){.toggle button[aria-pressed="true"]{color:#06222A}}
+
+/* tech mode */
+.tech{display:none}
+body[data-mode="tech"] .tech{display:block}
+body[data-mode="tech"] span.tech,body[data-mode="tech"] code.tech{display:inline}
+.techbox{margin-top:8px;padding:8px 12px;border-left:3px solid var(--teal);background:var(--teal-soft);font-size:.88rem;border-radius:0 6px 6px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--slate-soft);padding:1px 5px;border-radius:4px}
+
+/* hero */
+.hero{padding:48px 0 8px}
+.hero .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 28px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.hero .meta div b{display:block;font-family:var(--serif);font-size:1.05rem}
+.hero .meta div span{color:var(--muted);font-size:.93rem}
+
+/* chips */
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.82rem;font-weight:600;background:var(--slate-soft);color:var(--ink);white-space:nowrap}
+.chip.teal{background:var(--teal-soft);color:var(--teal)}
+.chip.amber{background:var(--amber-soft);color:var(--amber)}
+.chip.rose{background:var(--rose-soft);color:var(--rose)}
+.chip.green{background:var(--green-soft);color:var(--green)}
+.chip.new{outline:1.5px dashed var(--teal);outline-offset:1px}
+
+/* route tracker */
+.route{margin:22px 0 18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 16px 16px;overflow-x:auto}
+.stops{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));min-width:700px;position:relative}
+.stop{text-align:center;position:relative;padding:0 6px}
+.stop::before{content:"";position:absolute;top:15px;left:-50%;width:100%;height:4px;background:var(--line);z-index:0}
+.stop:first-child::before{display:none}
+.stop.done::before,.stop.now::before{background:var(--green)}
+.stop.fail::before{background:var(--rose)}
+.dot{position:relative;z-index:1;width:34px;height:34px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;background:var(--surface);border:3px solid var(--line);font-weight:700;font-size:.9rem;color:var(--muted);transition:background .25s,border-color .25s}
+.stop.done .dot{background:var(--green);border-color:var(--green);color:#fff}
+.stop.now .dot{border-color:var(--teal);color:var(--teal);box-shadow:0 0 0 5px var(--teal-soft)}
+.stop.fail .dot{background:var(--rose);border-color:var(--rose);color:#fff}
+.stop.off .dot{background:var(--slate-soft);border-color:var(--muted);color:var(--muted)}
+.stop b{display:block;font-size:.9rem;line-height:1.25}
+.stop span{display:block;font-size:.78rem;color:var(--muted);margin-top:2px}
+.route .exits{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;font-size:.85rem;color:var(--muted)}
+
+/* simulator */
+.sim{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.sim{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.panel h3{margin-bottom:2px}
+.who{font-size:.85rem;color:var(--muted);margin-bottom:8px}
+.actions{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;background:var(--teal);color:#fff;text-align:left}
+@media (prefers-color-scheme:dark){.btn{color:#06222A}}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.warn{background:var(--rose);color:#fff}
+@media (prefers-color-scheme:dark){.btn.warn{color:#2B0A12}}
+.btn.row{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%}
+label.fld{display:block;font-size:.88rem;font-weight:600}
+label.fld input[type=text],label.fld input[type=date],label.fld textarea{display:block;width:100%;margin-top:4px;font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+label.chk{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+label.chk input{margin-top:4px;accent-color:var(--teal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.alert{margin-top:14px;padding:12px 14px;border-radius:10px;border:1px solid var(--rose);background:var(--rose-soft);color:var(--ink)}
+.alert b{color:var(--rose)}
+.alert.team{border-color:var(--amber);background:var(--amber-soft)}
+.alert.team b{color:var(--amber)}
+.sample{background:none;border:0;color:var(--teal);cursor:pointer;font:inherit;font-size:.88rem;padding:0;text-decoration:underline;align-self:flex-start}
+
+/* case card */
+.case-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 4px}
+.subject{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.sect{margin-top:14px}
+.sect h4{margin:0 0 4px;font-size:.95rem;font-family:var(--serif)}
+.sect.hidden{opacity:.5}
+.frow{display:flex;justify-content:space-between;gap:12px;padding:5px 8px;border-radius:6px;font-size:.9rem;transition:background .6s}
+.frow:nth-child(even){background:color-mix(in srgb,var(--slate-soft) 55%,transparent)}
+.frow .k{color:var(--muted)}
+.frow .v{text-align:right;font-weight:600}
+.frow.chg{background:var(--teal-soft)!important}
+.auto{font-weight:600;font-size:.72rem;color:var(--teal);margin-left:6px;border:1px solid var(--teal);border-radius:999px;padding:0 6px}
+.log{margin:0;padding:0;list-style:none;max-height:260px;overflow:auto}
+.log li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.log li:last-child{border:0}
+.log .who2{flex:0 0 60px;font-weight:700;font-size:.8rem}
+.log .who2.sys{color:var(--teal)} .log .who2.you{color:var(--amber)} .log .who2.dc{color:var(--green)}
+.doclist{display:flex;flex-direction:column;gap:8px}
+.doc{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:.92rem}
+.doc.ok{background:var(--green-soft);border-color:var(--green)}
+
+/* journey list */
+.jlist{list-style:none;margin:22px 0 0;padding:0;counter-reset:j;border-left:3px solid var(--line);margin-left:14px}
+.jlist>li{position:relative;padding:0 0 26px 30px}
+.jlist>li::before{counter-increment:j;content:counter(j);position:absolute;left:-17px;top:0;width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.85rem}
+@media (prefers-color-scheme:dark){.jlist>li::before{color:#06222A}}
+.jlist>li.branch::before{background:var(--rose);content:"!"}
+@media (prefers-color-scheme:dark){.jlist>li.branch::before{color:#2B0A12}}
+.jlist>li.branch.grey::before{background:var(--muted);content:"×"}
+.jcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.jcard h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.jcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 22px;margin-top:10px;font-size:.93rem}
+.jcols b{display:block;font-family:var(--serif)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--slate-soft);font-family:var(--serif)}
+tr:last-child td{border-bottom:0}
+.tablewrap{overflow-x:auto;margin-top:12px}
+.tablewrap table{min-width:640px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h3{margin-bottom:4px}
+.card.gate{border-left:5px solid var(--amber)}
+.callout{margin-top:16px;padding:16px 18px;border-radius:12px;background:var(--teal-soft);border:1px solid var(--teal)}
+.callout b{font-family:var(--serif)}
+.calc{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.verdict{margin-top:12px;padding:10px 14px;border-radius:10px;font-weight:600}
+.verdict.no{background:var(--rose-soft);color:var(--rose)}
+.verdict.yes{background:var(--green-soft);color:var(--green)}
+.bar-hipaa{display:flex;height:26px;border-radius:8px;overflow:hidden;margin:8px 0 4px;font-size:.8rem;font-weight:700}
+.bar-hipaa div{display:grid;place-items:center;color:#fff;min-width:22px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.two ul{margin:6px 0 0;padding-left:20px}
+.hist{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.hist li{display:grid;grid-template-columns:110px 1fr;gap:12px;font-size:.93rem}
+.hist li b{font-family:var(--serif)}
+@media (max-width:520px){.hist li{grid-template-columns:1fr;gap:0}}
+.decision{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.decision input{accent-color:var(--teal);width:20px;height:20px;margin-top:4px}
+.decision.decided{background:var(--green-soft);border-color:var(--green)}
+.decision .q{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.decision .rest{grid-column:2}
+.dgrid{display:grid;gap:12px;margin-top:16px}
+.sbar{height:12px;background:var(--teal);border-radius:6px}
+.story{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:10px 16px}
+.story summary{cursor:pointer;display:grid;grid-template-columns:1fr 120px;gap:12px;align-items:center;font-weight:600}
+.story summary .t{display:flex;flex-direction:column}
+.story ul{margin:8px 0 4px;padding-left:20px;font-size:.93rem}
+.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px 24px;margin-top:14px}
+.gl div{padding:10px 0;border-bottom:1px solid var(--line)}
+.gl b{font-family:var(--serif)}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.88rem}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body data-mode="plain">
+
+<div class="bar">
+  <div class="wrap">
+    <nav aria-label="Sections">
+      <a href="#try">Try it</a>
+      <a href="#list">Journey list</a>
+      <a href="#tasks">To-dos</a>
+      <a href="#rules">Safety rules</a>
+      <a href="#today">Where we are</a>
+      <a href="#decisions">Decisions</a>
+      <a href="#plan">Build plan</a>
+      <a href="#glossary">Glossary</a>
+    </nav>
+    <div class="toggle" role="group" aria-label="Level of detail">
+      <button id="m-plain" aria-pressed="true" type="button">Plain English</button>
+      <button id="m-tech" aria-pressed="false" type="button">Add technical detail</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<header class="hero">
+  <p style="font:12px Segoe UI,Arial;color:#555;margin:0 0 6px">Client-neutral journey for the Ops walkthrough, v0.2.3 (after the 2026-11-05 working call): the Free Goods Status / Sub Status vocabulary exactly as deployed in October, nothing new; the sub-stages are to-dos (Submit packet → Follow up → Confirm shipment → Confirm delivery); HIPAA via Missing Information; patient-enrolled scope only. Technical details kept on purpose.</p><h1>Replacing a faulty product, from request to delivery</h1>
+  <p class="lede">When a product arrives unusable, the program team asks the manufacturer to send a replacement. Built for any program; the first one to use it is the Delcath Hepzato kit, and nothing in the build names it. This page shows how that request is tracked in Salesforce as one case. You can run a request through the whole journey below and see what people do and what Salesforce does for them.</p>
+  <div class="meta">
+    <div><b>What is new</b><span>The request lives on the Free Goods case (Product Replacement type), uses the Free Goods stages exactly as they are today, and tracks the detail with to-dos.</span></div>
+    <div><b>Who is involved</b><span>Program support staff, the patient's treating site (an enrolled patient), the manufacturer, and whoever ships the product.</span></div>
+    <div><b>How much work</b><span>About 7.5 build days plus testing. Built with Salesforce settings only, no custom code, no new picklist values.</span></div>
+    <div><b>Status of this design</b><span>v0.2.3 after the 2026-11-05 working call (ticket TD-2280). Nothing has been changed in the live system.</span></div>
+  </div>
+  <div class="techbox tech">Ticket TD-2280 (spike) under epic TD-1429. Supersedes the July 2026 design TD-865 (Alex Shale v1.0). Author Ali Mammadov, 2026-11-03, revised 2026-11-06. Read-only investigation of production.</div>
+</header>
+
+<!-- ===================== SIMULATOR ===================== -->
+<section id="try">
+  <h2>Try the journey</h2>
+  <p class="lede">You are a support associate. Follow the tracker from left to right. Try to skip a step and Salesforce will stop you, which is the point of the safety rules. The names and numbers below are made up for the demo.</p>
+
+  <div class="route" aria-label="Progress of the request">
+    <div class="stops" id="stops"></div>
+    <div class="exits" id="exits"></div>
+  </div>
+
+  <div class="sim">
+    <div>
+      <div class="panel" id="movePanel" aria-live="polite"></div>
+    </div>
+    <div style="display:grid;gap:18px">
+      <div class="panel" id="casePanel"></div>
+      <div class="panel">
+        <h3>What happened so far</h3>
+        <p class="small">"You" is the support associate, "Salesforce" is automatic, "the manufacturer" is the manufacturer.</p>
+        <ul class="log" id="log"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== JOURNEY LIST ===================== -->
+<section id="list">
+  <h2>The journey as a checklist</h2>
+  <p class="lede">The same journey, written out step by step. Each step says who acts, what Salesforce does on its own, and what has to be true before moving on.</p>
+
+  <ol class="jlist">
+    <li>
+      <div class="jcard">
+        <h3>Request received <span class="chip">Status: New</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>A support associate opens the patient's record and starts a Product Replacement case. One case per request.</div>
+          <div><b>Salesforce does</b>Names the case automatically ("<Program> - Product Replacement - patient name") and links the treating site.</div>
+          <div><b>Must be true</b>The patient is enrolled in the program, and the same site has not already had a replacement approved in the last 12 months. A missing HIPAA does not stop the case; it becomes a Missing Information item.</div>
+        </div>
+        <div class="techbox tech">Record type <code>Free_Goods</code>, <code>Sub_Type__c</code> = Product Replacement, <code>Pro_Program__c</code> = the program, <code>AccountId</code> = patient (Person Account), <code>Treating_Site__c</code> = facility. Subject by flow <code>PAP_Free_Goods_Case_Subject</code>. Created manually from the patient record (decision D5).</div>
+      </div>
+    </li>
+    <li>
+      <div class="jcard">
+        <h3>Eligibility check <span class="chip">Status: New</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The support associate confirms the appeal was denied and the site is approved, then marks the case Eligible.</div>
+          <div><b>Salesforce does</b>Stamps who reviewed it and when.</div>
+          <div><b>Must be true</b>Nothing is checked by the system here. the first program’s history sits on the older system, so a person confirms it by hand.</div>
+        </div>
+        <div class="techbox tech">Fields: Appeal Denial Completed, Site Approved Verified (+ date), Eligibility Status = Eligible. Eligibility Reviewed By/Date are stamped by a before-save flow. The first program has zero Benefit Verification, Authorization or Appeal cases on the new architecture, so the condition cannot be derived from data.</div>
+      </div>
+    </li>
+    <li>
+      <div class="jcard">
+        <h3>Collecting documents <span class="chip amber">Incomplete</span> <span class="chip">Missing Information</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The support associate gathers the five documents from the site (and the HIPAA authorization if it was missing) and ticks each one off as it arrives.</div>
+          <div><b>Salesforce does</b>Opens the Missing Information checklist from the program's configuration: the five documents, plus "Valid HIPAA" when the patient's HIPAA is not valid. Clears each item when ticked. When the last one is in, it marks "Required Documentation Complete" itself.</div>
+          <div><b>Must be true</b>All items received before the case can move on. If they never arrive, the case is cancelled as "MI Not Received".</div>
+        </div>
+        <div class="techbox tech">Reuses the Missing Information framework: five new list values plus the existing "Valid HIPAA" item, one config row per program in <code>PRO_Missing_Information_Config__mdt</code> (Program_Key + Sub_Type = Product Replacement), one extra condition on <code>PAP_Missing_Information_Check</code>. <code>Free_Goods_Requires_Valid_HIPAA</code> exempts Product Replacement (decided 11/05).</div>
+      </div>
+    </li>
+    <li>
+      <div class="jcard">
+        <h3>Packet complete, submitting <span class="chip teal">Under Review</span> <span class="chip">Pending Determination</span> <span class="chip amber">To-do 1 open</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The support associate moves the case to Under Review once the packet is complete.</div>
+          <div><b>Salesforce does</b>Creates to-do 1: "Submit product replacement packet to manufacturer", due in 48 hours, listing the program’s manufacturer contacts (from the Program record). The open to-do is how everyone sees "we are submitting".</div>
+          <div><b>Must be true</b>No open document items.</div>
+        </div>
+        <div class="techbox tech">Validation rule gates Status = Under Review on an open MI child with items (same test the parent guard uses). New Task record type <code>Manufacturer Review Request</code> carries all four to-dos; <code>Exception_Request_Task</code> is deliberately not reused because it carries the Compassionate Care sign-off.</div>
+      </div>
+    </li>
+    <li>
+      <div class="jcard">
+        <h3>Submitted, waiting <span class="chip teal">Under Review</span> <span class="chip">Pending Determination</span> <span class="chip amber">To-do 2 open</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The associate emails the packet to the manufacturer from Outlook (still manual in Phase 1), then completes to-do 1.</div>
+          <div><b>Salesforce does</b>Records "Submitted to Manufacturer", the date, sets the decision to Pending, and creates to-do 2: "Follow up with manufacturer on decision", due in 48 hours. Status and Sub Status do not move.</div>
+          <div><b>Must be true</b>Nothing extra. Overdue to-dos show in the existing task reports.</div>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="jcard">
+        <h3>Approved by the manufacturer, product on its way <span class="chip teal">Under Review</span> <span class="chip">Pending Determination</span> <span class="chip amber">To-do 3, then 4</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The associate records the approval with the purchase order (PO) number and date, then works to-do 3 (confirm shipment: courier, tracking) and to-do 4 (confirm delivery).</div>
+          <div><b>Salesforce does</b>Stamps the decision date, closes to-do 2, sets the shipment field to "Pending Shipment" and creates to-do 3. Completing to-do 3 sets it to "Shipped" and creates to-do 4. The case stays open; Status and Sub Status do not move.</div>
+          <div><b>Must be true</b>PO number and PO date are filled in.</div>
+        </div>
+        <div class="techbox tech">Flow on <code>Pro_Manufacturer_Decision__c</code> change. The case stays Under Review / Pending Determination because Approved is a closed status in this org and the July design says the case must stay open until the product arrives (D9 asks whether that should change). The existing <code>Shipment Sub-Status</code> field (Pending Shipment / Shipped / Shipment Complete) is the stamp the to-dos write.</div>
+      </div>
+    </li>
+    <li>
+      <div class="jcard">
+        <h3>Delivered and closed <span class="chip green">Approved</span> <span class="chip">No Restrictions</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The associate completes to-do 4 when the site confirms delivery.</div>
+          <div><b>Salesforce does</b>Stamps the completion date, closes the case as Approved and closes any leftover to-dos.</div>
+          <div><b>Must be true</b>PO number, tracking number and shipment date are all filled in.</div>
+        </div>
+        <div class="techbox tech">Flow sets Status = Approved, Sub Status = No Restrictions. <code>PAP_Parent_Close_Cleanup</code> closes open tasks. The PO date then starts the 12-month facility clock.</div>
+      </div>
+    </li>
+    <li class="branch">
+      <div class="jcard">
+        <h3>Branch: manufacturer says no <span class="chip rose">Denied</span> <span class="chip">Coverage Criteria</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The associate records the denial and the manufacturer’s comments.</div>
+          <div><b>Salesforce does</b>Closes the case as Denied / Coverage Criteria (the manufacturer's replacement criteria were not met) and closes to-do 2.</div>
+          <div><b>Must be true</b>The manufacturer's comments are filled in; they hold the reason.</div>
+        </div>
+      </div>
+    </li>
+    <li class="branch grey">
+      <div class="jcard">
+        <h3>Branch: withdrawn or opened in error <span class="chip">Cancelled</span></h3>
+        <div class="jcols">
+          <div><b>Who acts</b>The associate cancels the case at any point before it closes.</div>
+          <div><b>Salesforce does</b>Uses the existing Cancelled behaviour of Free Goods.</div>
+          <div><b>Must be true</b>A Sub Status is chosen (existing shared rule).</div>
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <h3 style="margin-top:8px">Status cheat sheet</h3>
+  <p class="small">Salesforce cases have a Status (the big stage) and a Sub Status (the detail). This table shows how the journey maps onto the Free Goods stages exactly as they exist today. No value is added or newly assigned; inside Under Review the open to-do tells you the detail.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Stage in plain words</th><th>Status</th><th>Sub Status</th><th>Open to-do / stamp</th><th>Who or what moves it</th></tr></thead>
+    <tbody>
+      <tr><td>Request received, eligibility review</td><td>New</td><td>(blank)</td><td>—</td><td>Case created</td></tr>
+      <tr><td>Items outstanding (HIPAA, documents)</td><td>Incomplete</td><td>Missing Information</td><td>Missing Information items</td><td>Automatic, from the program's configuration</td></tr>
+      <tr><td>Packet complete, submitting</td><td>Under Review</td><td>Pending Determination</td><td>To-do 1 Submit packet (48 h)</td><td>Person, gated by a safety rule</td></tr>
+      <tr><td>Submitted, waiting</td><td>Under Review</td><td>Pending Determination</td><td>Submitted = yes; To-do 2 Follow up (48 h)</td><td>Automatic, when to-do 1 is completed</td></tr>
+      <tr><td>Approved, shipping</td><td>Under Review</td><td>Pending Determination</td><td>Decision = Approved; To-do 3 Confirm shipment, then To-do 4 Confirm delivery; shipment field Pending Shipment → Shipped</td><td>Automatic, when Manufacturer Decision = Approved</td></tr>
+      <tr><td>Delivered</td><td>Approved (closed)</td><td>No Restrictions</td><td>Shipment Complete</td><td>Automatic, when to-do 4 is completed</td></tr>
+      <tr><td>Denied by the manufacturer</td><td>Denied (closed)</td><td>Coverage Criteria</td><td>Manufacturer Comments</td><td>Automatic, when Manufacturer Decision = Denied</td></tr>
+      <tr><td>Items never received</td><td>Cancelled (closed)</td><td>MI Not Received</td><td>—</td><td>Person</td></tr>
+      <tr><td>Withdrawn or opened in error</td><td>Cancelled (closed)</td><td>Patient Decision / Provider Decision / Opened in Error</td><td>—</td><td>Person</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout">
+    <b>Why "Approved" only appears at the very end</b>
+    <p style="margin-bottom:0">In this Salesforce org, "Approved" locks the case as closed. The manufacturer approving the request is not the end of the work, because the kit still has to ship. So while the product is in transit the case stays "Under Review / Pending Determination" with an open to-do, and only becomes "Approved" once delivery is confirmed. Nothing in the shared Free Goods stages changes. Open question D9: the business may prefer "Approved" at the manufacturer's decision, like every other case type, with shipping tracked on the closed case.</p>
+  </div>
+</section>
+
+
+<!-- ===================== TASKS ===================== -->
+<section id="tasks">
+  <h2>The to-dos that carry the detail</h2>
+  <p class="lede">Status and Sub Status stay on the Free Goods values we already have. Inside "Under Review" the detail is a to-do (a Salesforce task): one is open at a time, each one is created automatically when the previous one is completed, and completing it writes the result onto the case. This is how Free Goods already works for PAP; Product Replacement reuses the same mechanics.</p>
+
+  <h3 style="margin-top:8px">Product Replacement: four to-dos on one task type</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>#</th><th>To-do</th><th>Created when</th><th>Due</th><th>Completing it does</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Submit product replacement packet to manufacturer</td><td>All Missing Information items are in and the case moves to Under Review / Pending Determination</td><td>48 hours</td><td>Stamps Submitted to Manufacturer and the date, sets the decision to Pending, creates to-do 2</td></tr>
+      <tr><td>2</td><td>Follow up with manufacturer on decision</td><td>To-do 1 completed</td><td>48 hours</td><td>The decision and the manufacturer's comments are recorded <b>on this to-do</b>; Salesforce copies them to the case. Approved: shipment field = Pending Shipment, creates to-do 3. Denied: case closes Denied / Coverage Criteria</td></tr>
+      <tr><td>3</td><td>Confirm shipment (courier, tracking)</td><td>Manufacturer approved</td><td>5 business days</td><td>Shipment field = Shipped, creates to-do 4</td></tr>
+      <tr><td>4</td><td>Confirm delivery at site</td><td>To-do 3 completed</td><td>5 business days</td><td>Shipment field = Shipment Complete; case closes Approved / No Restrictions</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="techbox tech">One new Task record type <code>Manufacturer_Review_Request</code> for all four, subjects differ. Owner = case owner; <code>Patient_Name__c</code>, <code>Program__c</code>, <code>PRO_Product__c</code>, <code>Site_of_Care__c</code> filled like every Free Goods task. To-do 2 uses two Task fields that already exist from July (<code>Delcath_Decision__c</code>, <code>Delcath_Comments__c</code>, zero data), renamed <code>Manufacturer_*</code>; a Task-triggered flow copies them to the case, the same shape as <code>PAP_Eligibility_Determination</code>. Overdue to-dos are flagged by the existing <code>PAP_MI_SLAMonitor</code> once its scope formula includes these subjects. <code>PAP_Parent_Close_Cleanup</code> already completes any open to-do when a Free Goods case closes.</div>
+
+  <h3 style="margin-top:24px">What Free Goods already uses to-dos for, and whether Product Replacement needs them</h3>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Existing Free Goods to-do type</th><th>What it does today</th><th>Product Replacement?</th></tr></thead>
+    <tbody>
+      <tr><td>Eligibility Assessment / Re-Assessment</td><td>Created on every PAP, Quick Start and Bridge case; the outcome recorded on it approves or denies the case</td><td><b>No.</b> Already excluded for Product Replacement; eligibility is attested on the case (appeal denied, site approved)</td></tr>
+      <tr><td>Eligibility Determination and Communication</td><td>Tell the patient / provider the outcome</td><td><b>No.</b> The site gets the product; to-dos 3 and 4 cover the outcome</td></tr>
+      <tr><td>Exception Request (Compassionate Care)</td><td>Manager override of a financial denial</td><td><b>No.</b> The manufacturer is the decision-maker; there is no internal override</td></tr>
+      <tr><td>PAP Leadership Approval</td><td>Program leader signs off before Approved, when the program switch is on</td><td><b>No.</b> Switch is off for the first program; the manufacturer's approval is the approval</td></tr>
+      <tr><td>PAP Missing Information Follow-Up ("FollowUp Task-1")</td><td>Created with the Missing Information child case; due = program SLA days</td><td><b>Yes.</b> This is how the HIPAA and packet items are chased. Same mechanics, nothing new</td></tr>
+      <tr><td>Document Checklist (income documents)</td><td>Created on file upload when the program requires income verification</td><td><b>No.</b> Income verification is off; the packet documents are Missing Information items instead</td></tr>
+      <tr><td>Renewal Assessment</td><td>Reassess before eligibility ends</td><td><b>No.</b> Renewal is off; a new request is a new case (12-month site rule)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout">
+    <b>Naming clean-up that comes with this</b>
+    <p style="margin-bottom:0">Several of these to-do types and texts still say "PAP" although Free Goods now has four sub-types: the task types "PAP Leadership Approval", "PAP Missing Information Follow-Up" and "PAP Renewal Assessment", the follow-up subject "FollowUp Task-1" and its description "missing PAP requirements", and the eligibility subject built from the sub-type. Proposal: rename the labels to "Leadership Approval", "Missing Information Follow-Up", "Renewal Assessment", make the follow-up subject and description use the sub-type, and keep the technical names for now (three flows reference them by name; an API rename is a separate clean-up story with a dependency check).</p>
+    <div class="techbox tech">Record types <code>PAP_Leadership_Approval</code>, <code>PAP_Missing_Information_Follow_Up</code>, <code>PAP_Renewal_Assessment</code>: label change only in this release. Their DeveloperNames are matched in <code>PAP_Missing_Information_Check</code>, <code>MI_Parent_Change_Cleanup</code> and <code>PAP_Parent_Close_Cleanup</code>. Subject "FollowUp Task-1" and the description "Follow up with the patient / provider for the missing PAP requirements" are hard-coded in <code>PAP_Missing_Information_Check</code> (formula fxTaskDesc) and should read the sub-type.</div>
+  </div>
+</section>
+
+<!-- ===================== RULES ===================== -->
+<section id="rules">
+  <h2>Safety rules that keep the case honest</h2>
+  <p class="lede">Four rules apply only to Product Replacement cases, plus one duplicate check. Each blocks a save until the missing information is entered. You met all of them in the demo above.</p>
+
+  <div class="cards">
+    <div class="card gate"><h3>1. Under Review gate</h3><p>A case cannot move to Under Review while Missing Information items are still open.</p><div class="techbox tech">Validation rule, <code>RecordType = Free_Goods &amp;&amp; Sub_Type__c = Product Replacement</code>.</div></div>
+    <div class="card gate"><h3>2. Approval needs a PO</h3><p>Recording the manufacturer’s approval requires the PO number and PO date.</p></div>
+    <div class="card gate"><h3>3. Denial needs comments</h3><p>Recording a denial requires the manufacturer’s comments.</p></div>
+    <div class="card gate"><h3>4. Delivery needs proof</h3><p>Shipment Complete requires PO number, tracking number and shipment date.</p></div>
+    <div class="card gate"><h3>5. One product per site per year</h3><p>A site cannot have a new request while another replacement for that site was approved within the last 365 days (counted from the PO date). This is why the PO date is captured.</p><div class="techbox tech">Added to <code>PRO_Free_Goods_Fast_Field_Update_Flow</code> for Product Replacement only. Block or warn is decision D4.</div></div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>Try the 12-month rule</h3>
+    <p class="small">Pick the date a previous kit was approved for the same site, and choose how strict the rule should be.</p>
+    <div class="calc">
+      <label class="fld">PO date of the site's last approved kit
+        <input type="date" id="poCalc">
+      </label>
+      <label class="fld">When the rule triggers
+        <select id="modeCalc" style="display:block;margin-top:4px;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">
+          <option value="block">Block the new case</option>
+          <option value="warn">Warn, but allow</option>
+        </select>
+      </label>
+    </div>
+    <div id="calcOut" class="verdict" aria-live="polite"></div>
+  </div>
+
+  <div class="callout">
+    <b>Rules the case inherits from Free Goods (already live)</b>
+    <p style="margin-bottom:0">Sub Type must be one of the four types, a Person Account is required, and a Cancelled case needs a Sub Status. The "HIPAA Valid at creation" rule is exempted for Product Replacement (decided 11/05): a missing HIPAA becomes a Missing Information item instead. The first program has the money-related switches (income check, leadership approval, patient acceptance, renewals, and so on) turned off, so the eligibility and financial automations stay quiet for this case without any change to them.</p>
+  </div>
+</section>
+
+<!-- ===================== TODAY ===================== -->
+<section id="today">
+  <h2>Where we are today</h2>
+  <p class="lede">A lot is already in place, and one finding changed the design: the manufacturer's data sits on the older system.</p>
+
+  <h3 style="margin-top:20px">How we got here</h3>
+  <ul class="hist">
+    <li><b>July 2026</b><span>Alex Shale designs program Product Replacement under Financial Assistance (TD-865): about 18 fields, four flows, four rules, manual Outlook submission and a 48-hour follow-up. Smitha's journey diagram covers it (TD-875). Eight build stories are written (TD-1430 to TD-1437). The fields were built in production on July 22 and 31 but never shown to users, and no records use them.</span></li>
+    <li><b>Aug 24</b><span>Myra decides on a Free Goods case type with four sub-types: PAP, Quick Start, Bridge and Product Replacement (TD-1624). Rachel defines Product Replacement as product-focused, event-driven, not income-based, usually started by a provider, needing manufacturer review, and reported separately from PAP (TD-1671).</span></li>
+    <li><b>Aug 26</b><span>Myra notes the client bought this capability in May and that this work depends on the Free Goods design.</span></li>
+    <li><b>Oct 2026</b><span>The Free Goods framework goes live (TD-572): case type, stages, six rules and about 30 automations.</span></li>
+    <li><b>Nov 2 and 3</b><span>Nicole opens TD-2280 to move the design onto Free Goods. This document is the result.</span></li>
+  </ul>
+
+  <div class="two">
+    <div class="panel">
+      <h3>the manufacturer's footprint in the live system</h3>
+      <p><b>165</b> patients across <b>15</b> treating sites, plus 63 non-person accounts linked to the manufacturer cases.</p>
+      <p class="small" style="margin-bottom:2px">Patient HIPAA status (102 person accounts)</p>
+      <div class="bar-hipaa" role="img" aria-label="95 valid, 3 invalid, 4 blank">
+        <div style="flex:95;background:var(--green)">95 valid</div>
+        <div style="flex:3;background:var(--rose)">3</div>
+        <div style="flex:4;background:var(--amber)">4</div>
+      </div>
+      <p class="small">3 invalid and 4 blank; for those 7 the case opens with "Valid HIPAA" as a Missing Information item (decided 11/05).</p>
+      <p><b>116</b> and <b>221</b> the manufacturer cases sit on the two older case types (CarePlan and CorMedix). There are <b>zero</b> Benefit Verification, Authorization or Appeal cases for the manufacturer on the new setup.</p>
+      <div class="techbox"><b>What this means:</b> the "insurance checked, prior authorization done, at least one appeal denied" condition cannot be read from case data. A person confirms it by hand until the manufacturer is migrated.</div>
+    </div>
+    <div class="panel">
+      <h3>Already built versus added by this design</h3>
+      <p class="small" style="margin-bottom:2px"><b>Already live and reused</b></p>
+      <ul>
+        <li>Free Goods case type, stages, Sub Status list and six rules</li>
+        <li>Case fields for eligibility, the manufacturer review and fulfillment (built in July, unused)</li>
+        <li>The Product Replacement sub-type value (it also exists under Financial Assistance)</li>
+        <li>Missing Information checklist framework</li>
+        <li>Program switches for the manufacturer, all currently off</li>
+      </ul>
+      <p class="small" style="margin:10px 0 2px"><b>Added or changed</b></p>
+      <ul>
+        <li>One PO Date field (no Status or Sub Status change at all)</li>
+        <li>Fields moved onto the Free Goods page in three sections</li>
+        <li>Five document types and one config row</li>
+        <li>One to-do type with four auto-created to-dos (submit, follow up, confirm shipment, confirm delivery), decision automation, four rules</li>
+        <li>Five fields renamed from the client name to "Manufacturer" (no data in them)</li>
+        <li>The facility 12-month check</li>
+        <li>Clean-up of the Financial Assistance page (no data affected)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>The screen people will see</b>
+    <p style="margin-bottom:0">The Free Goods case page gains three sections, shown only for Product Replacement cases: <b>Product Replacement Eligibility</b>, <b>Manufacturer Review</b> and <b>Fulfillment</b>. The case card in the demo above is laid out the same way. The same sections are added to the classic layout so mobile matches, and the Path bar gets help text for Product Replacement.</p>
+    <div class="techbox tech">Dynamic Forms with visibility rule <code>Sub_Type__c = Product Replacement</code>. The current Free Goods page has no sub-type visibility rules (its "PAP Eligibility" section is label-only), so this is additive. The layout deploy is a full replace, so retrieve a fresh copy first.</div>
+  </div>
+</section>
+
+<!-- ===================== DECISIONS ===================== -->
+<section id="decisions">
+  <h2>Decisions needed before build</h2>
+  <p class="lede">State after the 2026-11-05 working call: two are decided, seven are open. Tick them off as you go; the counter keeps score (it only lives on this page).</p>
+  <p><b id="dcount">0 of 9</b> decided</p>
+  <div class="dgrid" id="dgrid"></div>
+</section>
+
+<!-- ===================== PLAN ===================== -->
+<section id="plan">
+  <h2>Build plan</h2>
+  <p class="lede">Nine follow-on stories replace the eight written for Financial Assistance (TD-1430 to TD-1437). Estimate: about 7.5 build days plus testing, all done with Salesforce settings and automations. No new objects, no custom code, no picklist changes.</p>
+  <div id="stories" style="margin-top:16px"></div>
+
+  <h3 style="margin-top:28px">What this design deliberately does not do</h3>
+  <div class="cards">
+    <div class="card"><h3>No separate request object</h3><p>One request, one decision, one shipment, so one case is enough. Same conclusion as July.</p></div>
+    <div class="card"><h3>No automated integrations</h3><p>No manufacturer connection, email automation or courier link in Phase 1. Submission stays a manual Outlook email.</p></div>
+    <div class="card"><h3>No change for other programs</h3><p>PAP, Quick Start and Bridge keep working as they do today. The only touch is one extra condition on the document-check automation and a Product Replacement exemption on the HIPAA creation rule.</p></div>
+    <div class="card"><h3>No provider-level replacement</h3><p>A site's own allowance (one vial per period with no named patient) is a different business rule and is out of scope. This design supports replacement for an enrolled patient.</p></div>
+    <div class="card"><h3>No migration of the first program</h3><p>Moving the first program off the older system is a separate project, and it is the reason eligibility is confirmed by hand.</p></div>
+  </div>
+</section>
+
+<!-- ===================== GLOSSARY ===================== -->
+<section id="glossary">
+  <h2>Plain-English glossary</h2>
+  <div class="gl">
+    <div><b>Case</b><br>One record that tracks a single request from start to finish.</div>
+    <div><b>Free Goods</b><br>The type of case used when a manufacturer gives product at no charge. Sub-types: PAP, Quick Start, Bridge and Product Replacement.</div>
+    <div><b>Sub Type</b><br>Which kind of Free Goods request this is. Here it is always Product Replacement.</div>
+    <div><b>Status and Sub Status</b><br>The big stage (such as Under Review) and the detail inside it (such as Pending Determination). Product Replacement uses only the values Free Goods already has.</div>
+    <div><b>To-do (task)</b><br>A piece of work assigned to a person with a due date. Here four to-dos, created one after the other, show where the request is.</div>
+    <div><b>Closed status</b><br>A stage that locks the case as finished. Approved and Denied are closed in this org.</div>
+    <div><b>Validation rule</b><br>A rule that refuses to save a record until required information is entered.</div>
+    <div><b>Flow</b><br>An automation that does steps for people, like stamping dates or creating to-dos.</div>
+    <div><b>Attested</b><br>Confirmed by a person ticking a box, rather than worked out by the system.</div>
+    <div><b>Missing Information</b><br>The existing checklist feature that tracks outstanding items on a case.</div>
+    <div><b>Person Account</b><br>A Salesforce account that represents an individual, here the patient.</div>
+    <div><b>Treating site</b><br>The facility where the patient is treated and where the replacement kit is delivered.</div>
+    <div><b>Dynamic Forms</b><br>Page sections that show or hide depending on the record, so Product Replacement fields appear only when relevant.</div>
+    <div><b>PO (purchase order)</b><br>The order number for the replacement kit. Its date starts the 12-month site clock.</div>
+    <div><b>HIPAA Valid</b><br>A flag showing the patient's privacy authorization is in good order.</div>
+    <div><b>Program switches</b><br>Settings on the program record that turn financial checks on or off. All are off for the manufacturer.</div>
+  </div>
+</section>
+
+<footer>v0.2.3 (2026-11-06), ticket TD-2280 under epic TD-1429. The patient, site and values in the demo are invented for illustration. Nothing here changes the live Salesforce org.</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NOW = new Date();
+const fmt = d => d.toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});
+const iso = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const pretty = v => { if(/^\d{4}-\d{2}-\d{2}$/.test(v)){ return fmt(new Date(v+"T00:00:00")); } return v; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+
+const DOCS = [
+  ["Valid HIPAA","the patient's privacy authorization (added only when it is not on file)"],
+  ["Summary of Benefits","what the insurance covers"],
+  ["PA Outcome Documentation","the prior authorization result"],
+  ["Appeal Denial Documentation","proof an appeal was turned down"],
+  ["EOB/ERA","the insurer's payment explanation"],
+  ["Product Invoice","what was billed for the kit"]
+];
+
+const FIELDS = [
+  ["Product Replacement Eligibility",[
+    ["appealDenial","Appeal Denial Completed"],
+    ["siteVerified","Site Approved Verified"],
+    ["siteDate","Site Approval Verified Date"],
+    ["reqDocs","Required Documentation Complete"],
+    ["eligStatus","Eligibility Status"],
+    ["eligBy","Eligibility Reviewed By"],
+    ["eligDate","Eligibility Reviewed Date"]
+  ]],
+  ["Manufacturer Review",[
+    ["submitted","Submitted to Manufacturer"],
+    ["subDate","Manufacturer Submission Date"],
+    ["decision","Manufacturer Decision"],
+    ["decDate","Manufacturer Decision Date"],
+    ["comments","Manufacturer Comments"]
+  ]],
+  ["Fulfillment",[
+    ["po","PO Number"],
+    ["poDate","PO Date (new field)"],
+    ["courier","Courier"],
+    ["tracking","Tracking Number"],
+    ["shipDate","Shipment Date"],
+    ["shipSub","Shipment Sub-Status"],
+    ["shipComplete","Shipment Complete Date"],
+    ["notes","Fulfillment Notes"]
+  ]]
+];
+
+const STOPS = [
+  ["Request received","New"],
+  ["Items outstanding","Incomplete"],
+  ["Submitting (to-do 1)","Under Review"],
+  ["Waiting (to-do 2)","Under Review"],
+  ["Shipping (to-dos 3, 4)","Under Review"],
+  ["Delivered","Approved (closed)"]
+];
+
+/* ---------- state ---------- */
+let s;
+function fresh(){
+  return { stage:"pre", f:{}, src:{}, docs:[true,false,false,false,false,false], hipaaItem:false, tasks:[], log:[], changed:new Set(), err:null, inp:{}, status:"None yet", sub:"" };
+}
+s = fresh();
+
+function set(k,v,by){ s.f[k]=v; s.src[k]=by||"you"; s.changed.add(k); }
+function note(who,msg){ s.log.unshift({who,msg}); }
+function setStatus(st,sub){ s.status=st; s.sub=sub; }
+function openTask(n,subject,days){ s.tasks.push({n,subject,due:addDays(NOW,days),open:true}); }
+function closeTask(n){ s.tasks.forEach(t=>{ if(t.n===n) t.open=false; }); }
+const docList = () => s.hipaaItem ? DOCS : DOCS.slice(1);
+const docIdx = i => s.hipaaItem ? i : i+1;
+
+/* ---------- stage copy ---------- */
+const COPY = {
+  pre:{ t:"Start a request", who:"Support associate",
+    p:"A patient's product is faulty. You open the enrolled patient's record and start a Product Replacement case. Salesforce checks the 12-month site rule before the case exists; a missing HIPAA does not stop the case, it becomes a Missing Information item. Use the boxes to see both.",
+    tech:"Case is created manually from the patient record (D5). Record type Free_Goods, Sub_Type = Product Replacement. Checks: duplicate/12-month facility rule in PRO_Free_Goods_Fast_Field_Update_Flow (D4). Free_Goods_Requires_Valid_HIPAA exempts Product Replacement; the MI config adds the existing item Valid HIPAA when the patient is not Valid (decided 11/05)."},
+  new:{ t:"Check eligibility", who:"Support associate",
+    p:"The case exists. Now confirm the manufacturer's pre-conditions: the insurance was checked, prior authorization was done, and at least one appeal was denied, and the treating site is approved. Salesforce cannot see this for the manufacturer, so a person confirms it.",
+    tech:"Appeal Denial Completed and Site Approved Verified (+ date) are ticked; Eligibility Status = Eligible. A before-save flow stamps Eligibility Reviewed By and Date. The first program has zero BV, Authorization or Appeal cases on the new architecture, hence manual attestation."},
+  docs:{ t:"Collect the five documents", who:"Support associate",
+    p:"Salesforce opened the Missing Information checklist from the program's configuration: the five documents the manufacturer needs, plus Valid HIPAA if it was missing. Tick each one when it arrives. Try moving ahead before they are all in.",
+    tech:"Missing Information child case with the items from PRO_Missing_Information_Config__mdt (Program_Key + Product Replacement): Valid HIPAA (conditional) + 5 documents. Auto-clear on tick. Required Documentation Complete is set when the MI child completes. Never received → Cancelled / MI Not Received."},
+  ready:{ t:"Send the packet to the manufacturer (to-do 1)", who:"Support associate",
+    p:"The packet is complete and the case is Under Review / Pending Determination. Salesforce created to-do 1 with a 48-hour due date. Email the packet to the manufacturer’s contacts from Outlook, then complete the to-do. Status and Sub Status do not move from here until the decision.",
+    tech:"Task RT Manufacturer Review Request, T1: subject 'Submit product replacement packet to manufacturer', owner = case owner, due now + 48h, description lists the program’s contacts (Program record, D7). Completion flow stamps Submitted to Manufacturer, Submission Date, Decision = Pending and creates T2."},
+  sent:{ t:"Wait for the manufacturer's answer (to-do 2)", who:"the manufacturer answers, associate records it",
+    p:"The ball is in the manufacturer's court; to-do 2 (follow up, 48 hours) is your reminder. When they reply, record their answer. An approval needs the PO number and date. A denial needs their comments. Try each path (you can restart afterwards).",
+    tech:"Record-triggered flow on Pro_Manufacturer_Decision__c. Approved: decision date, T2 closed, Shipment Sub-Status = Pending Shipment, T3 created; PO Number and PO Date required by VR; Status / Sub Status unchanged. Denied: Manufacturer Comments required by VR, Status = Denied, Sub Status = Coverage Criteria, T2 closed."},
+  fulfil:{ t:"Ship the product (to-dos 3 and 4)", who:"Support associate with the shipper",
+    p:"The manufacturer approved. The case stays open while the product ships. To-do 3: record the courier and tracking and confirm shipment. To-do 4: confirm delivery at the site, which needs a tracking number and a shipment date and closes the case.",
+    tech:"T3 Confirm shipment: completion sets Shipment Sub-Status = Shipped and creates T4. T4 Confirm delivery: completion sets Shipment Sub-Status = Shipment Complete (VR: PO Number, Tracking Number, Shipment Date), flow sets Status = Approved / No Restrictions. The case stays Under Review / Pending Determination meanwhile because Approved is closed (D9 open)."},
+  done:{ t:"Closed: kit delivered", who:"Salesforce",
+    p:"The case is now Approved / No Restrictions and closed. Salesforce stamped the completion date and tidied up leftover to-dos. The PO date now starts the 12-month clock for this site, so a second request for the same site will be stopped until that year is up.",
+    tech:"Flow sets Status = Approved, Sub Status = No Restrictions, Shipment Complete Date = now. PAP_Parent_Close_Cleanup closes open tasks."},
+  denied:{ t:"Closed: the manufacturer denied the request", who:"Salesforce",
+    p:"The case is closed as Denied / Coverage Criteria with the manufacturer’s comments on record as the reason. To-do 2 was closed automatically.",
+    tech:"Status = Denied (closed), Sub Status = Coverage Criteria (existing FG value, read as manufacturer criteria not met). T2 closed by flow."},
+  cancelled:{ t:"Cancelled", who:"Support associate",
+    p:"The request was withdrawn or opened by mistake. The case is cancelled with a reason, using the shared Free Goods behaviour.",
+    tech:"Existing Cancelled set. Shared VR: Cancelled requires Sub Status."}
+};
+
+/* ---------- inputs ---------- */
+function readInputs(){
+  document.querySelectorAll("[data-inp]").forEach(el=>{
+    s.inp[el.dataset.inp] = el.type==="checkbox" ? el.checked : el.value;
+  });
+}
+const val = k => (s.inp[k]||"").toString().trim();
+const chk = k => !!s.inp[k];
+const iv = k => s.inp[k] === undefined ? "" : esc(s.inp[k]);
+const ic = k => s.inp[k] ? "checked" : "";
+
+/* ---------- actions ---------- */
+function errRule(title,msg,tech){ s.err={kind:"rule",title,msg,tech}; }
+function errTeam(title,msg){ s.err={kind:"team",title,msg}; }
+
+function act(a,i){
+  readInputs();
+  s.err = null;
+  s.changed = new Set();
+
+  if(a==="restart"){ s = fresh(); return render(); }
+  if(a==="sample"){
+    const t = iso(NOW);
+    s.inp.po = s.inp.po || "PO-48213";
+    s.inp.poDate = s.inp.poDate || t;
+    s.inp.comments = s.inp.comments || "Kit could not be verified as defective.";
+    s.inp.courier = s.inp.courier || "FedEx";
+    s.inp.tracking = s.inp.tracking || "794612300981";
+    s.inp.shipDate = s.inp.shipDate || t;
+    return render();
+  }
+
+  if(a==="create"){
+    if(chk("simDup")){
+      errRule("Blocked: one replacement per site per year","Riverside Cancer Center already had a replacement approved 214 days ago. One per site every 12 months, so this request is stopped.","Duplicate/12-month rule added to PRO_Free_Goods_Fast_Field_Update_Flow: another Product Replacement for the same Treating_Site__c with Pro_Manufacturer_Decision__c = Approved and Pro_PO_Date__c within 365 days. Block or warn is decision D4.");
+      return render();
+    }
+    s.stage="new"; setStatus("New","");
+    s.f.subject = "<Program> - Product Replacement - Jane Doe";
+    ["appealDenial","siteVerified","reqDocs","submitted"].forEach(k=>{ s.f[k]="No"; });
+    s.f.eligStatus="Pending"; s.f.decision="";
+    s.src.subject="system";
+    note("You","Opened a Product Replacement case from Jane Doe's record (enrolled patient; treating site: Riverside Cancer Center).");
+    if(chk("simHipaa")){
+      s.hipaaItem = true; s.docs[0] = false;
+      note("Salesforce","Named the case and checked the 12-month site rule (passed). Jane's HIPAA is not valid, so the case was still created and 'Valid HIPAA' was added to the Missing Information list from the program's configuration.");
+    } else {
+      note("Salesforce","Named the case automatically and checked the 12-month site rule. Passed. HIPAA is valid, so no extra item.");
+    }
+    return render();
+  }
+
+  if(a==="attest"){
+    if(!chk("cAppeal") || !chk("cSite")){
+      errTeam("Confirm both items first","Tick both boxes before marking the case Eligible. This is a team practice rather than a system check, because the first program’s history lives on the older system.");
+      return render();
+    }
+    set("appealDenial","Yes"); set("siteVerified","Yes");
+    set("siteDate",fmt(NOW)); set("eligStatus","Eligible");
+    set("eligBy","Support associate","system"); set("eligDate",fmt(NOW),"system");
+    note("You","Confirmed the appeal denial and the approved site, and marked the case Eligible.");
+    note("Salesforce","Stamped who reviewed eligibility and when.");
+    return render();
+  }
+
+  if(a==="startDocs"){
+    s.stage="docs"; setStatus("Incomplete","Missing Information");
+    note("You","Started document collection.");
+    note("Salesforce","Opened the Missing Information checklist: "+docList().length+" items from the program's configuration.");
+    return render();
+  }
+
+  if(a==="doc"){
+    const n = +i;
+    s.docs[n] = !s.docs[n];
+    const left = s.docs.filter(x=>!x).length;
+    if(s.docs[n]) note("You","Received: "+DOCS[n][0]+".");
+    else note("You","Un-ticked: "+DOCS[n][0]+".");
+    if(left===0){
+      set("reqDocs","Yes","system");
+      note("Salesforce","All items closed. Marked Required Documentation Complete automatically.");
+    } else if(s.f.reqDocs==="Yes"){
+      set("reqDocs","No","system");
+    }
+    return render();
+  }
+
+  if(a==="toReady"){
+    const left = s.docs.filter(x=>!x).length;
+    if(left>0){
+      errRule("Blocked: items still open","You cannot move the case to Under Review while "+left+" Missing Information item"+(left>1?"s are":" is")+" still open.","Validation rule (Product Replacement only): Status cannot be Under Review while the case has an open Missing Information child with items.");
+      return render();
+    }
+    s.stage="ready"; setStatus("Under Review","Pending Determination");
+    openTask(1,"Submit product replacement packet to manufacturer",2);
+    s.changed.add("reqDocs");
+    note("You","Moved the case to Under Review / Pending Determination.");
+    note("Salesforce","Created to-do 1 'Submit product replacement packet to manufacturer', due "+fmt(s.tasks[0].due)+" (48 hours), with the program’s manufacturer contacts (from the Program record) listed.");
+    return render();
+  }
+
+  if(a==="send"){
+    s.stage="sent";
+    closeTask(1); openTask(2,"Follow up with manufacturer on decision",2);
+    set("submitted","Yes","system"); set("subDate",fmt(NOW),"system"); set("decision","Pending","system");
+    note("You","Emailed the packet to the manufacturer from Outlook and completed to-do 1.");
+    note("Salesforce","Recorded the submission and its date, set the manufacturer's decision to Pending, and created to-do 2 'Follow up with manufacturer on decision', due in 48 hours. Status and Sub Status unchanged.");
+    return render();
+  }
+
+  if(a==="approve"){
+    if(!val("po") || !val("poDate")){
+      errRule("Blocked: approval needs a PO","Enter both the PO number and the PO date to record the manufacturer’s approval.","Validation rule (Product Replacement only): Approved requires PO Number and PO Date. The PO date also drives the 12-month facility rule.");
+      return render();
+    }
+    s.stage="fulfil";
+    closeTask(2); openTask(3,"Confirm shipment (courier, tracking)",5);
+    set("po",val("po")); set("poDate",pretty(val("poDate")));
+    set("decision","Approved"); set("decDate",fmt(NOW),"system"); set("shipSub","Pending Shipment","system");
+    note("the manufacturer","Approved the replacement.");
+    note("You","Recorded the approval with PO "+val("po")+".");
+    note("Salesforce","Stamped the decision date, closed to-do 2, set the shipment field to Pending Shipment and created to-do 3 'Confirm shipment'. The case stays Under Review / Pending Determination.");
+    return render();
+  }
+
+  if(a==="deny"){
+    if(!val("comments")){
+      errRule("Blocked: denial needs comments","Enter the manufacturer’s comments to record a denial.","Validation rule (Product Replacement only): Manufacturer Comments required when the decision is Denied.");
+      return render();
+    }
+    s.stage="denied"; setStatus("Denied","Coverage Criteria");
+    closeTask(2);
+    set("decision","Denied"); set("decDate",fmt(NOW),"system"); set("comments",val("comments"));
+    note("the manufacturer","Denied the replacement.");
+    note("You","Recorded the denial and the manufacturer’s comments.");
+    note("Salesforce","Closed the case as Denied / Coverage Criteria and closed to-do 2. The comments hold the reason.");
+    return render();
+  }
+
+  if(a==="ship"){
+    if(val("courier")) set("courier",val("courier"));
+    if(val("tracking")) set("tracking",val("tracking"));
+    if(val("shipDate")) set("shipDate",pretty(val("shipDate")));
+    if(val("notes")) set("notes",val("notes"));
+    set("shipSub","Shipped","system");
+    closeTask(3); openTask(4,"Confirm delivery at site",5);
+    note("You","Completed to-do 3: courier and tracking recorded.");
+    note("Salesforce","Set the shipment field to Shipped and created to-do 4 'Confirm delivery at site'.");
+    return render();
+  }
+
+  if(a==="complete"){
+    if(!val("tracking") || !val("shipDate")){
+      const missing = [!val("tracking")?"tracking number":"", !val("shipDate")?"shipment date":""].filter(Boolean).join(" and ");
+      errRule("Blocked: delivery needs proof","Enter the "+missing+" before marking the shipment complete. The PO number is already on the case.","Validation rule (Product Replacement only): Shipment Complete requires PO Number, Tracking Number and Shipment Date.");
+      return render();
+    }
+    if(val("courier")) set("courier",val("courier"));
+    set("tracking",val("tracking")); set("shipDate",pretty(val("shipDate")));
+    if(val("notes")) set("notes",val("notes"));
+    set("shipSub","Shipment Complete","system"); set("shipComplete",fmt(NOW),"system");
+    closeTask(3); closeTask(4);
+    s.stage="done"; setStatus("Approved","No Restrictions");
+    note("You","Completed to-do 4: delivery confirmed by the site.");
+    note("Salesforce","Set the shipment field to Shipment Complete, stamped the completion date, closed the case as Approved / No Restrictions and closed any leftover to-dos. The 12-month clock for Riverside Cancer Center starts from the PO date.");
+    return render();
+  }
+
+  if(a==="cancel"){
+    s.stage="cancelled"; setStatus("Cancelled","Opened in Error"); s.tasks.forEach(t=>t.open=false);
+    note("You","Cancelled the case (opened in error).");
+    return render();
+  }
+}
+
+/* ---------- rendering ---------- */
+function stageIndex(){
+  return { pre:-1,new:0,docs:1,ready:2,sent:3,fulfil:4,done:5,denied:3,cancelled:-2 }[s.stage];
+}
+function renderRoute(){
+  const idx = stageIndex();
+  let h = "";
+  STOPS.forEach((st,n)=>{
+    let cls="", icon=String(n+1);
+    if(s.stage==="cancelled"){ cls = "off"; icon="–"; }
+    else if(s.stage==="denied" && n===3){ cls="fail"; icon="!"; }
+    else if(s.stage==="done"){ cls = n===5 ? "done" : "done"; icon="✓"; }
+    else if(idx>n){ cls="done"; icon="✓"; }
+    else if(idx===n){ cls="now"; }
+    h += `<div class="stop ${cls}"><div class="dot">${icon}</div><b>${st[0]}</b><span>${st[1]}</span></div>`;
+  });
+  $("#stops").innerHTML = h;
+  $("#exits").innerHTML = s.stage==="denied" ? "Ended: the manufacturer denied the request."
+    : s.stage==="cancelled" ? "Ended: the case was cancelled."
+    : "Side exits: the manufacturer can deny at stop 4, items never received → Cancelled / MI Not Received, and the case can be cancelled before it closes.";
+}
+
+function chipFor(status){
+  const m = {"New":"","Incomplete":"amber","Under Review":"teal","Approved":"green","Denied":"rose","Cancelled":""};
+  return m[status]||"";
+}
+
+function renderCase(){
+  const open = !["done","denied","cancelled"].includes(s.stage);
+  let h = `<h3>The case, as staff see it</h3>`;
+  if(s.stage==="pre"){
+    h += `<p class="small">No case yet. It will appear here as soon as you create it.</p>`;
+    $("#casePanel").innerHTML = h; return;
+  }
+  const openLabel = s.stage==="cancelled" ? "Ended" : (open ? "Open" : "Closed");
+  h += `<div class="case-head"><span class="subject">${esc(s.f.subject)}</span></div>
+    <div class="case-head">
+      <span class="chip ${chipFor(s.status)}">Status: ${esc(s.status)}</span>
+      ${s.sub?`<span class="chip">Sub Status: ${esc(s.sub)}</span>`:""}
+      <span class="chip ${open?"teal":""}">${openLabel}</span>
+    </div>
+    <p class="small" style="margin:6px 0 0">Treating site: Riverside Cancer Center. Program: <the patient’s program>. Highlighted rows just changed. "auto" means Salesforce filled it in.</p>`;
+  if(s.tasks.length){
+    h += `<div class="sect"><h4>To-dos (the sub-stage)</h4>` + s.tasks.map(t=>`<div class="frow${t.open?" chg":""}"><span class="k">To-do ${t.n}: ${esc(t.subject)}</span><span class="v">${t.open?`<span class="chip amber">Open, due ${fmt(t.due)}</span>`:`<span class="chip green">Done</span>`}</span></div>`).join("") + `</div>`;
+  }
+  FIELDS.forEach(sec=>{
+    h += `<div class="sect"><h4>${sec[0]}</h4>`;
+    sec[1].forEach(([k,label])=>{
+      let v = s.f[k];
+      const empty = (v===undefined || v==="");
+      h += `<div class="frow${s.changed.has(k)?" chg":""}"><span class="k">${label}</span><span class="v">${empty?'<span class="small">empty</span>':esc(v)}${(!empty && s.src[k]==="system")?'<span class="auto">auto</span>':''}</span></div>`;
+    });
+    h += `</div>`;
+  });
+  $("#casePanel").innerHTML = h;
+}
+
+function renderLog(){
+  const cls = {You:"you",Salesforce:"sys","the manufacturer":"dc"};
+  $("#log").innerHTML = s.log.length ? s.log.map(l=>`<li><span class="who2 ${cls[l.who]}">${l.who}</span><span>${esc(l.msg)}</span></li>`).join("") : `<li><span class="small">Nothing yet. Create the case to begin.</span></li>`;
+}
+
+function field(id,label,type,ph){
+  if(type==="area") return `<label class="fld">${label}<textarea rows="2" data-inp="${id}" placeholder="${ph||""}">${iv(id)}</textarea></label>`;
+  return `<label class="fld">${label}<input type="${type||"text"}" data-inp="${id}" value="${iv(id)}" placeholder="${ph||""}"></label>`;
+}
+const sampleBtn = `<button class="sample" type="button" data-act="sample">Fill in sample values</button>`;
+
+function actionsHtml(){
+  const st = s.stage;
+  let h = "";
+  if(st==="pre"){
+    h += `<label class="chk"><input type="checkbox" data-inp="simHipaa" ${ic("simHipaa")}><span><b>Pretend this patient's HIPAA status is not valid</b><br><span class="small">The case is still created; Valid HIPAA joins the Missing Information list.</span></span></label>
+    <label class="chk"><input type="checkbox" data-inp="simDup" ${ic("simDup")}><span><b>Pretend this site had a replacement approved 214 days ago</b><br><span class="small">Shows the one-per-site-per-year rule.</span></span></label>
+    <button class="btn" type="button" data-act="create">Create Product Replacement case for Jane Doe</button>`;
+  }
+  if(st==="new"){
+    const eligible = s.f.eligStatus==="Eligible";
+    if(!eligible){
+      h += `<label class="chk"><input type="checkbox" data-inp="cAppeal" ${ic("cAppeal")}><span>At least one appeal was denied, and insurance checks and prior authorization are done.</span></label>
+      <label class="chk"><input type="checkbox" data-inp="cSite" ${ic("cSite")}><span>The treating site (Riverside Cancer Center) is an approved site.</span></label>
+      <button class="btn" type="button" data-act="attest">Save eligibility review as Eligible</button>`;
+    } else {
+      h += `<p><span class="chip green">Eligible</span> Reviewed and stamped. Next, ask the site for the documents.</p>
+      <button class="btn" type="button" data-act="startDocs">Start collecting documents</button>`;
+    }
+  }
+  if(st==="docs"){
+    h += `<div class="doclist">` + docList().map((d,k)=>{ const n = docIdx(k); return `<div class="doc ${s.docs[n]?"ok":""}"><span><b>${d[0]}</b><br><span class="small">${d[1]}</span></span><button class="btn ${s.docs[n]?"ghost":""}" type="button" data-act="doc" data-i="${n}">${s.docs[n]?"Received (undo)":"Mark received"}</button></div>`; }).join("") + `</div>
+    <button class="btn" type="button" data-act="toReady">Packet complete: move to Under Review</button>`;
+  }
+  if(st==="ready"){
+    h += `<div class="doc"><span><b>To-do 1: Submit product replacement packet to manufacturer</b><br><span class="small">Due ${fmt(s.tasks[0].due)}. Owner: you. Lists the program’s manufacturer contacts (from the Program record).</span></span><span class="chip amber">Open</span></div>
+    <button class="btn" type="button" data-act="send">I emailed the manufacturer, complete to-do 1</button>`;
+  }
+  if(st==="sent"){
+    h += `<div class="doc"><span><b>To-do 2: Follow up with manufacturer on decision</b><br><span class="small">Due ${fmt(s.tasks[1].due)}. Your reminder to chase the manufacturer if you hear nothing. Closes itself when you record the decision.</span></span><span class="chip amber">Open</span></div>
+    <div class="alert team" style="margin:0"><b>If the manufacturer approves</b><br><span class="small">PO details are required.</span>
+      <div class="grid2" style="margin-top:8px">${field("po","PO number","text","e.g. PO-48213")}${field("poDate","PO date","date")}</div>
+      <div style="margin-top:10px"><button class="btn" type="button" data-act="approve">Record: the manufacturer approved</button></div>
+    </div>
+    <div class="alert team" style="margin:0"><b>If the manufacturer denies</b><br><span class="small">Their comments are required.</span>
+      <div style="margin-top:8px">${field("comments","the manufacturer comments","area","Why was it denied?")}</div>
+      <div style="margin-top:10px"><button class="btn warn" type="button" data-act="deny">Record: the manufacturer denied</button></div>
+    </div>
+    ${sampleBtn}`;
+  }
+  if(st==="fulfil"){
+    const t3 = s.tasks.find(t=>t.n===3), t4 = s.tasks.find(t=>t.n===4);
+    h += `<div class="doc"><span><b>To-do ${t4?"4: Confirm delivery at site":"3: Confirm shipment (courier, tracking)"}</b><br><span class="small">Due ${fmt((t4||t3).due)}. Owner: you.</span></span><span class="chip amber">Open</span></div>
+    <p><span class="chip">Shipment field: ${esc(s.f.shipSub)}</span> PO ${esc(s.f.po)} is already on the case. Status stays Under Review / Pending Determination until delivery.</p>
+    <div class="grid2">${field("courier","Courier","text","e.g. FedEx")}${field("tracking","Tracking number","text")}</div>
+    <div class="grid2">${field("shipDate","Shipment date","date")}${field("notes","Fulfillment notes (optional)","text")}</div>
+    ${sampleBtn}
+    ${s.f.shipSub==="Pending Shipment"?`<button class="btn ghost" type="button" data-act="ship">Complete to-do 3: shipment confirmed</button>`:""}
+    <button class="btn" type="button" data-act="complete">Complete to-do 4: delivery confirmed, close the case</button>`;
+  }
+  if(st==="done" || st==="denied" || st==="cancelled"){
+    h += `<button class="btn" type="button" data-act="restart">Run another request from the start</button>`;
+  }
+  if(["new","docs","ready","sent","fulfil"].includes(st)){
+    h += `<button class="btn ghost" type="button" data-act="cancel">Cancel this case (opened in error)</button>`;
+  }
+  return h;
+}
+
+function renderMove(){
+  const c = COPY[s.stage];
+  let h = `<h3>${c.t}</h3><div class="who">Who acts: ${c.who}</div><p>${c.p}</p><div class="techbox tech">${esc(c.tech)}</div>`;
+  h += `<div class="actions">${actionsHtml()}</div>`;
+  if(s.err){
+    h += `<div class="alert ${s.err.kind==="team"?"team":""}" role="alert"><b>${esc(s.err.title)}</b><br>${esc(s.err.msg)}${s.err.tech?`<div class="techbox tech">${esc(s.err.tech)}</div>`:""}</div>`;
+  }
+  $("#movePanel").innerHTML = h;
+}
+
+function render(){
+  const ae = document.activeElement;
+  renderRoute(); renderMove(); renderCase(); renderLog();
+  if(s.err){ const a = $("#movePanel .alert"); if(a) a.scrollIntoView({block:"nearest"}); }
+}
+
+document.addEventListener("click",e=>{
+  const b = e.target.closest("[data-act]");
+  if(b){ act(b.dataset.act, b.dataset.i); }
+});
+
+/* ---------- mode toggle ---------- */
+function setMode(m){
+  document.body.dataset.mode = m;
+  $("#m-plain").setAttribute("aria-pressed", m==="plain");
+  $("#m-tech").setAttribute("aria-pressed", m==="tech");
+}
+$("#m-plain").addEventListener("click",()=>setMode("plain"));
+$("#m-tech").addEventListener("click",()=>setMode("tech"));
+
+/* ---------- 12-month calculator ---------- */
+function calc(){
+  const v = $("#poCalc").value;
+  const out = $("#calcOut");
+  if(!v){ out.className="verdict"; out.textContent="Pick a date to see the result."; return; }
+  const days = Math.floor((NOW - new Date(v+"T00:00:00"))/86400000);
+  const mode = $("#modeCalc").value;
+  if(days<0){ out.className="verdict"; out.textContent="That date is in the future. Pick a past date."; return; }
+  if(days<=365){
+    const until = addDays(new Date(v+"T00:00:00"),366);
+    out.className = "verdict " + (mode==="block"?"no":"yes");
+    out.textContent = mode==="block"
+      ? `Blocked. That kit was approved ${days} days ago. A new request for this site opens on ${fmt(until)}.`
+      : `Warning shown, request allowed. That kit was approved ${days} days ago, inside the 365-day window.`;
+  } else {
+    out.className="verdict yes";
+    out.textContent = `Allowed. That kit was approved ${days} days ago, outside the 365-day window.`;
+  }
+}
+$("#poCalc").value = iso(addDays(NOW,-200));
+$("#poCalc").addEventListener("input",calc);
+$("#modeCalc").addEventListener("change",calc);
+
+/* ---------- decisions ---------- */
+const DEC = [
+  ["D1 (decided)","Which Status and Sub Status values does Product Replacement use?","Exactly the Free Goods values already in place since the October alignment. No new values, nothing newly assigned. The detail inside Under Review is carried by to-dos.","Decided 2026-11-05/06 (Ms. Reinhardt, Ali)"],
+  ["D2 (decided)","Does a missing HIPAA stop the case?","No. The case is created and the program's Missing Information configuration adds the existing item Valid HIPAA. If it never arrives the case is cancelled as MI Not Received.","Decided 2026-11-05 (Ms. Cross, Ms. Reinhardt)"],
+  ["D3","Are the five documents right, and is any of them optional?","Summary of Benefits, PA Outcome, Appeal Denial documentation, EOB/ERA and Product Invoice. Open item 1 from July.","Program business team"],
+  ["D4","How strict is the one-product rule, and should it block or only warn?","Per patient per site, rolling 12 months from the PO date (TD-1431). Try both modes in the calculator above.","Business"],
+  ["D5","Is it right that staff create the case by hand from the enrolled patient's record?","Enrollment is the gateway; the first program has no Enrollment case on the new setup yet, so nothing can create it automatically.","Rachel"],
+  ["D6","Can we retire the Financial Assistance footprint?","Remove Product Replacement from the Financial Assistance Sub Type list and move seven eligibility fields off its page. No records use them.","ARDC (direction confirmed 11/05)"],
+  ["D7","Where do the manufacturer contacts live?","Proposed: one text field on the Program record, shown in to-do 1. Nothing hard-coded.","Ms. Reinhardt, Rachel"],
+  ["D8","Should PAP, Quick Start and Bridge also move HIPAA from a creation rule to a Missing Information item?","Product Replacement is exempted; the other three keep the creation rule until the business decides.","Ms. Reinhardt"],
+  ["D9","Approved at the manufacturer's decision, or only at delivery?","Unified semantics would set Approved when the manufacturer approves (like every other case type) and track shipping on the closed case with to-dos 3 and 4. The July rule (Approved only at delivery) is kept in this design until decided.","Rachel, Ms. Reinhardt"]
+];
+function renderDecisions(){
+  const done = JSON.parse(JSON.stringify(window.__dec||{}));
+  $("#dgrid").innerHTML = DEC.map(d=>`<div class="decision ${done[d[0]]?"decided":""}">
+    <input type="checkbox" id="chk-${d[0]}" data-dec="${d[0]}" ${done[d[0]]?"checked":""}>
+    <label for="chk-${d[0]}" class="q">${d[0]}. ${d[1]}</label>
+    <div class="rest"><p class="small" style="margin:0 0 6px">${d[2]}</p><span class="chip">Owner: ${d[3]}</span></div>
+  </div>`).join("");
+  const n = Object.values(done).filter(Boolean).length;
+  $("#dcount").textContent = n+" of 9";
+}
+window.__dec = {};
+$("#dgrid").addEventListener("change",e=>{
+  const id = e.target.dataset.dec;
+  if(id){ window.__dec[id] = e.target.checked; renderDecisions(); const el = document.getElementById("chk-"+id); if(el) el.focus(); }
+});
+
+/* ---------- build plan ---------- */
+const STORIES = [
+  ["1. Configuration","1 day",1,"Set up the building blocks.",["No Status or Sub Status change","PO Date field","Five Missing Information list values and one config row per program (with Valid HIPAA)","HIPAA creation rule exempted for Product Replacement","Five fields renamed from the client name to Manufacturer (zero data; one stray layout cleaned)","Program switches all off","Financial Assistance clean-up (D6)"]],
+  ["2. Screens","1 day",1,"Show the right fields to the right people.",["Three Dynamic Forms sections on the Free Goods page, visible for Product Replacement only","Same sections on the Case-Free Goods layout for mobile and classic parity","Help text on the Path for Product Replacement"]],
+  ["3. Documentation","1 day",1,"Track HIPAA and the five documents.",["Add Product Replacement to the Missing Information check automation","Under Review gate (no open items)","Required Documentation Complete set automatically"]],
+  ["4. To-do chain","1.5 days",1.5,"Four to-dos that carry the sub-stage.",["New task type Manufacturer Review Request","To-do 1 Submit packet (48 h) created at Under Review; completion stamps the submission and creates to-do 2","To-do 2 Follow up (48 h), closed when the decision is recorded","To-do 3 Confirm shipment, created on approval; completion sets Shipped and creates to-do 4","To-do 4 Confirm delivery; completion sets Shipment Complete and closes the case Approved"]],
+  ["5. Decision and fulfillment","1 day",1,"Handle approval, denial and delivery.",["Decision automation (Approved: Pending Shipment + to-do 3; Denied: Denied / Coverage Criteria)","Delivery automation (Approved / No Restrictions on to-do 4)","Three safety rules: approval needs PO, denial needs comments, delivery needs proof"]],
+  ["6. 12-month site rule","0.5 day",0.5,"Stop duplicate replacements for the same site.",["Extend the fast-field-update automation for Product Replacement","Block or warn, per decision D4"]],
+  ["7. Reports","0.5 day",0.5,"Let the team see what is happening.",["Product Replacement by open to-do","Submitted and awaiting decision","Overdue to-dos","Approvals and denials by facility","Pending shipment","Turnaround time from submission to decision"]],
+  ["8. Permissions","0.5 day",0.5,"Make sure the right people can see and edit.",["Field access for the 19 fields on the Case Manager and Support Associate sets and the program’s permission set","Task type visibility","Do not reuse Fennec Program Access for this"]],
+  ["9. Ops walkthrough, then testing","Not yet sized",0,"Show the broad operator group first, then test.",["Walkthrough with the operator group (Savannah, Sarah, Darleya, Jessica and peers), this page then the CRM","User acceptance test script"]]
+];
+$("#stories").innerHTML = STORIES.map(x=>`<details class="story"><summary><span class="t"><span>${x[0]}</span><span class="small" style="font-weight:400">${x[3]}</span></span><span><span class="small">${x[1]}</span><div class="sbar" style="width:${Math.round(x[2]*100)}%;min-width:${x[2]?4:0}px"></div></span></summary><ul>${x[4].map(i=>`<li>${i}</li>`).join("")}</ul></details>`).join("");
+
+/* ---------- boot ---------- */
+render(); calc(); renderDecisions();
+})();
+</script>
+</body>
+</html>
