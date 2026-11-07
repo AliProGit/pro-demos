@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staff-to-doctor: three copies of one truth (provider portal, 2026-11-06)</title>
+<style>
+:root{--ink:#172b4d;--ink2:#42526e;--ink3:#6b778c;--line:#dfe1e6;--panel:#fff;--surface:#f4f5f7;--blue:#0052cc;--red:#bf2600;--redbg:#ffebe6;--green:#006644;--greenbg:#e3fcef;--amber:#974f0c;--amberbg:#fffae6;--heroku:#5a3b8a;--herokubg:#eee8f8;--ccr:#0b6e4f;--ccrbg:#e6f4ef;--spa:#8a4b08;--spabg:#fdf1e5}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,Arial,sans-serif;background:var(--surface);color:var(--ink);font-size:15px;line-height:1.45}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:10px 22px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px}
+header .sub{color:var(--ink3);font-size:13px}
+.hdr-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+button.ghost{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink2)}
+button.ghost:hover{background:var(--surface)}
+.wrap{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 52px)}
+nav{border-right:1px solid var(--line);background:var(--panel);padding:14px 0;position:sticky;top:52px;align-self:start;max-height:calc(100vh - 52px);overflow:auto}
+nav a{display:block;padding:8px 20px;color:var(--ink2);text-decoration:none;font-size:14px;border-left:3px solid transparent}
+nav a.on{border-left-color:var(--blue);color:var(--blue);background:#eaf0fb;font-weight:600}
+nav .t{color:var(--ink3);font-size:12px;padding:6px 20px;margin-top:8px;letter-spacing:.04em}
+nav .hint{color:var(--ink3);font-size:11.5px;padding:14px 20px 0;line-height:1.5}
+main{padding:26px 36px 80px;max-width:1280px;min-width:0}
+section{display:none}section.on{display:block}
+h2{font-size:26px;margin:0 0 6px}
+.lede{color:var(--ink2);font-size:17px;max-width:70ch;margin:0 0 18px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.tile .v{font-size:30px;font-weight:700}
+.tile .l{color:var(--ink2);margin-top:2px}
+.tile .d{color:var(--ink3);font-size:12.5px;margin-top:6px}
+.tile.bad .v{color:var(--red)}.tile.ok .v{color:var(--green)}.tile.warn .v{color:var(--amber)}
+.callout{border-left:4px solid var(--red);background:var(--redbg);padding:12px 16px;border-radius:6px;margin:16px 0}
+.callout.ok{border-color:var(--green);background:var(--greenbg)}
+.callout.warn{border-color:var(--amber);background:var(--amberbg)}
+table{border-collapse:collapse;width:100%;background:var(--panel);font-size:13.5px;margin:12px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f0f2f5;font-weight:600}
+td.bad{background:var(--redbg)}td.ok{background:var(--greenbg)}td.warn{background:var(--amberbg)}
+.steps{display:grid;gap:10px;margin-top:14px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;cursor:pointer;display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start}
+.step .n{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.step h3{margin:0 0 4px;font-size:16px}
+.step .who{color:var(--ink3);font-size:12.5px}
+.step .more{display:none;grid-column:2/4;color:var(--ink2);border-top:1px dashed var(--line);padding-top:10px;margin-top:6px}
+.step.open .more{display:block}
+.step .chev{color:var(--ink3);font-size:18px}
+.stores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0}
+.store{border-radius:12px;padding:16px 18px;border:2px solid}
+.store h3{margin:0 0 6px;font-size:16px}
+.store.heroku{border-color:var(--heroku);background:var(--herokubg)}
+.store.ccr{border-color:var(--ccr);background:var(--ccrbg)}
+.store.spa{border-color:var(--spa);background:var(--spabg)}
+.store .kv{font-size:13px;margin:4px 0}
+.store .kv b{display:inline-block;min-width:92px;color:var(--ink2)}
+.arrows{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;color:var(--ink3);font-size:12.5px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid}
+.pill.no{color:var(--red);border-color:var(--red);background:var(--redbg)}
+.pill.yes{color:var(--green);border-color:var(--green);background:var(--greenbg)}
+.pill.part{color:var(--amber);border-color:var(--amber);background:var(--amberbg)}
+.plan li{margin:8px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;white-space:pre-wrap;font-size:13.5px;line-height:1.5}
+.notes{display:none;background:#fff8e1;border:1px dashed #e0b400;padding:10px 14px;border-radius:8px;margin:12px 0;font-size:13.5px}
+body.notes .notes{display:block}
+.switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.switch button{border:0;background:#fff;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink2)}
+.switch button.on{background:var(--blue);color:#fff}
+.target-only{display:none}.today-only{display:block}
+body.target .target-only{display:block}body.target .today-only{display:none}
+@media (max-width:1000px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}.tiles{grid-template-columns:repeat(2,1fr)}.stores,.arrows,.two{grid-template-columns:1fr}}
+@media print{nav,header .hdr-r{display:none}section{display:block;page-break-after:always}}
+</style>
+<!-- embed-enhance v1 --><style id="embed-css">html.embedded .embed-fs{position:fixed;right:12px;bottom:12px;z-index:9999;background:#0052cc;color:#fff;font:600 12px/1 "Segoe UI",system-ui,sans-serif;padding:9px 12px;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.92}
+html.embedded .embed-fs:hover{opacity:1;background:#0747a6}
+html.embedded{scrollbar-width:thin}
+html.embedded header{padding:8px 16px;gap:12px}
+html.embedded header h1{font-size:17px}
+html.embedded header .sub{font-size:12px}
+html.embedded .wrap{grid-template-columns:230px 1fr}
+html.embedded nav a{padding:6px 16px;font-size:13.5px}
+html.embedded main{padding:18px 22px 70px;max-width:none}
+@media (max-width:1000px){
+ html.embedded .wrap{grid-template-columns:1fr}
+ html.embedded nav{display:flex;flex-wrap:wrap;gap:4px 6px;padding:8px 10px;position:sticky;top:52px;z-index:4;border-right:0;border-bottom:1px solid var(--line);max-height:none}
+ html.embedded nav .t{width:100%;padding:4px 2px 0;margin:0}
+ html.embedded nav .hint{display:none}
+ html.embedded nav a{padding:4px 10px;border:1px solid var(--line);border-left:1px solid var(--line);border-radius:999px;font-size:12.5px}
+ html.embedded main{padding:14px 14px 70px}
+}</style><script id="embed-js">(function(){var f=false;try{f=window.self!==window.top}catch(e){f=true}
+var q=location.search;if(q.indexOf('embed=0')>-1)f=false;if(q.indexOf('embed=1')>-1)f=true;
+if(!f)return;document.documentElement.classList.add('embedded');
+document.addEventListener('DOMContentLoaded',function(){var a=document.createElement('a');a.className='embed-fs';
+a.href=location.origin+location.pathname+location.hash;a.target='_blank';a.rel='noopener';a.title='Open this demo in its own tab';
+a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</script>
+</head>
+<body>
+<header>
+  <div><h1>Staff-to-doctor: three copies of one truth</h1><div class="sub">Provider portal access for office staff, clinical staff and practice admins. Prod and Pro Demo as read on 2026-11-06. Staff names only, no patient data.</div></div>
+  <div class="hdr-r">
+    <div class="switch" id="modeSwitch"><button data-m="today" class="on">TODAY</button><button data-m="target">TARGET</button></div>
+    <button class="ghost" onclick="document.body.classList.toggle('notes')" title="presenter notes (N)">Notes</button>
+  </div>
+</header>
+<div class="wrap">
+<nav id="nav"></nav>
+<main id="main">
+
+<section data-k="s1" data-t="1  The question">
+<h2>1. The question</h2>
+<p class="lede">Rachel asked why her portal test persona is tied to Elizabeth Smyers in the portal but nothing in the CRM shows that tie. The answer is bigger than one persona: the rule "staff see only the patients of the doctors they support" is stored in three places that never meet.</p>
+<div class="tiles">
+  <div class="tile bad"><div class="v">3</div><div class="l">copies of the staff-to-doctor truth</div><div class="d">Heroku database, Contact-Contact Relations, Staff Physician Assignment</div></div>
+  <div class="tile bad"><div class="v">0</div><div class="l">assignment rows in production</div><div class="d">Staff_Physician_Assignment__c, Practice_Admin_Role__c, Practice_Clinic_Association__c</div></div>
+  <div class="tile warn"><div class="v">152</div><div class="l">staff ↔ doctor relations built by Ops in prod</div><div class="d">Contact-Contact Relations, Nov 2026 (Sara Bryant 114, Rachel 38); read by no code</div></div>
+  <div class="tile bad"><div class="v">18,597</div><div class="l">patients the prod HCP endpoint returns unfiltered</div><div class="d">HcpPortalPatientListResource filters by program only; fix waiting in UAT since 10/14 (TD-1793)</div></div>
+</div>
+<div class="callout">The portal decides who sees which patient from its own database. Salesforce cannot show it, audit it, or stop it.</div>
+<div class="notes">Open with Rachel's question, then widen it. The number that lands is "three copies". Keep the 18,597 for section 6 unless someone asks about risk first.</div>
+</section>
+
+<section data-k="s2" data-t="2  The journey">
+<h2>2. The journey, step by step</h2>
+<p class="lede">Click a step for the detail. Dates and names are from Jira change history and the org metadata.</p>
+<div class="steps" id="steps"></div>
+<div class="notes">The story is: a good design, two teams building on different assumptions, a tester who found it, and tickets closed before the finding became work. Nobody's villain; a missing owner.</div>
+</section>
+
+<section data-k="s3" data-t="3  Three stores">
+<h2>3. The three stores</h2>
+<p class="lede">Who writes each copy, who reads it, and what it has in it.</p>
+<div class="stores">
+  <div class="store heroku"><h3>Heroku database (LaunchPad Lab)</h3>
+    <div class="kv"><b>Written by</b> practice admin in the portal</div>
+    <div class="kv"><b>Read by</b> the portal app</div>
+    <div class="kv"><b>Visible in CRM</b> <span class="pill no">no</span></div>
+    <div class="kv"><b>Rows</b> unknown to us</div>
+    <div class="kv"><b>Used for</b> the staff patient list users actually see</div></div>
+  <div class="store ccr"><h3>Contact-Contact Relation (Health Cloud)</h3>
+    <div class="kv"><b>Written by</b> Rachel, Sara Bryant on the contact page</div>
+    <div class="kv"><b>Read by</b> <span class="pill no">no code</span></div>
+    <div class="kv"><b>Visible in CRM</b> <span class="pill yes">yes</span></div>
+    <div class="kv"><b>Rows</b> prod 152 staff ↔ practitioner (Nov 2026); Pro Demo 92</div>
+    <div class="kv"><b>Roles</b> Office Staff, Clinical Staff, Practice Admin, Multi Site Staff ↔ Practitioner</div></div>
+  <div class="store spa"><h3>Staff Physician Assignment (custom, the design)</h3>
+    <div class="kv"><b>Written by</b> <span class="pill no">nobody</span> (4 hand-made rows in Pro Demo)</div>
+    <div class="kv"><b>Read by</b> StaffPatientListResource, ProSpectusPatientController, deactivation flow</div>
+    <div class="kv"><b>Visible in CRM</b> <span class="pill part">object exists, no UI in use</span></div>
+    <div class="kv"><b>Rows</b> prod 0; Pro Demo 4</div>
+    <div class="kv"><b>Has</b> practice, staff type, access level, active flag</div></div>
+</div>
+<div class="arrows today-only"><div>→ feeds the portal list today</div><div>→ feeds nothing</div><div>→ code reads an empty table</div></div>
+<div class="arrows target-only"><div>→ writes to the CRM, reads from the CRM</div><div>→ the master: one place Ops maintains</div><div>→ mirror kept by a flow for the existing code</div></div>
+<div class="callout warn today-only">Add a fourth half-copy: Contact.AccountId (the staff member's practice). 16 Office Staff and 9 Clinical Staff contacts in Pro Demo have none, so even the practice join fails.</div>
+<div class="callout ok target-only">Target: Contact-Contact Relation is the single source. A flow mirrors it into Staff Physician Assignment with the practice derived from the doctor's account. The portal writes to and reads from the CRM.</div>
+<div class="notes">Toggle TODAY / TARGET here. The target does not delete anything; it picks a master and derives the rest.</div>
+</section>
+
+<section data-k="s4" data-t="4  Who did what">
+<h2>4. Who did what</h2>
+<p class="lede">Real names. Pro Demo scrambles display names (David Berman shows as "Jesus Hubbard", Rachel as "Isabel Walton"); prod CreatedBy shows the deployer, not the author.</p>
+<table><tr><th>Piece</th><th>Who</th><th>When</th><th>Evidence</th></tr>
+<tr><td>Role design, the assignment-object rule</td><td>David Berman (PRO, left; user inactive since 2026-03-27)</td><td>2026-02-11</td><td>TD-9, TD-10, TD-11, TD-12, TD-22</td></tr>
+<tr><td>Review, test scenarios, "deployed to Pro-Demo"</td><td>Smitha Rai (PRO QA/PM, left 2026-07)</td><td>Feb to Jun 2026</td><td>TD-9, TD-12, TD-22</td></tr>
+<tr><td>StaffPatientListResource, AdminPortalPatientListResource, HcpPortal* classes</td><td>created under Ali's Pro Demo user</td><td>2026-03-06 to 03-09</td><td>Tooling CreatedBy</td></tr>
+<tr><td>ProSpectusPatientController, CaseController, PatientListResource, Caregiver* classes</td><td>David Berman</td><td>2026-03-16 to 03-20</td><td>Tooling CreatedBy (scrambled "Jesus Hubbard")</td></tr>
+<tr><td>Portal app and its own assignment store</td><td>Ifat Ribon, later Ji Park, Carlos Lino (LaunchPad Lab)</td><td>Mar 2026 onward</td><td>TD-22 "understand her build", TD-708</td></tr>
+<tr><td>Reciprocal roles and Contact-Contact Relations</td><td>Rachel Johnson; Sara Bryant (prod, Nov 2026)</td><td>Apr to Nov 2026</td><td>CreatedBy counts</td></tr>
+<tr><td>Prod deployment of HCP and enrollment classes only</td><td>Ali Mammadov</td><td>2026-07-31</td><td>Tooling CreatedBy in prod</td></tr>
+<tr><td>HCP list filter fix (UAT, Pro Demo)</td><td>Ali Mammadov</td><td>2026-10-14</td><td>TD-1793</td></tr>
+</table>
+<h3>Who closed the tickets</h3>
+<table><tr><th>Ticket</th><th>Last real finding</th><th>Closed Done by</th><th>When</th></tr>
+<tr><td>TD-9 Office Staff</td><td>UAT 3/10</td><td>Smitha Rai</td><td>2026-03-16</td></tr>
+<tr><td>TD-11 Practice Admin</td><td>Rachel 4/15: "needs to be reworked"; Ali 5/12 BLOCKED</td><td class="warn">Smitha Rai (BLOCKED → Prod Ready → Done in one minute)</td><td>2026-06-02</td></tr>
+<tr><td>TD-12 Multi-location</td><td>Smitha 4/07: "need end-to-end testing from the portal side"</td><td class="warn">Ali Mammadov (BLOCKED → Done in one minute)</td><td>2026-05-12</td></tr>
+<tr><td>TD-22 Clinical Staff</td><td>Rachel 5/08: relation shows the doctor, does not filter the list; BLOCKED</td><td class="warn">Smitha Rai</td><td>2026-06-02</td></tr>
+<tr><td>TD-14 Epic</td><td>"all items Done"</td><td>Nicole Cross</td><td>2026-08-03</td></tr>
+</table>
+<div class="callout warn">Not one person's fault. The design said "the portal writes the assignment", the vendor kept it in Heroku, QA closed on "deployed", the tester's finding never became a ticket. The missing piece is an owner for the contract between the portal and Salesforce. That is the architect's job from now on.</div>
+<div class="notes">Say the TD-12 line yourself before anyone else does. Then move to "what the owner does now".</div>
+</section>
+
+<section data-k="s5" data-t="5  Prod vs Pro Demo">
+<h2>5. Prod versus Pro Demo, end to end</h2>
+<table><tr><th>Item</th><th>Prod</th><th>Pro Demo</th><th>davidb / fullUAT</th></tr>
+<tr><td>The three assignment objects</td><td>exist (2026-07-22 / 07-30)</td><td>exist</td><td>exist</td></tr>
+<tr><td>Rows in them</td><td class="bad">0 / 0 / 0</td><td class="warn">4 / 0 / 0, all hand-made</td><td>davidb 3; fullUAT 0</td></tr>
+<tr><td>Staff and admin Apex (5 classes)</td><td class="bad">none of the five</td><td>4 of 5</td><td>davidb 5; fullUAT 4</td></tr>
+<tr><td>HcpPortalPatientListResource</td><td class="bad">filters by programId only: every patient of the program</td><td class="ok">10/14 fix: HCP identity required, only linked patients</td><td class="ok">fullUAT has the fix</td></tr>
+<tr><td>Heroku user may call it</td><td class="bad">yes (PRO_Heroku_Portal_Apex_Access)</td><td>yes</td><td>—</td></tr>
+<tr><td>Staff ↔ practitioner Contact-Contact rows</td><td>Clinical Staff 61, Practice Admin 13, Office Staff 0 (Nov 2026)</td><td>Office Staff 38, Clinical 15, Multi Site 5, Practice Admin 4</td><td>—</td></tr>
+<tr><td>Reciprocal roles for staff</td><td>"office staff" ↔ Practitioner only (Rachel 5/21)</td><td>all four roles ↔ Practitioner</td><td>—</td></tr>
+<tr><td>Staff contacts with a portal user id</td><td>11 (7 Clinical Staff Active, 3 Office Staff Invited, 1 Practice Admin Active)</td><td>17</td><td>—</td></tr>
+<tr><td>Practitioners invited to the portal</td><td class="ok">0 (1,315 Not Invited)</td><td>test personas</td><td>—</td></tr>
+<tr><td>Patients with a portal user id</td><td class="ok">0</td><td>test patients</td><td>—</td></tr>
+<tr><td>Apex REST traffic</td><td class="ok">one small log file (11/04): effectively idle</td><td>LPL testing</td><td>—</td></tr>
+</table>
+<div class="notes">Green in the prod column means "the risk is latent, not live". That is what buys us the time to fix it properly.</div>
+</section>
+
+<section data-k="s6" data-t="6  The risk">
+<h2>6. The risk we cannot take</h2>
+<p class="lede">The production HCP patient list returns all patients of a program, with name, birth date, address, phone and e-mail, to any caller authenticated as the Heroku user.</p>
+<div class="two">
+  <div class="tile bad"><div class="v">18,597</div><div class="l">person accounts in prod</div><div class="d">the size of one unfiltered call</div></div>
+  <div class="tile ok"><div class="v">0</div><div class="l">practitioners live on the prod portal</div><div class="d">1,315 Not Invited; endpoint not being called today</div></div>
+</div>
+<div class="callout">Rule: the filtered class (TD-1793, in UAT and Pro Demo since 10/14) is deployed to production before any practitioner or staff member is invited. Luminopia Phase 2 (TD-1788) is the first date that matters.</div>
+<p>What the fixed version does: requires an HCP identity (contact id, portal user id or NPI), returns only patients linked to that HCP through a case prescriber or servicing provider or an active patient-provider row, and never returns a roster.</p>
+<div class="notes">Rachel's UAT pass is the gate. If it does not come this week, Ali runs the script and records it on TD-1793.</div>
+</section>
+
+<section data-k="s7" data-t="7  Test scenarios">
+<h2>7. Test scenarios</h2>
+<p class="lede">Run in Pro Demo first (davidb for code changes), then prod after the fix lands. Expected result today versus target.</p>
+<table id="tests"><tr><th>#</th><th>Scenario</th><th>Setup</th><th>Action</th><th>Today</th><th>Target</th></tr></table>
+<div class="notes">T1, T2 and T5 are the ones to show live. T5 is Rachel's case.</div>
+</section>
+
+<section data-k="s8" data-t="8  What we do">
+<h2>8. What we do</h2>
+<p class="lede">One source of truth in the CRM; everything else derives from it.</p>
+<div class="two">
+  <div class="store ccr"><h3>Option A: Contact-Contact Relation as master</h3><p>Already maintained by Ops (152 rows in prod), standard Health Cloud, visible on every contact page, has role and active flag. Missing: practice (derive from the doctor's account) and code that reads it.</p><p><span class="pill yes">recommended</span></p></div>
+  <div class="store spa"><h3>Option B: Staff Physician Assignment as master</h3><p>Read by the code and the deactivation flow, has practice, staff type and access level. Missing: no UI people use, no rows, and it asks Ops to maintain a second list.</p><p><span class="pill part">becomes the mirror</span></p></div>
+</div>
+<ol class="plan">
+  <li><b>Mirror flow (davidb first).</b> Record-triggered flow on Contact-Contact Relation: when one side is a Practitioner and the other is Office Staff, Clinical Staff, Practice Admin or Multi Site Staff, upsert a Staff Physician Assignment row (staff, doctor, practice from the doctor's account, staff type, active). One-time backfill of today's 152 prod rows. Existing code and the deactivation flow keep working.</li>
+  <li><b>Fix the two readers.</b> StaffPatientListResource takes a contact id instead of the logged-in integration user; ProSpectusPatientController gets its case query restored; both check the program.</li>
+  <li><b>Deploy the TD-1793 HCP filter to prod</b> before any practitioner is invited.</li>
+  <li><b>LaunchPad Lab:</b> write the assignment to the CRM when a practice admin makes it, and read the patient list from the CRM endpoints with the staff contact id. Drop the private copy.</li>
+  <li><b>Clean-up:</b> merge the two inactive Elizabeth Smyers duplicates; set Contact.AccountId on staff contacts without a practice; re-open TD-11 and TD-12 as new tickets.</li>
+  <li><b>Fold into the access-model redesign</b> (program-key sharing): this is the external half of "who can see which patient".</li>
+</ol>
+<p>Owner: Ali for 1, 2, 3, 5; Ji and Carlos for 4; Ms. Reinhardt confirms A over B and the re-opening.</p>
+<div class="notes">If asked "why not just fix the portal": because the CRM must be able to answer "who can see this patient" without asking the vendor. That is the audit requirement.</div>
+</section>
+
+<section data-k="s9" data-t="9  Messages">
+<h2>9. Messages</h2>
+<div class="two">
+<div><h3>To Ifat, Ji, Carlos (LaunchPad Lab)</h3><div class="msg">Subject: Provider portal: where the staff-to-doctor assignment lives, and what I need from your side
+
+When a practice admin assigns staff to a doctor in the portal, the assignment stays in the Heroku database; nothing reaches Salesforce. Our assignment objects have zero rows in production, our staff endpoints read them and return nothing, and Ops maintains the same links in Salesforce as Contact-Contact Relations that the portal never sees. Rachel found this on 5/08 (TD-22); it was never followed up, and that is on us too.
+
+I need: (1) where the portal stores the assignment and which Salesforce Contact Id it holds for the doctor (for "Rachel paige test": the active Elizabeth Smyers or a duplicate?); (2) which endpoints and parameters it calls for staff patient lists; (3) whether the portal can write the assignment to Salesforce and read it back, with Salesforce holding the single copy as a Contact-Contact Relation; (4) whether production is calling /HCPPortal/v1/patients/ today, because the production version is unfiltered and the filtered one (TD-1793) goes to production before any practitioner is invited.
+
+A 30-minute call this week would be fastest. I will bring the journey document and tests T1 to T12.</div></div>
+<div><h3>Internal (Ms. Reinhardt, Ms. Cross, Rachel)</h3><div class="msg">Subject: Provider portal staff access: three copies of the truth, one fix plan
+
+The staff-to-doctor rule lives in three places that do not meet: Heroku (what the portal uses), Contact-Contact Relations (what Ops maintains, read by no code), and the empty assignment objects the Apex reads. Production lacks the staff endpoints, and its HCP patient list is unfiltered until TD-1793 is deployed. No practitioner is live in production, so the risk is latent; it must be closed before Luminopia Phase 2.
+
+TD-9, TD-11, TD-12, TD-22 were closed Done although the rework and Rachel's 5/08 finding were never done. Not one person's fault; a missing owner. I own it from here.
+
+Plan: Contact-Contact Relation becomes the master; a flow mirrors it into Staff Physician Assignment; the staff endpoints take a contact id; the TD-1793 filter goes to production before any HCP invite; LaunchPad Lab writes assignments to the CRM; TD-11 and TD-12 are re-opened. Decision needed: confirm Contact-Contact Relation as master. Ask to Rachel: run the TD-1793 UAT script this week.</div></div>
+</div>
+</section>
+
+</main>
+</div>
+<script>
+const steps=[
+ ["February 2026: the design","David Berman, reviewed by Smitha Rai and Myra","Stories TD-9 Office Staff, TD-22 Clinical Staff, TD-11 Practice Admin, TD-12 Multi-location under epic TD-14. Rule: staff see only patients linked to a doctor in their Staff Physician Assignment rows, and that doctor must belong to their practice. Smitha asked what happens when a doctor is deactivated; Myra asked the user guide to say staff lose access until a new doctor is assigned."],
+ ["March 2026: the Salesforce build","Ali (two classes, 3/09), David Berman (the rest, 3/16 to 3/20), in Pro Demo","Objects Staff Physician Assignment, Practice Admin Role, Practice Clinic Association. Apex REST: StaffPatientListResource, AdminPortalPatientListResource, ProSpectusPatientController, CaseController, PatientListResource. A flow deactivates assignments when the doctor is deactivated. Smitha closed TD-9 on 3/16: 'deployed to Pro-Demo'."],
+ ["March to May 2026: the portal build","LaunchPad Lab: Ifat Ribon, then Ji Park and Carlos Lino","Ruby app on Heroku, one Salesforce integration user. The app keeps its own tables for portal users and for which staff member supports which doctor. It never writes the Salesforce assignment objects, although the Heroku user may. To list a staff member's patients it resolves the doctors itself and calls the HCP endpoints."],
+ ["April to May 2026: testing finds the gap","Rachel Johnson","TD-11 4/15: 'design is being reconsidered… needs to be reworked'. TD-22 5/08: 'the Contact-Contact relationship is working to display the doctor, but is not showing the site, and the relationship is not filtering down the Patient List access. Additional work with Ifat will be needed to understand her build.' Both set to BLOCKED."],
+ ["May to August 2026: the tickets are closed anyway","Ali (TD-12, 5/12), Smitha (TD-11 and TD-22, 6/02), Nicole (epic, 8/03)","TD-12 went BLOCKED → Done in one minute; TD-11 BLOCKED → Prod Ready → Done in one minute; TD-22 closed with Rachel's blocker still open. Nicole closed the epic because all children said Done. Smitha left in July; David's user was already inactive."],
+ ["April to November 2026: Ops builds what they can see","Rachel Johnson, Sara Bryant","Reciprocal roles created in Pro Demo (Office Staff 4/15, Multi Site 4/15, Clinical 5/15, Practice Admin 6/12) and in prod ('office staff', 5/21). Staff linked to doctors as Contact-Contact Relations: Pro Demo 92 rows; prod 152 rows this month. No code reads them."],
+ ["July 2026: production gets half","Ali Mammadov","Only HcpPortalPatientListResource, HcpPortalPatientResource and the enrollment classes went to prod (7/31). The staff and admin classes never did. Prod: 0 assignment rows, no practitioner invited, no patient with a portal id, Apex REST idle. The prod HCP list filters by program only; the fixed version (10/14, TD-1793) waits in UAT and Pro Demo."],
+ ["November 2026: today","Rachel asks, Ali answers","Rachel cannot find the tie between her persona and Elizabeth Smyers: it is in Heroku only. The links she and Sara maintain in the CRM are read by nobody. Three copies, none connected. This page is the plan to make it one."]
+];
+const tests=[
+ ["T1","HCP sees only own patients","Doctor A prescribes 3 patients in program P; doctor B 2 others","GET /HCPPortal/v1/patients/?programId=P&hcpContactId=A","Pro Demo 3. <b>Prod: all patients of P</b>","3 in every org"],
+ ["T2","HCP identity missing","same","GET …?programId=P, no HCP identity","Pro Demo 400. Prod 200 with the full roster","400 everywhere"],
+ ["T3","Staff assigned via the CRM assignment object","Staff S, assignment S→A active, practice = A's account","portal patient list as S","empty: one reader keys on the integration user, the other's query is commented out","A's patients only"],
+ ["T4","Staff assigned via Contact-Contact Relation only (Rachel's model)","S ↔ A, role Office Staff, active; no assignment row","portal list as S","whatever Heroku holds; CRM link ignored","A's patients, driven by the CRM relation"],
+ ["T5","Staff assigned in Heroku only (Rachel paige test → Elizabeth Smyers)","nothing in the CRM","portal list as S","shows Elizabeth's patients from Heroku","not allowed: no CRM relation, no patients (or the portal writes the relation first)"],
+ ["T6","Doctor deactivated","S→A active; set A inactive","portal list as S","assignment flow flips its row; CCR and Heroku untouched","S loses A's patients in every store"],
+ ["T7","Staff moved to another doctor","S→A then S→B","portal list as S","depends on which store was edited","only B's patients, changed once in the CRM"],
+ ["T8","Practice admin sees the whole practice","Admin D, Practice Admin Role D → practice X, can view all","GET /AdminPortal/v1/patients/?contact_id=D","Pro Demo works only if the row exists (0 today). Prod: class missing","all patients of doctors at X"],
+ ["T9","Multi-site staff","Practice Clinic Association X ↔ clinic Y","list as multi-site staff","0 rows anywhere; reader absent in Pro Demo","patients of both sites"],
+ ["T10","Duplicate doctor","three Elizabeth Smyers contacts, one active with patients","assign S to an inactive duplicate","silently shows nothing","forced to the active record; duplicates merged"],
+ ["T11","Program isolation","S supports A; A has patients in P and Q; S belongs to P","list as S","no program check on staff paths","P patients only"],
+ ["T12","Audit","any of the above","from the CRM: who can see which patient","not answerable; Heroku holds the truth","one report on the CRM relation answers it"]
+];
+const secs=[...document.querySelectorAll('section')];
+const nav=document.getElementById('nav');
+nav.innerHTML='<div class="t">SECTIONS</div>'+secs.map((s,i)=>`<a href="#${s.dataset.k}" data-i="${i}">${s.dataset.t}</a>`).join('')+'<div class="hint">Keys: ← → sections · T today/target · N notes · click a step to expand</div>';
+let cur=0;
+function show(i){cur=(i+secs.length)%secs.length;secs.forEach((s,j)=>s.classList.toggle('on',j===cur));[...nav.querySelectorAll('a')].forEach((a,j)=>a.classList.toggle('on',j===cur));history.replaceState(null,'','#'+secs[cur].dataset.k);document.getElementById('main').scrollIntoView({block:'start'});}
+nav.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();show(+a.dataset.i)});
+document.getElementById('steps').innerHTML=steps.map((s,i)=>`<div class="step" onclick="this.classList.toggle('open')"><div class="n">${i+1}</div><div><h3>${s[0]}</h3><div class="who">${s[1]}</div></div><div class="chev">⌄</div><div class="more">${s[2]}</div></div>`).join('');
+document.getElementById('tests').insertAdjacentHTML('beforeend',tests.map(t=>`<tr><td>${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td><td><code>${t[3]}</code></td><td class="bad">${t[4]}</td><td class="ok">${t[5]}</td></tr>`).join(''));
+const sw=document.getElementById('modeSwitch');
+function mode(m){document.body.classList.toggle('target',m==='target');[...sw.children].forEach(b=>b.classList.toggle('on',b.dataset.m===m));}
+sw.addEventListener('click',e=>{const b=e.target.closest('button');if(b)mode(b.dataset.m)});
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1);if(e.key==='t'||e.key==='T')mode(document.body.classList.contains('target')?'today':'target');if(e.key==='n'||e.key==='N')document.body.classList.toggle('notes')});
+const start=secs.findIndex(s=>'#'+s.dataset.k===location.hash);show(start<0?0:start);
+</script>
+</body>
+</html>

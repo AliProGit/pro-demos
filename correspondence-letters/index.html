@@ -63,6 +63,35 @@ select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8
 .badge.amber{background:var(--amber-soft);color:var(--amber)}
 .badge.dim{background:var(--soft);color:var(--muted)}
 .badge.aud{background:var(--soft);color:var(--ink);font-weight:500}
+/* templates group: team colours (5 teams), header strip, matrix */
+:root{--t-cm:#2F6F8F;--t-cm-soft:#E2EDF3;--t-payor:#1F6F6B;--t-payor-soft:#D9EEEC;--t-fin:#8A5300;--t-fin-soft:#FBE9C8;--t-lead:#5B3F8F;--t-lead-soft:#E8E0F3;--t-auto:#4A5560;--t-auto-soft:#E4E7EA}
+.team{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12.5px;font-weight:700;border:1px solid transparent;white-space:nowrap}
+.team.cm{background:var(--t-cm-soft);color:var(--t-cm);border-color:var(--t-cm)}
+.team.payor{background:var(--t-payor-soft);color:var(--t-payor);border-color:var(--t-payor)}
+.team.fin{background:var(--t-fin-soft);color:var(--t-fin);border-color:var(--t-fin)}
+.team.lead{background:var(--t-lead-soft);color:var(--t-lead);border-color:var(--t-lead)}
+.team.auto{background:var(--t-auto-soft);color:var(--t-auto);border-color:var(--t-auto)}
+.assumed{display:inline-block;font-style:italic;color:var(--muted);font-size:11px;border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:middle;background:var(--surface)}
+.tstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 14px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:13px}
+.tstrip div span{display:block;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+.tstrip div b{font-weight:600;word-break:break-word}
+.tstrip .big{font-size:22px;color:var(--accent)}
+.trig{border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;padding:8px 12px;margin:8px 0}
+.trig b{display:block;font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+.ptr{font-size:13px;color:var(--muted);margin:0 0 10px;padding:6px 10px;border:1px dashed var(--line);border-radius:8px;background:var(--surface)}
+.ptr a{margin-right:6px;font-weight:600;cursor:pointer}
+.scroll.tall{max-height:72vh}
+.mx td:first-child{white-space:nowrap}
+.mx .team{white-space:normal;line-height:1.3}
+.mx td:nth-child(3){min-width:250px}
+.mx td:nth-child(4){min-width:190px}
+.mx td:nth-child(8){min-width:120px}
+.mx .code{font-weight:700;color:var(--accent)}
+.mx tr.off td{opacity:.6}
+.mx .wave{font-size:11.5px;font-weight:700;border-radius:6px;padding:0 6px;background:var(--soft)}
+.legend .team{margin-right:4px}
+.tfoot{margin-top:12px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+@media print{.scroll.tall{max-height:none}}
 .steps{margin:0;padding-left:0;list-style:none;counter-reset:s}
 .steps li{position:relative;padding:4px 0 4px 32px;counter-increment:s}
 .steps li::before{content:counter(s);position:absolute;left:0;top:5px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -208,7 +237,8 @@ function fmt(s){
   if(s==null)return '';
   return String(s)
     .replace(/%U\{([^}]*)\}/g,'<em class="unv">$1<small>unverified</small></em>')
-    .replace(/%D\{(D[1-8][^}]*)\}/g,'<span class="dmark">$1</span>')
+    .replace(/%D\{(D[1-9][^}]*)\}/g,'<span class="dmark">$1</span>')
+    .replace(/%T\{([^}]*)\}/g,'<span class="assumed">assumed</span>')
     .replace(/%G\{([^}]*)\}/g,'<span class="dok">$1</span>')
     .replace(/%B\{([^}]*)\}/g,'<span class="badge">$1</span>')
     .replace(/%R\{([^}]*)\}/g,'<span class="badge red">$1</span>')
@@ -915,8 +945,28 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-zoom]');if
 document.addEventListener('mousemove',e=>{const g=e.target.closest&&e.target.closest('.bar[data-tip]');const tip=$('#tip');if(g){tip.textContent=g.getAttribute('data-tip');tip.style.opacity=1;tip.style.left=Math.min(window.innerWidth-280,e.clientX+12)+'px';tip.style.top=(e.clientY+14)+'px';}else{tip.style.opacity=0;}});
 
 /* ---------- scene builders ---------- */
+/* shared chain renderer: journey scenes and template scenes both use it; extraBad adds / overrides red steps (e.g. D9 on ATTEST) */
+function chainItems(chain,extraBad){
+  chain=chain||{}; const skip=new Set(chain.skip||[]); const names=chain.names||{}; const over=chain.over||{}; const bad=Object.assign({},chain.bad||{},extraBad||{}); const good=chain.good||{};
+  return SPINE.filter(s=>!skip.has(s.k)).map(s=>{
+    let text=over[s.k]!=null?over[s.k]:s.text;
+    if(s.k==='mdt'&&chain.mdt)text=chain.mdt;
+    if(s.k==='template'&&chain.template)text=chain.template;
+    if(s.k==='status'&&chain.status)text=chain.status;
+    if(s.k==='mapping'&&!over.mapping)text=(chain.mapping&&chain.mapping.length?'Tokens for this letter:':'')+(s.text||'');
+    let extra='';
+    if(s.k==='extract'&&chain.extract&&chain.extract.length)extra='<div class="fields">'+chain.extract.map(f=>'<code>'+esc(f)+'</code>').join('')+'</div>';
+    if(s.k==='mapping'&&chain.mapping&&chain.mapping.length)extra='<div class="fields">'+chain.mapping.map(f=>'<code>'+esc(f)+'</code>').join('')+'</div>';
+    const b=bad[s.k], g=good[s.k];
+    const cls=(b?' bad':'')+(g&&!b?' good':'');
+    return '<li class="'+cls+'" data-k="'+s.k+'"><b>'+esc(names[s.k]||s.name)+'</b><span>'+fmt(text)+'</span>'+extra+(b?'<span class="dnote"><span class="dmark">'+esc(b.id)+'</span>'+fmt(b.text)+'</span>':'')+(g?'<span class="gnote"><span class="dok">'+esc(g.id)+'</span>'+fmt(g.text)+'</span>':'')+'</li>';
+  }).join('');
+}
+function goLink(id,label){return '<a href="#'+esc(id)+'" data-go="'+esc(id)+'">'+esc(label)+'</a>';}
 function journeyScene(j){
   const chain=j.chain||{}; const skip=new Set(chain.skip||[]); const names=chain.names||{}; const over=chain.over||{}; const bad=chain.bad||{}; const good=chain.good||{};
+  const tpls=(typeof T!=='undefined')?T.filter(t=>t.j===j.id):[];
+  const ptr=tpls.length?'<p class="ptr">Template scenes for this journey (who uses it, when, and the exact trigger): '+tpls.map(t=>goLink('tpl-'+t.code,t.code+' '+(CAT.find(c=>c.code===t.code)||{}).name)).join(' ')+' · '+goLink('tpl-matrix','Who uses which template')+'</p>':'<p class="ptr">No single template belongs to this journey; see '+goLink('tpl-matrix','Who uses which template')+' for the per-template scenes.</p>';
   const items=SPINE.filter(s=>!skip.has(s.k)).map(s=>{
     let text=over[s.k]!=null?over[s.k]:s.text;
     if(s.k==='mdt'&&chain.mdt)text=chain.mdt;
@@ -942,13 +992,13 @@ function journeyScene(j){
   left+='</div>';
   let right='<div class="col"><h3>What happens in the back end</h3><ol class="chain" data-anim>'+items+'</ol>';
   right+='<div class="box"><h4>Defects as of 2026-11-05</h4><p style="margin:0">'+fmt(j.defects)+'</p></div></div>';
-  return '<div class="card"><div class="head"><span class="kicker">'+esc(j.kicker)+'</span><h2>'+esc(j.title)+'</h2></div><p class="sub">'+esc(j.letters)+'</p><div class="two">'+left+right+'</div></div>';
+  return '<div class="card"><div class="head"><span class="kicker">'+esc(j.kicker)+'</span><h2>'+esc(j.title)+'</h2></div><p class="sub">'+esc(j.letters)+'</p>'+ptr+'<div class="two">'+left+right+'</div></div>';
 }
 
 function titleScene(){
   return '<div class="card"><div class="head"><span class="kicker">Scene 1 · Title</span><h2>One button, 25 letters, one data contract</h2></div>'+
   '<p>A registry-driven Salesforce Industries Document Generation (DocGen) solution for the Lembaz Family Support program (Beren Therapeutics): a Case quick action lets a case manager pick one of 25 active letters, HCP fax letters with a generated cover sheet or patient mail letters, plus a system-generated e-signature attestation. Apex resolves the letter in <code>PRO_Letter_Type__mdt</code>, checks the Case\'s program, starts a DocGen job against a Word template, and files the result on the Case with an audit row and a request ledger.</p>'+
-  '<div class="tiles"><div class="tile"><b>25</b><span>active letters (24 + ATTEST; 12 / 13 / 17 registered, inactive)</span></div><div class="tile"><b>33</b><span>UAT requests in fulluat, all Complete, 23 codes</span></div><div class="tile"><b>148</b><span>extract input paths read by PROLetterCommonExtract</span></div><div class="tile"><b>3 s</b><span>median server time, single letter (UAT)</span></div><div class="tile"><b>8</b><span>content defects D1-D8; 2 closed (D6, Ali\'s half of D1)</span></div></div>'+
+  '<div class="tiles"><div class="tile"><b>25</b><span>active letters (24 + ATTEST; 12 / 13 / 17 registered, inactive)</span></div><div class="tile"><b>33</b><span>UAT requests in fulluat, all Complete, 23 codes</span></div><div class="tile"><b>148</b><span>extract input paths read by PROLetterCommonExtract</span></div><div class="tile"><b>3 s</b><span>median server time, single letter (UAT)</span></div><div class="tile"><b>9</b><span>content defects D1-D9; 2 closed (D6, Ali\'s half of D1); D9 = attestation terms join</span></div><div class="tile"><b>28</b><span>template scenes (one per letter) plus the "Who uses which template" matrix: sidebar group Templates</span></div></div>'+
   '<div class="two"><div class="col"><h3>Who built it</h3>'+kv({'Vendor':'LaunchpadLab (LPL)','Victor':'João Victor Montmann Guidio (victor@launchpadlab.com.davidb): framework, Apex, DataRaptors, templates, READMEs','Carlos':'Carlos Eduardo Lino: attestation slice and portal work','Business owner':'Ms. Nicole Cross','Tester':'Rachel Johnson','PRO admin / release owner':'Ali Mammadov','Jira':'Neither Victor nor Carlos has a Jira account; their work shows only through davidb (Victor, last change 10/28) and prodemo (Carlos, 10/29)'})+'</div>'+
   '<div class="col"><h3>Where it stands today</h3>'+kv({'UAT':'Open since 2026-11-05 (readiness report: "UAT is ready to start today"); Round 3 announced on TD-1582; fulluat is level with davidb (10/28 delta promoted 11/03)','Prod':'Dormant un-prefixed 10/22 build hidden behind custom permission Letter_Generation_Enabled (held by nobody); retire-then-install after sign-off on TD-1975 / TD-2347','Pro Demo':'PRO_ build 10/26 with a "Beren" program name; 10/28 delta not promoted','Personas':'QA1025 Beren CM / Leader / Payor Specialist hold the full access set since 11/06; persona UI run still to do (TD-2329)'})+
   '<div class="box"><h4>One-line verdict</h4><p style="margin:0">Back end proven end to end in UAT (33 requests, 23 codes, every one filed on the Case, median 3 s); what remains is content (D1 Victor\'s half, D2-D5, D7, D8), the fax-packet and ATTEST paths that UAT has not exercised, the persona UI run, and the prod migration after business sign-off.</p></div></div></div></div>';
@@ -1023,11 +1073,484 @@ function closeScene(){
   '<div class="box"><h4>Next steps</h4>'+ol(['Victor confirms the 10/28 scope and fixes D1 (mapping), D2, D3, D4, D5, D7 in davidb; Ali promotes the delta to fulluat with the J19 recipe and records it on TD-2328.','Rachel runs Round 3 on the 12 UAT cases (TD-2086 / TD-2255), including one fax packet (05 on 00030641 or 06 on 00030721) and an e-signature attestation.','Ali runs the persona UI run as QA1025 Beren CM without Login_As; Ops creates an ARM assignment in UAT (D8).','Ms. Nicole Cross names the sign-off letter set and testers; sign-off recorded on TD-1975 / TD-2347.','Prod retire-then-install (MASTER 6.1), grants for the seven Lembaz CMs, smoke 05 / 25 / 06 / SOB_ARM, Jira deployment fields and Snowflake notification.','Performance follow-ups for LPL: adaptive polling or push, honest progress copy, DocGen request time-out + stale-request reaper, single-job fax packet probe.'])+'</div></div>';
 }
 
+/* ---------- templates: who uses which template, when (MASTER 2.1 / 2.2 / 4, JOURNEYS A / C.6, readiness report 3-4 / 11; PRO_Letter_Type__mdt rows confirmed read-only in fulluat 2026-11-06, 28 rows) ---------- */
+const TEAMS={cm:'Beren Case Manager',payor:'Payor / Reimbursement Specialist',fin:'Copay &amp; Patient Assistance (Financial) team',lead:'Leader / ARM',auto:'Automation (no user)'};
+const FIN_NOTE='No source names a separate Financial team; JOURNEYS gives this letter to the Beren CM. If Ops splits copay / PAP work to a Financial team, move it there.';
+const T=[];
+/* field lists shared by several letters */
+const X_COMMON=['Case.CaseNumber / Status / Sub_Status__c / RecordType.Name','Case.PRO_Letter_Recipient_Name__c / PRO_Letter_Practice_Name__c / PRO_Letter_Recipient_Fax__c (+ Parent.PRO_Letter_*)','Case.Pro_Case_Manager__r.Name / Phone / Email','Case.Account.FirstName / LastName / PersonBirthdate / PRO_Patient_Unique_ID__c','Case.Pro_Program__r.Name / Program_Phone_Number__c / Program_Fax_Number__c / Customer_Support_Email__c / PRO_Program_Website__c','Config.Brand_Name__c / Support_Hours__c / Copyright_Text__c / Legal_Disclaimer__c / Prescribing_Info_Text__c'];
+const X_PATIENT=['Case.Account.FirstName / LastName / PersonBirthdate / PRO_Patient_Unique_ID__c','Case.Account.BillingStreet / City / State / PostalCode','Case.FAM_Contact__r.Name / Phone / Email','Case.Parent.FAM_Contact__r.* + Parent.RecordType.DeveloperName (depth 3 parent chain, first Enrollment ancestor)','Case.Pro_Case_Manager__r.Name / Phone / Email','Case.Pro_Program__r.* and Config.* (letterhead, hours, footer, disclaimer, PI line)'];
+const X_MI=['seq 5 MissingInfoCase: latest EMI child the user can see -> Missing_Information_List__c, Missing_information_notes__c','Case.Missing_Information_List__c / Missing_information_notes__c (used only when no child)','Case.Account.Provider_Consent__c','Case.Contact_Reason__c / Contact_Reason_Other__c','Case.PRO_Letter_Response_Deadline__c (today + 2 business days)'];
+const X_CB=['seq 3 Task "Primary Verification" (newest) -> Coverage_Outcome__c / Payor_Type__c / Payor_Phone_Number__c','Coverage_Benefit__r.IndividualInNetworkDeductibleLimit / Applied / Remaining; PRO_Individual_Deductible_Remaining__c','Coverage_Benefit__r.IndividualInNetworkOutofPocketApplied; PRO_Individual_OOP_Remaining__c','Coverage_Benefit__r.InNetworkCoinsurancePercentage / EmergencyDepartmentCopay / BenefitPeriodStartDate / EndDate','Coverage_Benefit__r.MemberPlan.Name / MemberNumber / GroupNumber / Payer.Name / EffectiveFrom / PRO_Plan_Type__c / Pro_Subscriber_Name__c'];
+const X_SOB=X_CB.concat(['CB.PRO_OON_Deductible__c / PRO_OON_Family_Deductible__c / PRO_OON_Family_OOP_Amount__c / PRO_OON_Individual_Coinsurance__c / PRO_OON_Individual_Copay_Amount__c / PRO_OON_Individual_OOP_Amount__c / PRO_OON_Out_of_Pocket_Remaining__c','CB.PRO_Facility_network_status__c / PRO_HCP_network_status__c / PRO_Funding_Type__c / PRO_Referrals__c / PRO_Referral_description__c / PRO_Date_Verified__c / PRO_Verified_By__r.Name / BenefitNotes','CB.FamilyInNetworkOutofPocketLimit / FamilyInNetworkDeductibleRemaining / PRO_Family_Deductible_Remaining__c / PRO_Family_OOP_Remaining__c','MemberPlan.Issuer_Id__c / EffectiveTo / PRO_Additional_Plan_Type__c / PRO_Funding_Arrangement__c / PrimarySecondaryTertiary / PrimaryCarePhysician / Pro_Policy_Holder_DOB__c / Insurance_Phone_Number__c / PRO_Call_Reference_Number__c / Type_of_Insurance__c','Case.CPT_HCPC_Code__c (FLS-hidden for most users, P3-6)','Case.Treating_Site__r.HealthCloudGA__TaxId__c / PRO_Facility_NPI__c','Case.Pro_CorM_Associated_HealthCare_Provider__r.Practitioner.PRO_NPI__c / PRO_Tax_ID__c','Case.Reimbursement_Type__c']);
+const X_PAP=['Case.Approved_Dose__c / Approved_Quantity__c / Approved_Dispensing_Frequency__c (approved.quantity = "qty / dose / frequency")','Case.Leadership_Approval_Date__c (pap.approval_date)','Case.Effective_Date__c / Eligibility_End_Date__c (assistance.* period; blank in UAT)'];
+const X_PA=['Case.Reference_Number__c','Case.Pending_Authorization_Number__c','Case.Authorization_Start_Date__c / Authorization_Expiration_Date__c','Case.Pro_Outcome_Date__c; Pro_Outcome__c / Final_Auth_Outcome__c','Case.Case_Stage__c; Case.Case_Next_Action__c','Case.Member_Plan__r.Payer.Name / Member_Plan__r.Plan.Name'];
+const X_PADEN=['Case.Denial_Reason__c','Case.Action_Required__c (TD-2182)','Case.Reference_Number__c (extracted; D2: placeholder unbound)','Case.PRO_Letter_Response_Deadline__c','Case.Member_Plan__r.Payer.Name','Case.Case_Stage__c; Case.Case_Next_Action__c','Case.ClosedDate (candidate source for Denial Date, D3)'];
+const X_COPAY=['Case.Copay_Card_Number__c (copay.member_id; added 10/28)','Case.Benefit_Assignment__r.Pro_Eligibility_Start_Date__c / Pro_Eligibility_End_Date__c','Case.Benefit_Assignment__r.Pro_Initial_Copay_Assistance_Amount__c / PRO_Enrollee_Transaction_Limit__c','Case.ClosedDate (copay.approval_date)','Case.Member_Plan__r.Payer.Name'];
+
+/* 02 */
+T.push({code:'02',j:'j16',team:'auto',persona:'System: CoverSheetChain / CoverSheetRender after any HCP letter with the box ticked',
+ scenario:'Every letter faxed to a prescriber\'s office travels behind a one-page fax cover. The system makes it on its own as the second half of a fax packet: once the HCP letter has been rendered to PDF and its pages counted, the cover sheet is produced with the destination fax, the sender and the total page count. No one picks it in the menu and it cannot be generated alone.',
+ trigger:'Automation event: a payload letter whose <code>Requires_Cover_Sheet__c = true</code> was generated with "Include the fax cover sheet" ticked reaches status Payload Filed; <code>CoverSheetChain</code> counts pages and <code>CoverSheetRender</code> starts letter 02 against the request row.',
+ rt:'Any HCP fax packet (03_b, 04, 05, 06, 07, 08, 11, 14, 15, 18, 38, 40, 42, SOB)',moment:'after the payload letter is filed',recip:'HCP office (first page of the packet)',
+ steps:['Nothing to pick: generate any HCP letter with <b>Include the fax cover sheet</b> ticked (default). Progress reads Letter -> Page count -> Cover sheet -> Complete.','When complete the modal offers <b>Open letter</b> and <b>Open cover sheet</b>; both files sit under Files &amp; Documents on the Case.','Open the cover sheet and read <b>To fax</b>: it comes from <code>Case.PRO_Letter_Recipient_Fax__c</code> (or the parent\'s) and the field description requires you to confirm it before any real send. In UAT only 00030721 has a fax number.','Send: use the Fax Documents screen flow <code>Pro_Screen_Flow_Create_Files_Documents_Record</code> (destination fax, sender, uploaded file) which publishes <code>Pro_FaxPlatformEvent__e</code> to MuleSoft and SRFax. Only the first linked file of a record is faxed, so merge cover + letter into one PDF or send twice.'],
+ receives:['Page 1: "Fax Cover Sheet" with To (recipient.name), Practice/Facility, <b>To fax</b>, From "Lembaz Family Support", <b>Total pages including cover sheet: N</b>, program contact line (blank today: fax-cover contact NULL), MLR <code>PP-LEM-US-0002</code>.','Pages 2-N: the HCP letter rendered as PDF.'],
+ fill:['HCP Practitioner fax (or PRO_Prescriber__r.Fax / Treating_Site__r.Fax / HCP Account fax) so the recipient fax resolves','Pro_Program__c.Program_FaxCoverPage_Contact_Information__c (NULL in fulluat and prod)','Keep the letter under 2.5 MB (page-count ceiling)'],
+ extract:['Request:Total_Pages__c -> letter.total_pages','Request:Case__r.PRO_Letter_Recipient_Fax__c / Parent.PRO_Letter_Recipient_Fax__c -> recipient.fax','Request:Case__r.PRO_Letter_Recipient_Name__c / PRO_Letter_Practice_Name__c','Request:Case__r.Pro_Program__r.Program_FaxCoverPage_Contact_Information__c (NULL)','Request:Case__r program / config / patient / case-manager nodes as the common extract (36 items, PROLetterPacketExtract_1)'],
+ defects:'No D-item. Data: fax-cover contact NULL; recipient fax resolves on 1 of 12 UAT cases. Design gap %U{no Send path from the Draft letter row to the fax chain}.',
+ uat:'Not run in UAT (all 33 fulluat requests are plain letters). Packet proven only in davidb (QA-1025: "Total pages including cover sheet: 2"). Recommended first UAT packet: 05 on 00030641 or 06 on 00030721 (fax (407) 555-0169).'});
+
+/* 03_b */
+T.push({code:'03_b',j:'j1',team:'cm',persona:'P1 Beren Case Manager (QA1025 Beren CM in UAT)',
+ scenario:'A prescriber\'s office sent an enrollment form that asks for the product only, with no benefits investigation or support services. The case manager who reviews the new Enrollment case confirms to the office that the product order request was received and what happens next. It is the product-only sibling of letter 04 and is sent once, at intake.',
+ trigger:'Enrollment case, Sub Type New Enrollment, product-order-only form; Status Complete (or In Process) / Sub Status Enrollment Received, right after the CM has reviewed the intake.',
+ rt:'Enrollment',moment:'Complete / Enrollment Received, product order only',recip:'HCP office',
+ checks:['Associated Healthcare Provider <code>Pro_CorM_Associated_HealthCare_Provider__c</code> (To / Dear)','Treating Site or HCP account (Practice/Facility)','Case Manager <code>Pro_Case_Manager__c</code>','Enrollment date <code>Pro_Enrollment_DateTime__c</code>','Practitioner fax for the cover'],
+ review:'the To / Practice block, the subject "Product Order Request Only", the Case Manager contact and the MLR footer PRO-1588-US-EN-v1.',
+ receives:['Lembaz letterhead and date; To HCP / Practice; patient block (name, DOB, Patient ID).','Subject <b>Product Order Request Only</b>; confirmation text; Case Manager name / phone / e-mail; "Sincerely, Lembaz(TM) Family Support"; disclaimer; footer with MLR <code>PRO-1588-US-EN-v1</code>.','Cover sheet 02 in front when the box is ticked.'],
+ fill:['Case.Pro_CorM_Associated_HealthCare_Provider__c','Case.Treating_Site__c or HCP account','Case.Pro_Case_Manager__c','Case.Pro_Enrollment_DateTime__c','HCP Practitioner fax (recipient.fax for the cover)'],
+ extract:X_COMMON.concat(['Case.Pro_Enrollment_DateTime__c (letter.enrollment_date)','Case.IsClosed (letter.enrollment_status)']),
+ defects:'None of D1-D9 specific to 03_b. Cross-cutting %D{D7} PI placeholder if the template carries the PI line; QA-1025 P2-1 masks access errors.',
+ uat:'00030670 (500QL00000vBcYzYAK), L1 patient. LR-0000036, file 069QL00000PHwNqYAL, Complete in 15 s (2026-11-04 19:13Z), generated by Ali via Apex without cover sheet.'});
+
+/* 04 */
+T.push({code:'04',j:'j1',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'A completed Lembaz enrollment form has arrived by fax or through the portal; a new Enrollment case was created and the case manager has reviewed it. The CM acknowledges receipt to the prescriber\'s office and states the current enrollment status (Enrollment Received, Additional Information Needed or Enrollment Complete) with the case manager contact. It is normally the first letter on a new patient and can be re-sent when the status changes.',
+ trigger:'Enrollment case at Status New / In Process (prints "Enrollment Received"), Incomplete / Missing Information ("Additional Information Needed") or Complete ("Enrollment Complete"). Refused by Apex when Status is Cancelled and Sub Status Opened in Error.',
+ rt:'Enrollment',moment:'New / In Process / Complete; refused on Cancelled + Opened in Error',recip:'HCP office',
+ checks:['Associated Healthcare Provider and Treating Site (To / Practice)','Case Manager','Status + Sub Status worded as the business wants the status sentence','Enrollment date','Practitioner fax'],
+ review:'the status sentence (letter.current_status), the To / Practice block and the MLR footer PRO-1595-US-EN-v2 [September 2026].',
+ receives:['Letterhead, date, To HCP / Practice, patient block.','Subject <b>Welcome to Lembaz Family Support – Enrollment Status Update</b>; status sentence; enrollment date; Case Manager contact; disclaimer; footer MLR <code>PRO-1595-US-EN-v2</code>.','Cover sheet 02 when ticked (davidb packet showed "Total pages including cover sheet: 2").'],
+ fill:['Case.Pro_CorM_Associated_HealthCare_Provider__c','Case.Treating_Site__c or HCP account','Case.Pro_Case_Manager__c','Status + Sub_Status__c','HCP Practitioner fax','Case must not be Cancelled / Opened in Error'],
+ extract:X_COMMON.concat(['Case.Pro_Enrollment_DateTime__c','Case.IsClosed','Case.Status + Sub_Status__c -> letter.current_status (formula #115)']),
+ defects:'None of D1-D9 specific to 04. Cross-cutting %D{D7} PI placeholder; recipient fax blank on 00030670 so a cover would show no "To fax".',
+ uat:'00030670 (500QL00000vBcYzYAK), L1, FAM One, CM set. LR-0000014, file 069QL00000PHOpGYAX, Complete in 13 s (2026-11-04). Persona UI run still outstanding (TD-2329).'});
+
+/* 05 */
+T.push({code:'05',j:'j3',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'During enrollment intake something is missing: a Tax ID, the patient address, the payor, the prescriber signature, a diagnosis code. Automation opens an Enrollment Missing Information (EMI) child case listing the gaps and sets the parent to Incomplete / Missing Information. The case manager asks the prescriber\'s office to supply the ticked items by the printed deadline, two business days out.',
+ trigger:'EMI child case (record type <code>Enrollment_Missing_Information</code>) exists with <code>Missing_Information_List__c</code> filled; parent Enrollment at Incomplete / Missing Information. Generate from the EMI child (or the parent, which reads the newest visible child).',
+ rt:'Enrollment Missing Information (child) or its Enrollment parent',moment:'parent Incomplete / Missing Information; child open',recip:'HCP office',
+ checks:['<code>Missing_Information_List__c</code> uses recognised values (Tax ID, Patient Address, Payor, Member ID ...)','<code>Missing_information_notes__c</code> for Other (FLS-hidden for most users, P3-6)','<code>Contact_Reason__c</code> (+ Other text)','HCP on the child or its parent'],
+ review:'the [X] marks (e.g. "[X] Prescriber information: Tax ID"), the contact-reason box and "Please respond by" (today + 2 business days).',
+ receives:['Subject <b>Request for Missing Information</b>; nine-category checklist with [X] / [ ] and the item text after the colon.','Contact-reason box; <b>Please respond by MM/DD/YYYY</b>; Case Manager contact; MLR <code>PRO-1596-US-EN-v2</code>; cover sheet 02 in front.'],
+ fill:['EMI child Missing_Information_List__c with recognised values','Missing_information_notes__c for Other','Contact_Reason__c (+ Contact_Reason_Other__c)','HCP on the child or its parent','Generate from a case where you can see the EMI child (P3-5)'],
+ extract:X_MI.concat(X_COMMON),
+ defects:'%D{D7} PI placeholder prints on 05. P3-5 (invisible child falls back silently), P3-6 (notes FLS-hidden). No other D-item.',
+ uat:'00030641 (500QL00000vBZ87YAG), EMI child of 00030640, list "Tax ID;None". LR-0000018, file 069QL00000PHm9zYAD, Complete in 2 s. Also 00030733 (income reason), 00030737 (Other + text; no HCP on the child).'});
+
+/* 06 */
+T.push({code:'06',j:'j6',team:'payor',persona:'P3 Payor Specialist generates; P1 CM may regenerate after a data fix',
+ scenario:'The Payor Specialist has finished the benefits investigation: the Primary Verification call is logged as a task, the coverage benefit (deductible, out-of-pocket, coinsurance, copay, benefit period) and the member plan are recorded, and the BV case is complete. The prescriber\'s office receives a one-page benefits summary with deductible and out-of-pocket status, whether a prior authorization is needed and the next step, and the name of the dedicated Access &amp; Reimbursement Manager.',
+ trigger:'Benefit Verification case at Status Complete (or BV Complete) with Sub Status Covered / Not Covered / Prior Auth Required, immediately after the Primary Verification task and CoverageBenefit are saved.',
+ rt:'Benefit Verification',moment:'Complete / Covered (or Not Covered, PA Required)',recip:'HCP office',
+ checks:['Task <b>"Primary Verification"</b> (exact subject) linked to the CoverageBenefit with <code>Coverage_Outcome__c</code>','CoverageBenefit limits / applied / period; MemberPlan payer, member, group, effective, plan type, policy holder','<code>Case.Reimbursement_Type__c</code>, <code>Case_Next_Action__c</code>, <code>Sub_Status__c</code>','ARM assignment (<code>Case.ARM__c</code>; 0 rows in UAT)'],
+ review:'the deductible and OOP lines (D1: amount and Met are swapped until Victor\'s fix), Coverage Status, PA Required and the ARM sentence (D8 blank in UAT).',
+ receives:['Subject <b>Benefits Investigation Complete</b>; plan block (plan, type, member id, group, policy holder, effective date); coverage status; benefit type.','<b>Deductible $X (Met: $Y, Not Met: $Z)</b>, <b>Out-of-Pocket Maximum $X (Met, Remaining)</b>; copay / coinsurance; PA Required Yes/No + status; next step; "contact your dedicated Access &amp; Reimbursement Manager at &lt;name, phone&gt;".','Own benefits disclaimer, no PI line; MLR <code>PRO-1597-US-EN-v2</code>; cover sheet 02 in front.'],
+ fill:['Task "Primary Verification" with Coverage_Outcome__c linked to the CB','CB limits / applied / period; MemberPlan on the CB','Case.Reimbursement_Type__c; Case_Next_Action__c; Sub_Status__c','ARM assignment (Case.ARM__c -> ARM_Account_Assignment__c)','User FLS on CoverageBenefit / MemberPlan (DataAccess set)'],
+ extract:X_CB.concat(['Case.Reimbursement_Type__c','Case.Case_Next_Action__c','Case.Sub_Status__c (coverage.status)','Case.Pro_Outcome__c / Final_Auth_Outcome__c (coverage.pa_status)','Case.ARM__r.ARM_Contact__r.Name / Phone (D8)'],X_COMMON),
+ defects:'%D{D1} Victor\'s half open (Applied printed as amount, Limit as Met, OOP headline reads DeductibleRemaining); Ali\'s half closed 11/05 (TD-2374). %D{D8} ARM line blank (data, Ops). P2-2 Coverage Status "Pending Verification" when Sub Status unmapped.',
+ uat:'00030743 (500QL00000vBcvaYAC), CB 0TLQL0000003UBG4A2, MemberPlan 0SqQL000000DMCP0A4. LR-0000043, file 069QL00000PMZFHYA5 (after the formula fix); earlier LR-0000020 / LR-0000037. Second case 00030721 (fax (407) 555-0169).'});
+
+/* 07 */
+T.push({code:'07',j:'j10',team:'cm',alt:'fin',persona:'P1 Beren Case Manager (source); Financial team candidate',
+ scenario:'The patient\'s commercial copay assistance request has been approved on a Copay Eligibility case. The prescriber\'s office is told that the patient is enrolled in the out-of-pocket program, with the benefit period and maximum benefit, so claims can be processed against the program. It pairs with letter 26 to the patient and is sent once per approval or renewal.',
+ trigger:'Copay Eligibility case set to Status Approved (In Process or closed) with <code>Copay_Card_Number__c</code>, <code>Member_Plan__c</code> and a Benefit Assignment linked.',
+ rt:'Copay Eligibility',moment:'Approved (In Process / closed), BA linked',recip:'HCP office',
+ checks:['<code>Copay_Card_Number__c</code>','<code>Member_Plan__c</code> (payer name)','<code>Benefit_Assignment__c</code> with eligibility dates, initial assistance amount, transaction limit','Case closed if the approval date must print (ClosedDate)'],
+ review:'benefit period, maximum benefit (or "$500 per claim"), payer and approval date.',
+ receives:['Subject <b>Out-of-Pocket Program- Approval Notification</b>; patient block; Member ID; <b>Benefit Period</b>; <b>Maximum Benefit</b>; payer; approval date; CM contact; PI line (D7); MLR <code>PRO-1692-US-EN-v1</code>; cover sheet 02.'],
+ fill:['Copay_Card_Number__c','Benefit_Assignment__c (create the BA first; needs Benefit + ProgramEnrollment)','Member_Plan__c','Close the case for the approval date'],
+ extract:X_COPAY.concat(X_COMMON),
+ defects:'%D{D7} PI placeholder. %G{D6 closed} 11/05 (BA 0nDQL0000001zPd2AI). No flow creates a BA on approval in UAT (business process).',
+ uat:'00030750 (500QL00000vBiPtYAK), parent Authorization 00030745. LR-0000027, file 069QL00000PH4X8YAL, Complete in 3 s.'});
+
+/* 08 */
+T.push({code:'08',j:'j11',team:'cm',alt:'fin',persona:'P1 Beren Case Manager (source); Financial team candidate',
+ scenario:'The commercial copay request was denied, for income, insurance type or another reason, and the Copay Eligibility case is closed as Denied. The prescriber\'s office is told the outcome, the reason and the next steps, for example a different assistance program. TD-2226 (10/27 hot fix) made a Denied case closable so this letter could be tested.',
+ trigger:'Copay Eligibility case at Status Denied with <code>Sub_Status__c</code> (Income, Insurance ...) and <code>Denial_Reason__c</code> set; generate when the denial is final.',
+ rt:'Copay Eligibility',moment:'Denied / Sub Status Income etc.',recip:'HCP office',
+ checks:['<code>Sub_Status__c</code> (validation rule for Denied)','<code>Denial_Reason__c</code>','<code>Member_Plan__c</code>'],
+ review:'the denial reason wording, payer and next steps.',
+ receives:['Subject <b>Commercial Copay Program - Denial Notification</b>; denial reason; payer; next steps; CM contact; MLR job code <code>PP-LEM-US-0008</code> (no date); cover sheet 02.'],
+ fill:['Sub_Status__c','Denial_Reason__c','Member_Plan__c'],
+ extract:['Case.Denial_Reason__c','Case.Sub_Status__c','Case.Member_Plan__r.Payer.Name','Case.Pro_Outcome_Date__c'].concat(X_COMMON),
+ defects:'No open D-item specific to 08. %K{TD-2226 Done}.',
+ uat:'00030756 (500QL00000vBijFYAS), Denied / Income, reason Other. LR-0000029, file 069QL00000PHn61YAD, Complete in 2 s.'});
+
+/* 11 */
+T.push({code:'11',j:'j12',team:'cm',alt:'fin',persona:'P2 Beren Leader approves (leadership gate); P1 CM generates',
+ scenario:'A leader has approved a Patient Assistance Program (free goods) request after the financial review. The prescriber\'s office is told the approval date and the approved regimen (quantity, dose and dispensing frequency) so the product can be shipped. The leadership gate stamps the approval date and releases the case; the case manager then generates the letter. It pairs with 29 to the patient.',
+ trigger:'Free Goods case, Sub Type PAP, Status Approved / No Restrictions with <code>Leadership_Approval_Date__c</code> stamped by the leadership gate (TD-1967 / TD-2202).',
+ rt:'Free Goods (Sub Type PAP)',moment:'Approved / No Restrictions after leadership approval',recip:'HCP office',
+ checks:['<code>Approved_Dose__c</code>, <code>Approved_Quantity__c</code>, <code>Approved_Dispensing_Frequency__c</code>','<code>Leadership_Approval_Date__c</code> (set by the gate, not by hand)','<code>Effective_Date__c</code> / <code>Eligibility_End_Date__c</code> if the assistance period must print'],
+ review:'the regimen line ("4 vials / 2 g/kg / Every 4 weeks"), the approval date and whether the period lines are blank.',
+ receives:['Subject <b>Patient Assistance Program (PAP)- Approval Notification</b>; approved regimen; approval date; assistance period (blank in UAT); CM contact; MLR <code>PRO-1598-US-EN-v1</code>; cover sheet 02.'],
+ fill:['Approved_Dose__c, Approved_Quantity__c, Approved_Dispensing_Frequency__c','Leadership_Approval_Date__c via the leadership gate','Effective_Date__c / Eligibility_End_Date__c if the period must print %U{whether the business wants them}'],
+ extract:X_PAP.concat(X_COMMON),
+ defects:'No D-item listed for 11; period lines blank for the %D{D5} reason (Effective_Date__c / Eligibility_End_Date__c unfilled on Free Goods).',
+ uat:'00030688 (500QL00000vBdjZYAS), Approved / No Restrictions, 2 g/kg, 4 vials, Every 4 weeks, leadership date 2026-11-03. LR-0000030, file 069QL00000PHVNhYAP, Complete in 2 s.'});
+
+/* 12 inactive */
+T.push({code:'12',j:null,team:'cm',assumed:true,alt:'fin',persona:'Assumed: Beren CM after a leader denies (by analogy with 11 / 08)',
+ scenario:'Registered but <b>inactive</b>: the row has no template, no subject and no audience, so it appears in the picker only inside "3 registered letters are waiting for approval". Intended scenario %T{}: a Patient Assistance Program request is denied on the Free Goods case (does not meet financial criteria, patient has coverage, documents incomplete) and the prescriber\'s office receives a denial notice with the reason and next steps. Activating it needs an MLR-approved Word template registered under this row.',
+ trigger:'%T{} Free Goods case, Sub Type PAP, Status Denied with Sub Status and Denial_Reason__c, after leadership review. Not generatable today: <code>resolveLetterType</code> answers "This letter is not available yet".',
+ rt:'Free Goods (Sub Type PAP)',moment:'Denied (assumed); row inactive',recip:'HCP office (assumed)',
+ steps:['Not available: the picker lists active letters only; 12 is counted among the 3 inactive registered letters.','To activate: LPL delivers an MLR-approved .docx, registers it as DocumentTemplate (UniqueName e.g. PRO_Letter12_PapDenied_v1), sets Audience / Subject / MLR on the row and <code>Is_Active__c = true</code>; promote per J19.','Expected use once active %T{}: open the denied Free Goods PAP case, check Denial_Reason__c, Sub_Status__c and the HCP, Generate Letter, pick "PAP denied", cover sheet ticked, fax to the office.'],
+ receives:['Nothing today. Expected %T{}: denial notice to the office with reason, next steps and CM contact, with cover sheet 02.'],
+ fill:['%T{} Denial_Reason__c, Sub_Status__c, HCP on the case'],
+ extract:['None today (no template). Expected %T{}: Case.Denial_Reason__c, Case.Sub_Status__c, Case.Pro_Outcome_Date__c + the common recipient / patient / program fields'],
+ defects:'Not a defect: deliberately inactive in Wave 2 (TD-1921). Open question to Ms. Nicole Cross whether 12 / 13 / 17 are in the sign-off set.',
+ uat:'None (inactive; never generated in any org).'});
+
+/* 13 inactive */
+T.push({code:'13',j:null,team:'cm',assumed:true,alt:'fin',persona:'Assumed: Beren CM when a PAP patient leaves the program',
+ scenario:'Registered but <b>inactive</b> (no template, subject or audience). Intended scenario %T{}: a patient leaves the Patient Assistance Program, because coverage was obtained, the income situation changed, the patient asked to stop, or re-enrolment documents never arrived (see 28). The prescriber\'s office is told that free-goods supply has ended and from which date.',
+ trigger:'%T{} Free Goods PAP case closed as Disenrolled / Cancelled with a disenrollment reason and date. Not generatable today.',
+ rt:'Free Goods (Sub Type PAP)',moment:'Disenrolled / closed (assumed); row inactive',recip:'HCP office (assumed)',
+ steps:['Not available today (inactive row, counted in "3 registered letters are waiting for approval").','To activate: MLR-approved template registered under the row, Audience / Subject / MLR filled, <code>Is_Active__c = true</code> (J19).','Expected use once active %T{}: open the closed PAP case, check the disenrollment reason and end date, Generate Letter, pick "PAP disenrollment", cover sheet ticked, fax to the office.'],
+ receives:['Nothing today. Expected %T{}: disenrollment notice with end date, reason and how to re-apply.'],
+ fill:['%T{} Disenrollment reason / end date fields (none mapped today)'],
+ extract:['None today. %T{} Candidates: Case.Status / Sub_Status__c, Case.ClosedDate, Case.Eligibility_End_Date__c'],
+ defects:'Not a defect: inactive by design in Wave 2. Pattern family "Disenrollment Notice" has no active member.',
+ uat:'None (inactive).'});
+
+/* 14 */
+T.push({code:'14',j:'j13',team:'cm',alt:'fin',persona:'P1 Beren Case Manager',
+ scenario:'A PAP patient is coming up on a refill. Before the next free-goods shipment the office must send a new prescription or confirm the regimen is unchanged. The case manager sends this request with the approved regimen and a response deadline.',
+ trigger:'Free Goods PAP case, Approved, when the refill cycle comes due (no automation; the CM decides from the dispensing frequency and shipment history).',
+ rt:'Free Goods (Sub Type PAP)',moment:'Approved, refill due',recip:'HCP office',
+ checks:['Approved regimen fields (dose, quantity, frequency)','HCP and practice on the case','Response deadline formula value'],
+ review:'the regimen line and "Please respond by".',
+ receives:['Subject <b>Patient Assistance Program (PAP)- Refill Request</b>; approved regimen; response deadline; CM contact; MLR <code>PRO-1601-US-EN-v1</code>; cover sheet 02.'],
+ fill:['Approved_Dose__c, Approved_Quantity__c, Approved_Dispensing_Frequency__c','HCP on the case','Practitioner fax'],
+ extract:X_PAP.slice(0,1).concat(['Case.PRO_Letter_Response_Deadline__c'],X_COMMON),
+ defects:'None listed for 14.',
+ uat:'00030688 (500QL00000vBdjZYAS). LR-0000032, file 069QL00000PHnCSYA1, Complete in 13 s (DocGen service variance).'});
+
+/* 15 */
+T.push({code:'15',j:'j14',team:'cm',persona:'P2 Beren Leader approves; P1 CM generates',
+ scenario:'Coverage is still pending (prior authorization under review or on appeal) and leadership approves a bridge supply so treatment can start or continue. The prescriber\'s office receives the approval with the regimen; the bridge period and approval date are meant to print but are blank today (D5). Pairs with 31 to the patient.',
+ trigger:'Free Goods case, Sub Type Bridge, after the leadership gate stamps <code>Leadership_Approval_Date__c</code> (UAT case is Under Review / Pending Exception with the date set).',
+ rt:'Free Goods (Sub Type Bridge)',moment:'leadership approval stamped',recip:'HCP office',
+ checks:['Approved regimen fields','<code>Leadership_Approval_Date__c</code>','The bridge date fields once D5 names them'],
+ review:'regimen ("2 vials / 2 g/kg / Every 2 weeks"); Approval Date and Bridge Period are blank until D5 is fixed.',
+ receives:['Subject <b>Bridge Program – Approval Notification</b>; regimen; Approval Date and Bridge Period (blank, D5); CM contact; MLR <code>PRO-1683-US-EN-v1</code>; cover sheet 02.'],
+ fill:['Approved_Dose__c, Approved_Quantity__c, Approved_Dispensing_Frequency__c','Leadership_Approval_Date__c via the gate','Bridge dates once D5 is resolved'],
+ extract:['Case.Approved_Dose__c / Approved_Quantity__c / Approved_Dispensing_Frequency__c','Case.Effective_Date__c / Eligibility_End_Date__c (what bridge.* reads today)','Case.Leadership_Approval_Date__c (read, mapped only to pap.approval_date)'].concat(X_COMMON),
+ defects:'%D{D5} bridge.* bound to Effective_Date__c / Eligibility_End_Date__c (Victor + Rachel to agree the sources).',
+ uat:'00030711 (500QL00000vBeirYAC), Bridge, leadership date 2026-11-04. LR-0000034, file 069QL00000PHYRxYAP, Complete in 2 s.'});
+
+/* 17 inactive */
+T.push({code:'17',j:null,team:'cm',assumed:true,persona:'Assumed: Beren CM when the bridge supply ends',
+ scenario:'Registered but <b>inactive</b> (no template, subject or audience). Intended scenario %T{}: the bridge supply ends because the payor finally approved (patient moves to commercial supply) or finally denied (patient moves to PAP or stops), and the prescriber\'s office is told the bridge has ended and what replaces it.',
+ trigger:'%T{} Free Goods Bridge case closed when the Authorization / Appeal outcome is final. Not generatable today.',
+ rt:'Free Goods (Sub Type Bridge)',moment:'bridge ended / closed (assumed); row inactive',recip:'HCP office (assumed)',
+ steps:['Not available today (inactive row).','To activate: MLR-approved template, row fields, <code>Is_Active__c = true</code> (J19).','Expected use once active %T{}: open the closed Bridge case, check end date and the final coverage outcome, Generate Letter, pick "Bridge disenrollment", cover ticked, fax.'],
+ receives:['Nothing today. Expected %T{}: bridge end notice with end date and the next supply route.'],
+ fill:['%T{} Bridge end date and final outcome fields (none mapped today)'],
+ extract:['None today. %T{} Candidates: Case.Eligibility_End_Date__c, Case.ClosedDate, parent Authorization outcome'],
+ defects:'Not a defect: inactive by design.',
+ uat:'None (inactive).'});
+
+/* 18 */
+T.push({code:'18',j:'j5',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'The case manager has tried several times to reach the patient, for consent, income documents, an insurance update or a scheduled follow-up, without success. The prescriber\'s office is asked to help reach the patient; the letter ticks the single reason and gives a response deadline. Pairs with 34 to the patient.',
+ trigger:'Enrollment case (or the case being worked) after the documented contact attempts fail; <code>Contact_Reason__c</code> set to the one reason.',
+ rt:'Enrollment (or the active case)',moment:'after failed contact attempts',recip:'HCP office',
+ checks:['<code>Contact_Reason__c</code> (single select: exactly one box) and <code>Contact_Reason_Other__c</code> for Other','HCP / practice on the case','Response deadline'],
+ review:'that the right reason box is ticked (00030670 had none set, so the UAT letter printed no tick) and the deadline.',
+ receives:['Subject <b>Unable to Contact Patient – Action Requested</b>; one ticked reason; response deadline; CM contact; no PI line; MLR <code>PRO-1603-US-EN-v3</code>; cover sheet 02.'],
+ fill:['Contact_Reason__c (+ Contact_Reason_Other__c)','HCP on the case','Practitioner fax'],
+ extract:['Case.Contact_Reason__c / Contact_Reason_Other__c (case.reason_* "X")','Case.PRO_Letter_Response_Deadline__c'].concat(X_COMMON),
+ defects:'Round 2 formatting item "Selected Option indent on 18" open (template). No D-item.',
+ uat:'00030670 (500QL00000vBcYzYAK). LR-0000016, file 069QL00000PHrKuYAL, Complete in 3 s. Contact_Reason__c was not set on that case.'});
+
+/* 25 */
+T.push({code:'25',j:'j2',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'Enrollment is complete. The patient is welcomed to Lembaz Family Support and told who their Family Access Manager (FAM) and case manager are and how to reach them. It goes out at the same moment as letter 04 to the office, is printed and mailed, and today carries no postal address block.',
+ trigger:'Enrollment case at Status Complete / Sub Status Enrollment Received (or Enrollment Complete) with <code>FAM_Contact__c</code> set on the case or an Enrollment ancestor.',
+ rt:'Enrollment',moment:'Complete / Enrollment Received',recip:'Patient (FAM named as contact)',
+ checks:['<code>FAM_Contact__c</code> (QA1025 FAM One in UAT; parent-chain fallback since 10/28)','Patient Account name, DOB, Patient ID and billing address','Case Manager'],
+ review:'"Dear <patient>", the FAM block (name, phone, e-mail), the CM block and the PI line placeholder (D7).',
+ receives:['Letterhead; "Dear &lt;patient&gt;,"; subject <b>Welcome to Lembaz Family Support</b>.','FAM name / phone / e-mail; Case Manager contact; "Sincerely, Lembaz(TM) Family Support"; disclaimer; PI line (D7); footer MLR <code>PRO-1698-US-EN-v1</code>. No postal address block.'],
+ fill:['Case.FAM_Contact__c on the Enrollment case (or an Enrollment ancestor)','Account FirstName / LastName / PersonBirthdate / PRO_Patient_Unique_ID__c / Billing address'],
+ extract:X_PATIENT,
+ defects:'%D{D7} PI placeholder. Round 2 "FAM blank" closed by the 10/28 parent-chain fallback. UAT has no Contact record type FAM (TD-1933 davidb only).',
+ uat:'00030670 (500QL00000vBcYzYAK). LR-0000015, file 069QL00000PHmOUYA1, Complete in 2 s; FAM printed.'});
+
+/* 26 */
+T.push({code:'26',j:'j10',team:'cm',alt:'fin',persona:'P1 Beren Case Manager (source); Financial team candidate',
+ scenario:'The commercial copay request is approved. The patient receives their copay program details: the member ID (the copay card number), the benefit period and the maximum benefit, plus the Family Access Manager to call. Pairs with 07 to the office and is printed and mailed.',
+ trigger:'Copay Eligibility case Approved with <code>Copay_Card_Number__c</code>, <code>Member_Plan__c</code> and a Benefit Assignment; generate after the BA exists or the period prints blank (D6, closed in UAT).',
+ rt:'Copay Eligibility',moment:'Approved, BA linked',recip:'Patient (FAM named)',
+ checks:['<code>Copay_Card_Number__c</code> (Member ID)','<code>Benefit_Assignment__c</code> eligibility dates and amounts','<code>Member_Plan__c</code>','FAM on the case or Enrollment ancestor'],
+ review:'Member ID, Benefit Period, Maximum Benefit, payer, approval date and FAM.',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>Commercial Copay Program – Approval Notification</b>; Member ID 1234567890; Benefit Period; Maximum Benefit $2,000.00 (or "$500 per claim"); payer; approval date; FAM contact; PI line (D7); MLR <code>PRO-1700-US-EN-v1</code>.'],
+ fill:['Copay_Card_Number__c','Benefit_Assignment__c (create the BA first)','Member_Plan__c','FAM_Contact__c','Close the case for the approval date'],
+ extract:X_COPAY.concat(X_PATIENT),
+ defects:'%G{D6 closed} 11/05. %D{D7} PI placeholder open. Template is the 10/28 re-cut (fulluat ContentVersion 2 068QL00000QSEFaYAP).',
+ uat:'00030750 (500QL00000vBiPtYAK). LR-0000042, file 069QL00000PMfZFYA1 (after BA 0nDQL0000001zPd2AI, 7 s); earlier LR-0000028 / LR-0000041 printed a blank period.'});
+
+/* 28 */
+T.push({code:'28',j:'j13',team:'cm',alt:'fin',persona:'P1 Beren Case Manager',
+ scenario:'A PAP re-enrolment or annual review needs updated income documents. The patient is asked to send proof of income by the due date held on the Document Checklist task of the Free Goods case, with the FAM as contact. If nothing arrives the PAP ends (see 13, inactive).',
+ trigger:'Free Goods PAP case with a Task of record type <b>Document_Checklist</b> whose <code>ActivityDate</code> is the income-documents due date; generate when the review cycle opens.',
+ rt:'Free Goods (Sub Type PAP)',moment:'re-enrolment / income review open; checklist task due',recip:'Patient (FAM named)',
+ checks:['Document Checklist task exists with <code>ActivityDate</code>','FAM on the case or ancestor','Patient address'],
+ review:'the due date (case.income_due) and the documents list.',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>Patient Assistance Program (PAP) - Income Verification Request</b>; documents needed; <b>due date</b>; FAM contact; MLR <code>PRO-1702-US-EN-v1</code>.'],
+ fill:['Document Checklist task with ActivityDate','FAM_Contact__c','Account address'],
+ extract:['seq 6 DocumentChecklist: newest Task RecordType Document_Checklist -> ActivityDate (case.income_due)'].concat(X_PATIENT),
+ defects:'%U{D7 if the PI line is printed on 28}; nothing else listed. %U{Document Checklist task state on 00030688 not re-verified}.',
+ uat:'00030688 (500QL00000vBdjZYAS). LR-0000033, file 069QL00000PHVImYAP, Complete in 4 s.'});
+
+/* 29 */
+T.push({code:'29',j:'j12',team:'cm',alt:'fin',persona:'P2 Beren Leader approves; P1 CM generates',
+ scenario:'The Patient Assistance Program request is approved. The patient learns the approved regimen and the approval date and who to call (FAM). Pairs with 11 to the office; printed and mailed after the leadership gate releases the case.',
+ trigger:'Free Goods PAP case Approved / No Restrictions with <code>Leadership_Approval_Date__c</code> stamped.',
+ rt:'Free Goods (Sub Type PAP)',moment:'Approved / No Restrictions after leadership approval',recip:'Patient (FAM named)',
+ checks:['Regimen fields','<code>Leadership_Approval_Date__c</code>','FAM and patient address'],
+ review:'regimen, approval date, period lines (blank in UAT), FAM.',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>Patient Assistance Program (PAP) – Approval Notification</b>; regimen; approval date; assistance period if set; FAM contact; MLR <code>PRO-1703-US-EN-v1</code>.'],
+ fill:['Approved_* fields','Leadership_Approval_Date__c via the gate','FAM_Contact__c','Effective_Date__c / Eligibility_End_Date__c if the period must print'],
+ extract:X_PAP.concat(X_PATIENT),
+ defects:'None listed; period blank for the %D{D5} reason. %U{D7 if the PI line prints}.',
+ uat:'00030688 (500QL00000vBdjZYAS). LR-0000031, file 069QL00000PHj7HYAT, Complete in 1 s.'});
+
+/* 31 */
+T.push({code:'31',j:'j14',team:'cm',persona:'P2 Beren Leader approves; P1 CM generates',
+ scenario:'Bridge supply is approved while coverage is pending. The patient is told the regimen and, once D5 is fixed, the bridge period and approval date, with the FAM as contact. Pairs with 15 to the office.',
+ trigger:'Free Goods Bridge case after the leadership gate stamps <code>Leadership_Approval_Date__c</code>.',
+ rt:'Free Goods (Sub Type Bridge)',moment:'leadership approval stamped',recip:'Patient (FAM named)',
+ checks:['Regimen fields','<code>Leadership_Approval_Date__c</code>','FAM and address'],
+ review:'regimen prints; Approval Date and Bridge Period blank (D5); FAM; PI line (D7).',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>BRIDGE Program - Approval Notification</b>; regimen "2 vials / 2 g/kg / Every 2 weeks"; Approval Date / Bridge Period (blank, D5); FAM; PI line (D7); MLR <code>PRO-1705-US-EN-v1</code>.'],
+ fill:['Approved_* fields','Leadership_Approval_Date__c','FAM_Contact__c','Bridge dates once D5 names them'],
+ extract:['Case.Approved_Dose__c / Approved_Quantity__c / Approved_Dispensing_Frequency__c','Case.Effective_Date__c / Eligibility_End_Date__c (bridge.*)','Case.Leadership_Approval_Date__c'].concat(X_PATIENT),
+ defects:'%D{D5} (Victor + Rachel). %D{D7} PI line.',
+ uat:'00030711 (500QL00000vBeirYAC). LR-0000040, file 069QL00000PM3AXYA1, Complete in 2 s (regenerated 11/05); earlier LR-0000035.'});
+
+/* 34 */
+T.push({code:'34',j:'j5',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'The programme could not reach the patient after repeated attempts. A plain "we tried to reach you" letter asks the patient to call the Family Access Manager so enrollment or support can continue. Pairs with 18 to the office; printed and mailed.',
+ trigger:'Enrollment (or active) case after failed contact attempts; <code>Contact_Reason__c</code> set; generated together with 18.',
+ rt:'Enrollment (or the active case)',moment:'after failed contact attempts',recip:'Patient (FAM named)',
+ checks:['<code>Contact_Reason__c</code>','FAM on the case or ancestor','Patient address'],
+ review:'the FAM block and the reason wording.',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>Unable to Reach You</b>; why we tried; FAM contact; MLR <code>PRO-1699-US-EN-v1</code>.'],
+ fill:['Contact_Reason__c (+ Other text)','FAM_Contact__c','Account address'],
+ extract:['Case.Contact_Reason__c / Contact_Reason_Other__c'].concat(X_PATIENT),
+ defects:'%U{D7 if 34 carries the PI line}. Template is the 10/28 re-cut (fulluat ContentVersion 2 068QL00000QSHDYYA5).',
+ uat:'00030670 (500QL00000vBcYzYAK). LR-0000017, file 069QL00000PHIGoYAP, Complete in 1 s.'});
+
+/* 38 */
+T.push({code:'38',j:'j8',team:'cm',persona:'P1 Beren Case Manager (source; PA tracking may sit with the Payor Specialist)',
+ scenario:'The payor has approved the prior authorization. The Authorization case is set to Approved with the reference number and the validity dates; the prescriber\'s office receives the approval notice with payer, reference, authorization period and next step. Pairs with 39 to the patient.',
+ trigger:'Authorization case at Status Approved / Sub Status No Restrictions (Sub Type Initial or Renewal Authorization, Case Stage "Prior Authorization Approved") with <code>Reference_Number__c</code>, start / expiry dates and <code>Member_Plan__c</code>.',
+ rt:'Authorization Case',moment:'Approved / No Restrictions',recip:'HCP office',
+ checks:['<code>Reference_Number__c</code>','<code>Authorization_Start_Date__c</code> / <code>Authorization_Expiration_Date__c</code>','<code>Member_Plan__c</code> (payer prints only then)','<code>Case_Stage__c</code>, <code>Case_Next_Action__c</code>'],
+ review:'payer "Cigna", reference, period, outcome date, stage text and next step.',
+ receives:['Subject <b>Prior Authorization -Approval Notification</b>; payer / plan; reference number; authorization period start - end; outcome date; stage; next step; CM contact; MLR <code>PRO-1689-US-EN-v1</code>; cover sheet 02.'],
+ fill:['Member_Plan__c','Reference_Number__c','Authorization_Start_Date__c / Authorization_Expiration_Date__c','Case_Stage__c; Case_Next_Action__c'],
+ extract:X_PA.concat(X_COMMON),
+ defects:'None of D1-D9. Round 2 "Current Case Stage source mismatch" (Victor) touches case.stage.',
+ uat:'00030745 (500QL00000vBgEUYA0), AUTH-2026-1103-01, 2026-10-24..2027-05-03, Cigna. LR-0000023, file 069QL00000PHEl3YAH, Complete in 3 s.'});
+
+/* 39 */
+T.push({code:'39',j:'j8',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'The prior authorization is approved and the patient is told: payer, reference, the period the authorization covers and who to call (FAM). Pairs with 38; printed and mailed.',
+ trigger:'Authorization case Approved / No Restrictions with reference, dates and Member Plan; FAM on the case or Enrollment ancestor.',
+ rt:'Authorization Case',moment:'Approved / No Restrictions',recip:'Patient (FAM named)',
+ checks:['Reference and dates','<code>Member_Plan__c</code>','FAM and address'],
+ review:'payer, reference, period and FAM.',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>Prior Authorization (PA) – Approval Notification</b>; payer; reference; period; FAM contact; MLR <code>PRO-1709-US-EN-v1</code>.'],
+ fill:['Member_Plan__c','Reference_Number__c; Authorization dates','FAM_Contact__c'],
+ extract:X_PA.concat(X_PATIENT),
+ defects:'None of D1-D9. %U{D7 if the PI line prints on 39}.',
+ uat:'00030745 (500QL00000vBgEUYA0). LR-0000024, file 069QL00000PHaolYAD, Complete in 3 s.'});
+
+/* 40 */
+T.push({code:'40',j:'j9',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'The payor denied the prior authorization. The case is set to Denied with the reason, the action the office must take (letter of medical necessity, recent clinical notes) and a deadline. The office receives the denial notice; today the denial reference number and denial date print blank and the action boxes stay unticked (D2, D3, D4).',
+ trigger:'Authorization case at Status Denied with Sub Status (Medical Necessity ...), <code>Denial_Reason__c</code>, <code>Action_Required__c</code>, <code>Reference_Number__c</code>, <code>Member_Plan__c</code>; Case Stage "Prior Authorization Denied".',
+ rt:'Authorization Case',moment:'Denied / Medical Necessity',recip:'HCP office',
+ checks:['<code>Sub_Status__c</code> (validation rule for Denied)','<code>Denial_Reason__c</code>','<code>Action_Required__c</code> text','<code>Reference_Number__c</code>, <code>Member_Plan__c</code>'],
+ review:'payer, denial reason, Denial Reference Number (blank, D2), Denial Date (blank, D3), Action Required boxes (unticked, D4) and "Please respond by".',
+ receives:['Subject <b>Prior Authorization - Denial Notification</b>; payer; denial reason; Denial Reference Number (blank, D2); Denial Date (blank, D3); Action Required checkboxes + free text (unticked, D4); <b>Please respond by</b> date; CM contact; MLR <code>PRO-1690-US-EN-v1</code>; cover sheet 02.'],
+ fill:['Sub_Status__c','Denial_Reason__c','Action_Required__c','Reference_Number__c','Member_Plan__c'],
+ extract:X_PADEN.concat(X_COMMON),
+ defects:'%D{D2} placeholder unbound (Victor). %D{D3} no source for Denial Date (Victor + Rachel; ClosedDate candidate). %D{D4} Action Required boxes never tick (Victor).',
+ uat:'00030768 (500QL00000vBXhPYAW), AUTH-2026-1103-02, Cigna L2. LR-0000038, file 069QL00000PM345YAD, Complete in 2 s (first run LR-0000025). D2-D4 reproduced 11/05.'});
+
+/* 41 */
+T.push({code:'41',j:'j9',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'The prior authorization is denied and the patient is told the reason and that the office is working on the next step, with the FAM to call. Pairs with 40; printed and mailed. Denial reference and date print blank today (D2, D3).',
+ trigger:'Authorization case Denied with Denial_Reason__c, Reference_Number__c and Member Plan; FAM on the case or Enrollment ancestor.',
+ rt:'Authorization Case',moment:'Denied / Medical Necessity',recip:'Patient (FAM named)',
+ checks:['Denial reason, reference, Member Plan','FAM and address'],
+ review:'payer, denial reason, blanks for reference and date (D2, D3), FAM, PI line (D7).',
+ receives:['"Dear &lt;patient&gt;,"; subject <b>Prior Authorization (PA) – Denial Notification</b>; payer; denial reason; Denial Reference Number / Denial Date (blank, D2 / D3); FAM contact; PI line (D7); MLR <code>PRO-1708-US-EN-v1</code>.'],
+ fill:['Denial_Reason__c','Reference_Number__c','Member_Plan__c','FAM_Contact__c'],
+ extract:X_PADEN.slice(0,1).concat(X_PADEN.slice(2,5),X_PATIENT),
+ defects:'%D{D2}, %D{D3} (Victor; D3 also Rachel). %D{D7} PI line. Template is the 10/28 re-cut (fulluat ContentVersion 2 068QL00000QSGhDYAX).',
+ uat:'00030768 (500QL00000vBXhPYAW). LR-0000039, file 069QL00000PLnH4YAL, Complete in 2 s (first run LR-0000026).'});
+
+/* 42 */
+T.push({code:'42',j:'j4',team:'cm',persona:'P1 Beren Case Manager',
+ scenario:'A downstream case, a benefits verification, an authorization or a copay request, is on hold because information is missing. The office is told the case cannot move until it arrives ("Case Support Action Required"). Same checklist mechanics as 05, plus boxes that say which kind of case is waiting (PA, appeal, other).',
+ trigger:'Stalled BV / Authorization / Appeal / Copay case with an Enrollment Missing Information child (or the EMI child itself) listing the gaps; generate while the case is on hold.',
+ rt:'EMI child or the stalled BV / Authorization / Appeal case',moment:'case on hold, MI list filled',recip:'HCP office',
+ checks:['EMI child <code>Missing_Information_List__c</code>, notes, Contact Reason','The stalled case\'s record type (drives the PA / Appeal / Other box)','HCP on child or parent'],
+ review:'ticked items, the case-type box and the deadline.',
+ receives:['Subject <b>Missing Information – Case Support Action Required</b>; case-type boxes (PA / Appeal / Other); checklist with [X] items; response deadline; CM contact; MLR <code>PRO-1691-US-EN-v1</code>; cover sheet 02.'],
+ fill:['As 05: EMI list with recognised values, notes for Other, Contact_Reason__c, HCP on child or parent'],
+ extract:X_MI.concat(['Case.RecordType.Name (case.box_pa / box_appeal / box_other)'],X_COMMON),
+ defects:'%D{D7} PI placeholder (cross-cutting). P3-5 / P3-6 as 05.',
+ uat:'00030641 (500QL00000vBZ87YAG). LR-0000019, file 069QL00000PHjiMYAT, Complete in 5 s.'});
+
+/* ATTEST */
+T.push({code:'ATTEST',j:'j15',team:'auto',persona:'System (patient or representative e-signs); the CM only sees the locked file',
+ scenario:'The patient or their representative accepts the enrollment terms electronically, for example in the portal. The Enrollment case records the acceptance and, without anyone clicking anything, a locked PDF attestation is generated with the case number, patient, program, acceptance date, IP address, terms version and the full terms text. It is the legal record of consent and cannot be replaced or deleted. Today it fails silently for any program with more than one Enrollment Terms row (D9).',
+ trigger:'Automation event: Case after-save with <code>eSignature_Accepted__c = true</code> on record type Enrollment fires flow <code>PRO_Case_EnrollmentAttestation</code> -> invocable -> queueable -> <code>generate(caseId, \'ATTEST\')</code>. One attestation per case.',
+ rt:'Enrollment',moment:'eSignature_Accepted__c becomes true',recip:'Enrollment file on the Case (tagged to the patient); nothing is sent',
+ steps:['No user steps. The patient signs; within about a minute a PDF "Attestation Document" appears under Files on the Enrollment case, tagged Document Type Enrollment and linked to the patient.','A CM who tries to upload a new version or delete it sees "This document is locked and cannot be revised / deleted."','If no file appears, check the Letter Requests tab: today a failed attestation leaves <b>no</b> request row (the queueable only writes a debug log, D9); a Beren / Lembaz program with one terms row works.'],
+ receives:['PDF from <code>PRO_LetterATTEST_Attestation_v1</code> (36,796 bytes): case number, patient name, program, acceptance date, IP address, terms version, modal text of the enrollment terms. No MLR code; not faxed or mailed despite Delivery "Fax" on the row.'],
+ fill:['Nothing manual: eSignature_Accepted__c / _Date__c / _IP_Address__c / _Terms_Version__c written by the portal; Enrollment record type','Exactly one PRO_Enrollment_Term__c row per program until D9 is fixed'],
+ extract:['Case.Id / CaseNumber','Case.Account.FirstName / LastName','Case.Pro_Program__r.Name','Case.eSignature_Accepted__c / eSignature_Accepted_Date__c / eSignature_IP_Address__c / eSignature_Terms_Version__c','PRO_Enrollment_Term__c.Modal_Text__c WHERE Pro_Program__c = Case:Pro_Program__c (no version / active filter: D9)'],
+ extraBad:{extract:{id:'D9',text:'PROLetterAttestCaseExtract_1 joins PRO_Enrollment_Term__c on program only. CG Oncology in Pro Demo has 3 active rows -> Terms node is an array -> DocGen "Input object is not a key-value pair" -> queueable swallows it, no request row. Fix (Victor): filter Version__c = Case:eSignature_Terms_Version__c, fallback latest active, limit 1; write a Failed request row. Must be fixed before prod.'}},
+ defects:'%D{D9} silent failure for programs with more than one terms row (Victor; before prod). Not run in UAT. Open LPL question on the Pro Demo 10/29 old-mapper re-deploy.',
+ uat:'None in fulluat. Pro Demo positive test: Beren Enrollment 00058257 (500dx00000dgNwLAAU) -> LR-0000001 ATTEST Complete 2026-11-06 20:41Z; negative: CG Oncology 00058265 (500dx00000diUvJAAU) -> no row.'});
+
+/* SOB */
+T.push({code:'SOB',j:'j7',team:'payor',persona:'P3 Payor Specialist',
+ scenario:'After benefit verification the prescriber\'s office may want the full Benefit Verification Summary form rather than the one-page letter 06: network status of facility and provider, whether the codes are covered, referrals, in- and out-of-network amounts, who verified and when. The Payor Specialist generates it from the BV case and faxes it with a cover sheet. It replaces the older Visualforce SOB (TD-1911) that still sits on the BV page.',
+ trigger:'Benefit Verification case Complete with the Primary Verification task, CoverageBenefit (network statuses, OON amounts, referrals, verified by / date) and MemberPlan filled; when the office asks for the form or as the standard BV deliverable.',
+ rt:'Benefit Verification',moment:'Complete / Covered, form requested',recip:'HCP office',
+ checks:['Everything 06 needs plus <code>Case.CPT_HCPC_Code__c</code> (FLS-hidden for most users, P3-6)','Treating Site NPI / Tax ID; HCP NPI / Tax ID','CB network statuses, funding type, referrals, verified by / date, OON amounts','MemberPlan call reference, subscriber DOB'],
+ review:'the Y/N boxes, the codes line (template hard-codes "J3490 / 96450", P3-4) and the OON amounts; the form has no letterhead by design.',
+ receives:['"BENEFIT VERIFICATION SUMMARY" form: verified by / date, payer, policy dates, network status, [X] Y/N for codes covered and referrals, in- and out-of-network deductible / OOP / coinsurance / copay, facility and provider NPI / Tax ID. No subject, no MLR code in the registry; cover sheet 02 in front.'],
+ fill:['As 06 plus Case.CPT_HCPC_Code__c','Treating Site NPI / Tax ID; HCP NPI / Tax ID','CB network statuses, funding, referrals, verified by / date, OON amounts','MemberPlan call reference, subscriber DOB','FLS on CPT_HCPC_Code__c'],
+ extract:X_SOB.concat(X_COMMON.slice(1,3)),
+ defects:'P3-4 hard-coded codes (LPL). P3-6 CPT_HCPC_Code__c FLS. %D{D1} family: deductible semantics shared with 06. VF SOB: TD-2191 BLOCKED.',
+ uat:'00030743 (500QL00000vBcvaYAC). LR-0000021, file 069QL00000PHthdYAD, Complete in 1 s. Second case 00030721 (L2, fax (407) 555-0169, CB 0TLQL0000003UBF4A2).'});
+
+/* SOB_ARM */
+T.push({code:'SOB_ARM',j:'j7',team:'lead',persona:'P2 Beren Leader / ARM uses it; P3 Payor Specialist or the ARM generates it',
+ scenario:'The Access &amp; Reimbursement Manager prepares a field conversation with the prescriber\'s office using the longer internal worksheet: payer, policy dates, funding type, in- and out-of-network amounts, facility and provider identifiers, with blank sections to complete by hand during the visit. It is generated from the BV case and stays inside the program; nothing is faxed or mailed.',
+ trigger:'Benefit Verification case Complete, before an ARM field visit or payor conversation; Delivery is blank on the row and no cover sheet is offered.',
+ rt:'Benefit Verification',moment:'Complete; ARM prep',recip:'ARM internal (worksheet)',
+ checks:['As SOB: CB in- and out-of-network amounts, network statuses, funding, referrals','MemberPlan call reference, subscriber DOB, policy dates','Facility / provider NPI and Tax ID'],
+ review:'payer, member id, policy dates, subscriber DOB, funding type, OON amounts; the remaining sections are the manual worksheet.',
+ receives:['Internal worksheet (largest template, 6,260 bytes): payer, member ID, policy dates, subscriber DOB, funding type; in-network and out-of-network deductible / OOP / remaining / coinsurance / copay; facility and provider NPI / Tax ID; network status; referrals; codes (blank without FLS); manual sections. No subject, no MLR, no cover.'],
+ fill:['As SOB','FLS on CPT_HCPC_Code__c for the codes line'],
+ extract:X_SOB,
+ defects:'P3-6 codes blank without FLS. %D{D1} family (deductible semantics). VF ARM SOB (Generate_ARM_Lembaz_SOB) still on the BV page.',
+ uat:'00030743 (500QL00000vBcvaYAC). LR-0000022, file 069QL00000PHLhjYAH, Complete in 2 s.'});
+
+/* ---------- template scene builders ---------- */
+function tplCat(code){return CAT.find(c=>c.code===code)||{};}
+function teamBadge(t,short){const lbl=TEAMS[t.team];return '<span class="team '+t.team+'">'+lbl+'</span>'+(t.assumed?'<span class="assumed">assumed</span>':'')+(t.alt&&!short?' <span class="unv" title="'+esc(FIN_NOTE)+'">or '+TEAMS[t.alt]+'<small>assumed</small></span>':'')+(t.alt&&short?' <span class="unv"><small title="'+esc(FIN_NOTE)+'">or Financial team, assumed</small></span>':'');}
+function waveLabel(w){return w==='W1'?'Wave 1':w==='W2'?'Wave 2':w==='SOB'?'SOB':w;}
+function recipClass(r){return /^HCP/.test(r)?'HCP office':/^Patient/.test(r)?'Patient or FAM':/^ARM/.test(r)?'ARM internal':'Internal file';}
+function delivLabel(c){if(c.code==='02')return 'Fax packet page 1 (automatic)';if(c.code==='ATTEST')return 'Internal: locked PDF on the Case';if(c.del==='Fax'&&c.cover==='yes')return 'Fax packet with cover 02';if(c.del==='Mail')return 'Print + mail (DOCX)';return 'Internal (DOCX, no cover)';}
+function tplSteps(t){
+  if(t.steps)return t.steps;
+  const c=tplCat(t.code); const fax=c.del==='Fax'&&c.cover==='yes'; const mail=c.del==='Mail';
+  const s=[];
+  s.push('Open the <b>'+t.rt+'</b> case at the moment described above'+(t.uat?' (UAT example in the footer)':'')+'.');
+  s.push('Check these fields first: '+t.checks.join('; ')+'.');
+  s.push('Click <b>Generate Letter</b> and pick "<b>'+esc(c.name)+'</b>" ('+t.code+'); the summary line reads <code>'+esc(c.aud)+' · '+esc(c.del||'(blank)')+' · DOCX</code>.');
+  if(fax)s.push('Leave <b>Include the fax cover sheet</b> ticked (default for this letter) so the packet gets cover sheet 02 with the page count; untick only to get the letter alone.');
+  else if(mail)s.push('No cover-sheet checkbox: this is a print-and-mail letter.');
+  else s.push('No cover-sheet checkbox: this is an internal document.');
+  s.push('Click <b>Generate</b>; on "Your letter is ready and saved on the Case." click <b>Open letter</b> and review '+t.review);
+  if(fax)s.push('Send by fax: confirm the destination (<code>Case.PRO_Letter_Recipient_Fax__c</code>, printed as "To fax" on the cover), then use the Fax Documents screen flow <code>Pro_Screen_Flow_Create_Files_Documents_Record</code> on the filed document; the status comes back on the Files &amp; Documents record. Only the first linked file is faxed, so send letter + cover as one PDF or in two sends.');
+  else if(mail)s.push('Print the DOCX and mail it to the patient address on the Account; no postal integration exists. Note the mailing on the case.');
+  else s.push('Open it from Files &amp; Documents when needed; nothing is sent outside.');
+  return s;
+}
+function tplChain(t){
+  if(t.j){const j=J.find(q=>q.id===t.j);return chainItems(j?j.chain:{},t.extraBad);}
+  const inactive={mdt:'Row <code>Letter_'+t.code+'</code>: <code>Is_Active__c = false</code>, no Document_Template_Name__c, no Audience / Subject / MLR; Approved_Programs__c = Lembaz Family Support. The picker counts it among the "3 registered letters waiting for approval".',
+    template:'None registered. Activation needs an MLR-approved .docx registered as DocumentTemplate and the row updated (J19).',
+    status:'No request row can exist: <code>resolveLetterType</code> refuses an inactive row with "This letter is not available yet. Choose another letter or contact your administrator."',
+    skip:['lr','extract','mapping','job','trigger'],
+    over:{lwc:'Picker shows active letters only; this code appears only as a count.',svc:'<code>resolveLetterType(\''+t.code+'\')</code> requires an active row with a template; stops here.'},
+    bad:{mdt:{id:'Inactive',text:'By design in Wave 2; not a defect.'}}};
+  return chainItems(inactive,t.extraBad);
+}
+function templateScene(t){
+  const c=tplCat(t.code); const j=t.j?J.find(q=>q.id===t.j):null;
+  const strip='<div class="tstrip"><div><span>Code</span><b class="big">'+esc(t.code)+'</b></div><div><span>Letter</span><b>'+esc(c.name)+'</b></div><div><span>Subject line (Re:)</span><b>'+esc(SUBJ[t.code]||'(none in registry)')+'</b></div><div><span>Template file</span><b><code>'+esc(c.tpl)+'</code></b></div><div><span>MLR code</span><b>'+esc(c.mlr||'(none)')+'</b></div><div><span>Status</span><b>'+(c.active?'<span class="badge green">active</span>':'<span class="badge red">inactive</span>')+'</b></div><div><span>Wave</span><b>'+esc(waveLabel(c.wave))+'</b></div><div><span>Audience · Delivery · Cover</span><b>'+esc(c.aud)+' · '+esc(c.del||'(blank)')+' · '+esc(c.cover)+'</b></div></div>';
+  const ptr='<p class="ptr">'+(j?'Journey scene with the full walk-through: '+goLink(j.id,j.nav+' · '+j.title):'No journey scene (inactive letter)')+' · '+goLink('tpl-matrix','Back to the matrix')+'</p>';
+  let left='<div class="col"><h3>Who and when</h3>';
+  left+='<p>'+teamBadge(t)+'</p><p class="hint" style="margin-top:-6px">'+fmt(t.persona)+'</p>';
+  left+='<h4>Business scenario</h4><p>'+fmt(t.scenario)+'</p>';
+  left+='<div class="trig"><b>Exact trigger</b>'+fmt(t.trigger)+'</div>';
+  left+='<h4>Steps the user takes</h4>'+ol(tplSteps(t));
+  left+='<h4 style="margin-top:10px">What the recipient receives</h4><p class="hint" style="margin:0 0 4px">Recipient: '+esc(t.recip)+' · '+esc(delivLabel(c))+'</p>'+li(t.receives);
+  left+='<div class="box"><h4>Fill these fields first</h4>'+li(t.fill)+'</div></div>';
+  let right='<div class="col"><h3>Behind the scenes</h3><p class="hint">'+(j?'Component chain shared with '+esc(j.nav)+'; red steps carry the defect id.':'Chain stops at the registry: the row is inactive.')+'</p><ol class="chain" data-anim>'+tplChain(t)+'</ol>';
+  right+='<div class="box"><h4>Extract fields this letter needs</h4><div class="fields" style="display:flex;flex-wrap:wrap;gap:4px">'+t.extract.map(f=>'<code style="font-size:12px">'+fmt(f)+'</code>').join('')+'</div></div>';
+  right+='<div class="box"><h4>Known defects as of 2026-11-06</h4><p style="margin:0">'+fmt(t.defects)+'</p></div></div>';
+  const foot='<div class="tfoot"><b>UAT example:</b> '+fmt(t.uat)+'</div>';
+  return '<div class="card"><div class="head"><span class="kicker">Template · '+esc(waveLabel(c.wave))+(c.active?'':' · inactive')+'</span><h2>'+esc(t.code)+' · '+esc(c.name)+'</h2></div>'+strip+ptr+'<div class="two">'+left+right+'</div>'+foot+'</div>';
+}
+function matrixScene(){
+  const legend='<div class="legend">'+Object.keys(TEAMS).map(k=>'<span><span class="team '+k+'">'+TEAMS[k]+'</span></span>').join('')+'<span><span class="assumed">assumed</span> = team inferred from the letter name / audience, not stated in a source; correct it</span></div>';
+  const rows=T.map(t=>{const c=tplCat(t.code);const m=t.uat.match(/d{8}/);const uatShort=m?m[0]+(/LR-d+/.test(t.uat)?' · '+t.uat.match(/LR-d+/)[0]:''):/inactive/i.test(t.uat)?'None (inactive)':/Pro Demo/.test(t.uat)?'Not in UAT; Pro Demo LR-0000001':'Not run in UAT (davidb only)';
+    return '<tr'+(c.active?'':' class="off"')+'><td>'+goLink('tpl-'+t.code,t.code)+'<br><small>'+esc(c.name)+'</small></td><td>'+teamBadge(t,true)+'</td><td>'+esc(t.scen1||plain(t.scenario).split(/(?<=\.)\s/)[0])+'</td><td>'+esc(t.rt)+'<br><small class="hint">'+esc(t.moment)+'</small></td><td>'+esc(recipClass(t.recip))+'</td><td>'+esc(delivLabel(c))+'</td><td><span class="wave">'+esc(c.active?waveLabel(c.wave):'inactive')+'</span></td><td>'+esc(uatShort)+'</td></tr>';}).join('');
+  const tbl='<div class="scroll tall"><table class="tight mx"><thead><tr><th>Code</th><th>Team / persona who generates</th><th>Scenario</th><th>Source case record type · status moment</th><th>Recipient</th><th>Delivery</th><th>Wave</th><th>UAT case / example</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  const byTeam={};T.forEach(t=>{(byTeam[t.team]=byTeam[t.team]||[]).push(t.code);});
+  const summary='<div class="two" style="margin-top:12px"><div class="box"><h4>Who owns which family</h4>'+li(Object.keys(byTeam).map(k=>'<span class="team '+k+'">'+TEAMS[k]+'</span> '+byTeam[k].join(', ')))+'<p class="hint" style="margin:6px 0 0">'+esc(FIN_NOTE)+' Letters marked "or Financial team" are 07, 08, 26 (copay) and 11, 12, 13, 14, 28, 29 (PAP). The Leader approves PAP and Bridge (11, 29, 15, 31) through the leadership gate but does not generate the letter.</p></div>'+
+  '<div class="box"><h4>How to read the table</h4>'+li(['Click a code to open its template scene (who, when, steps, what the recipient gets, fields, chain, defects).','Record type column = the Case the letter is generated from (MASTER 2.2); the framework itself does not restrict by record type, only by the Case\'s program.','Delivery: HCP letters are fax packets (letter PDF + cover 02) filed as Draft on a Files &amp; Documents row; patient letters are DOCX for print and mail; SOB_ARM and ATTEST stay internal.','Rows greyed out are registered but inactive (12, 13, 17): no template, no subject, no audience.','Letter-type rows confirmed read-only in fulluat on 2026-11-06 (28 rows).'])+'</div></div>';
+  return '<div class="card"><div class="head"><span class="kicker">Templates · overview</span><h2>Who uses which template, in what scenario, and when</h2></div><p class="sub">All 28 registered letters (25 active, 3 inactive). Team colours answer "who generates it"; the scenario and status-moment columns answer "when"; the recipient and delivery columns answer "what goes out and how".</p>'+legend+tbl+summary+'</div>';
+}
+
+/* ---------- narration for the template scenes ---------- */
+const NARR_T={
+ 'tpl-matrix':"Who uses which template. Twenty-eight letters are registered, twenty-five active. The Beren case manager owns most: the enrollment letters four, three b and twenty-five, the missing information requests five and forty-two, the unable-to-contact pair eighteen and thirty-four, the prior authorization letters thirty-eight to forty-one, and, as the sources stand, copay letters seven, eight and twenty-six and PAP letters eleven, fourteen, twenty-eight and twenty-nine. If a financial team takes that work, those nine move; they are marked as assumptions. The payor specialist owns letter six and the Summary of Benefits form. The leader, as ARM, owns the worksheet and approves PAP and bridge without generating. Automation owns the cover sheet and the attestation. Twelve, thirteen and seventeen are inactive.",
+ 'tpl-02':"Template zero two, the fax cover sheet. Nobody picks it. Whenever a case manager generates a provider letter with the cover box ticked, the system renders the letter to PDF, counts its pages, and produces this one-page cover with the recipient, the destination fax, the sender and the total page count. The office receives it as page one of the fax packet. Behind the scenes two queueables run between two DocGen jobs, and the cover is extracted from the request record rather than the case. No defect is logged, but the destination fax resolves on only one UAT case, the program's cover contact line is empty, and no send action exists yet from the filed draft.",
+ 'tpl-03_b':"Template three b, product-only enrollment received. The Beren case manager uses it when a prescriber's office has enrolled a patient for the product alone, without benefits or support services. Right after reviewing the new enrollment case, the case manager generates it with the cover sheet and faxes it to the office. The office receives a short acknowledgement headed Product Order Request Only, with the patient block and the case manager's contact details. Back end: the standard chain, same as letter four, with the common extract and the shell mapping. No specific defect; the prescribing information placeholder is the only cross-cutting item.",
+ 'tpl-04':"Template four, welcome and enrollment status. This is usually the first letter on a new patient. The Beren case manager sends it to the prescriber's office as soon as a completed enrollment form has been reviewed, and again whenever the status changes. The letter states the current status, enrollment received, additional information needed, or enrollment complete, computed from the case status and sub status, with the enrollment date and the case manager's contact. The service refuses it on a case cancelled as opened in error. Back end: the standard fax packet chain. No specific defect; the destination fax is blank on the UAT case, so a cover would carry no number.",
+ 'tpl-05':"Template five, missing information request. The Beren case manager uses it when enrollment intake found gaps: a tax ID, a patient address, a payor, a prescriber signature. Automation has already opened a missing information child case with the list and the parent sits at incomplete. The case manager opens the child, checks the list, the notes and the contact reason, generates five with the cover sheet and faxes it. The office receives a nine-category checklist with the missing items ticked and a respond-by date two business days out. Back end: the extract reads the newest visible child case. Defects: the prescribing information placeholder, plus two access items, the child must be visible and the notes field is hidden.",
+ 'tpl-06':"Template six, benefits investigation complete. The payor specialist generates it from the benefit verification case the moment the primary verification task and the coverage benefit are saved and the case is complete. The office receives the plan block, the coverage status, deductible and out-of-pocket amounts with met and remaining, whether prior authorization is required, the next step, and the name of the dedicated Access and Reimbursement Manager. Back end: the extract follows the primary verification task to the coverage benefit and member plan. Defects: D one, the applied and limit amounts are crossed in the mapping, our formula half is fixed; D eight, the ARM line is blank because UAT has no ARM assignments.",
+ 'tpl-07':"Template seven, commercial copay approved, to the office. In the sources the Beren case manager generates it; if a financial team owns copay work, it would move there, so it is marked as an assumption. The moment is a copay eligibility case set to approved with the card number, the member plan and a benefit assignment. The office receives the approval notice with the benefit period, the maximum benefit and the payer, so claims can be processed. Back end: copay tokens read the benefit assignment and the card number added on the twenty-eighth of October. Defects: D six is closed after the benefit assignment was created; the prescribing information placeholder remains.",
+ 'tpl-08':"Template eight, commercial copay denied. Again the Beren case manager in the sources, with the financial team as the assumed alternative. The copay eligibility case is closed as denied with a sub status such as income and a denial reason; a hot fix in October made that closable. The office receives the denial notification with the reason, the payer and next steps. Back end: four case fields, the standard packet chain, and an MLR code without a date so the auditor skips the date check. No open defect specific to this letter.",
+ 'tpl-11':"Template eleven, patient assistance program approved, to the office. A leader approves the free goods request through the leadership gate, which stamps the approval date; the Beren case manager then generates the letter with the cover sheet. The office receives the approval date and the approved regimen, quantity, dose and frequency, so product can ship. Back end: a formula concatenates the three regimen fields; the approval date comes from the leadership field. The assistance period lines read effective and eligibility end dates that free goods cases do not fill, the same root cause as D five on the bridge letters.",
+ 'tpl-12':"Template twelve, PAP denied. It is registered but inactive: no template, no subject, no audience. It shows in the picker only as one of three registered letters waiting for approval. The intended scenario, assumed from the name, is a free goods PAP request denied after financial review, with the office told the reason and next steps. Nothing can be generated until LaunchpadLab delivers an approved Word template and the row is activated. Whether twelve, thirteen and seventeen are in the sign-off set is an open question for Nicole Cross.",
+ 'tpl-13':"Template thirteen, PAP disenrollment. Registered but inactive. The assumed scenario is a patient leaving the patient assistance program, because coverage was obtained, income changed, the patient asked to stop, or re-enrolment documents never arrived. The office would be told the free goods supply ended and from which date. No template, no fields mapped, no UAT case; the disenrollment notice family has no active member today.",
+ 'tpl-14':"Template fourteen, PAP refill request. The Beren case manager sends it to the prescriber's office when a patient assistance patient is due for a refill and a new prescription or confirmation is needed before the next shipment. The office receives the approved regimen and a respond-by date, under the cover sheet. Back end: the regimen formula and the response deadline, otherwise the standard chain. No defect listed; the UAT run took thirteen seconds because of document service variance.",
+ 'tpl-15':"Template fifteen, bridge approval notification, to the office. While coverage is pending, a leader approves bridge supply through the leadership gate, and the Beren case manager generates the letter. The office receives the regimen; the approval date and bridge period are meant to print but are blank, defect D five, because the mapping reads effective and eligibility end dates that free goods cases never populate rather than the leadership date or the benefit period. Victor and Rachel are to agree the sources.",
+ 'tpl-17':"Template seventeen, bridge disenrollment. Registered but inactive. The assumed scenario is the end of a bridge supply when the payor's decision becomes final, approved and the patient moves to commercial supply, or denied and the patient moves to PAP or stops. The office would be told the bridge has ended and what replaces it. No template, no mapped fields, never generated.",
+ 'tpl-18':"Template eighteen, unable to contact patient, to the office. The Beren case manager uses it after documented attempts to reach the patient have failed, for consent, income documents, an insurance update or a follow-up. One contact reason is set on the case and prints as a single ticked box with a respond-by date; the office is asked to help. Back end: the contact reason picklist maps to five reason tokens. No content defect; a formatting item on the selected option indent is open with the template.",
+ 'tpl-25':"Template twenty-five, the patient welcome letter. The Beren case manager sends it at the same moment as letter four, once enrollment is complete, and prints and mails it. The patient is welcomed and given the Family Access Manager and the case manager with phone and e-mail. Back end: the FAM is read from the case or, since the twenty-eighth of October, from the first enrollment ancestor; patient address fields are extracted but the template has no address block. Defect: the prescribing information placeholder.",
+ 'tpl-26':"Template twenty-six, commercial copay approved, to the patient. Beren case manager in the sources, financial team as the assumed alternative. After the copay case is approved and a benefit assignment exists, the patient receives the member ID, the benefit period, the maximum benefit, the payer and the FAM contact, by mail. Back end: the copay tokens read the benefit assignment; the member ID comes from the card number. D six is closed; the prescribing information placeholder remains.",
+ 'tpl-28':"Template twenty-eight, PAP income verification request. The Beren case manager sends it to the patient when a re-enrolment or annual review needs proof of income. The due date comes from the document checklist task on the free goods case, and the FAM is the contact. Back end: a dedicated extract block reads the newest document checklist task. No defect listed; whether the UAT case still has that task was not re-verified.",
+ 'tpl-29':"Template twenty-nine, patient assistance program approved, to the patient. The Beren case manager generates it in the sources, with the financial team as the assumed alternative. The moment is a free goods PAP case at approved, no restrictions, once the leader has approved through the leadership gate and the approval date is stamped. The case manager prints and mails it. The patient receives the approved regimen, quantity, dose and frequency, the approval date and the Family Access Manager to call; the assistance period lines are blank for the same reason as D five. Back end: the chain is shared with letter eleven, the regimen formula and the leadership date. No defect listed beyond that blank period.",
+ 'tpl-31':"Template thirty-one, bridge approval, to the patient. Same moment as fifteen: coverage is pending, a leader approves bridge supply through the leadership gate, and the Beren case manager prints and mails the letter. The patient receives the regimen, two vials, two grams per kilogram, every two weeks in UAT, and, once D five is fixed, the bridge period and approval date, with the Family Access Manager as contact. Back end: the bridge tokens read effective and eligibility end dates that free goods cases never populate, so those lines print blank. Defects: D five, the bridge dates, with Victor and Rachel, and the prescribing information placeholder on this patient letter.",
+ 'tpl-34':"Template thirty-four, unreachable patient. The Beren case manager mails it together with letter eighteen to the office, after repeated documented attempts to reach the patient have failed, for consent, income documents, an insurance update or a follow-up call. The patient receives a short letter headed Unable to Reach You that asks them to call the Family Access Manager so enrollment or support can continue. Back end: the contact reason picklist and the FAM parent-chain fallback, with the standard single-document path, no cover sheet; the template is the October twenty-eighth re-cut. No specific defect; whether the prescribing information line prints on this letter is unverified.",
+ 'tpl-38':"Template thirty-eight, prior authorization approved, to the office. The Beren case manager generates it when the authorization case is set to approved with the reference number, start and expiry dates and the member plan. The office receives payer, reference, authorization period, outcome date, stage and next step, under the cover sheet. Back end: the PA fields map directly; the payer prints only when the member plan is set. No content defect; a case stage source mismatch is open with Victor.",
+ 'tpl-39':"Template thirty-nine, prior authorization approved, to the patient. The Beren case manager generates it at the same moment as thirty-eight, when the authorization case is set to approved with the reference number, the start and expiry dates and the member plan, and then prints and mails it. The patient receives the payer, the reference number, the period the authorization covers and the Family Access Manager to call. Back end: the same PA fields as thirty-eight, mapped directly, plus the FAM chain; the payer prints only when the member plan is set on the case. No defect in D one to D nine; whether the prescribing information line prints here is unverified.",
+ 'tpl-40':"Template forty, prior authorization denied, to the office. The Beren case manager generates it when the payor denies and the authorization case is set to denied with the reason, the action the office must take and the reference. The office receives the denial notice with a respond-by date. Three defects: D two, the denial reference number placeholder is not bound although the value is extracted; D three, no source is mapped for the denial date; D four, the action required check boxes never tick.",
+ 'tpl-41':"Template forty-one, prior authorization denied, to the patient. The Beren case manager mails it at the same moment as forty, when the payor denies and the authorization case is set to denied with the reason, the reference and the member plan. The patient receives the payer, the denial reason and the Family Access Manager to call while the office works on the next step. Defects: D two, the denial reference number placeholder is not bound although the value is extracted; D three, no source is mapped for the denial date; and the prescribing information placeholder. The template is the October twenty-eighth re-cut held in UAT as content version two.",
+ 'tpl-42':"Template forty-two, case delay missing information. The Beren case manager uses it when a downstream case, a benefit verification, an authorization or a copay request, is on hold for missing information. Same checklist mechanics as five, plus boxes that say whether a prior authorization, an appeal or another case is waiting. The office receives the ticked items and a respond-by date. Back end: the missing information child extract plus the record type name for the case-type boxes. Defects: the prescribing information placeholder and the two access items shared with five.",
+ 'tpl-ATTEST':"The attestation document. No user generates it. When a patient or representative accepts the enrollment terms electronically, the enrollment case records the acceptance and a flow starts a queueable that produces a locked PDF with the case number, patient, program, date, IP address, terms version and the full terms text. The case manager only sees the locked file; new versions and deletes are refused. Defect D nine: the attestation extract joins the terms table on program alone, so a program with more than one terms row makes DocGen reject the job and the queueable swallows the error without a request row. Beren works, CG Oncology in Pro Demo does not. This must be fixed before production.",
+ 'tpl-SOB':"The Summary of Benefits form for the office. The payor specialist generates it from the completed benefit verification case when the office wants the full form rather than letter six: network status, codes covered, referrals, in- and out-of-network amounts, who verified and when. It is faxed with a cover sheet. Back end: the full coverage benefit and member plan extract. Defects: the template hard-codes two procedure codes, the CPT field is hidden by field security for most users, and the deductible semantics are shared with D one.",
+ 'tpl-SOB_ARM':"The ARM worksheet. The leader, as Access and Reimbursement Manager, uses it to prepare a field conversation; the payor specialist or the ARM generates it from the benefit verification case. It is the largest template: payer, policy dates, funding type, in- and out-of-network amounts, facility and provider identifiers, and blank sections to fill by hand. It stays internal; nothing is sent. Back end: the same extract as the HCP form, no cover sheet, delivery blank on the row. Codes print blank without field security on the CPT field."
+};
+/* subject lines (Letter_Subject__c, fulluat 2026-11-06) */
+const SUBJ={'02':'Fax Cover Sheet','03_b':'Product Order Request Only','04':'Welcome to Lembaz Family Support – Enrollment Status Update','05':'Request for Missing Information','06':'Benefits Investigation Complete','07':'Out-of-Pocket Program- Approval Notification','08':'Commercial Copay Program - Denial Notification','11':'Patient Assistance Program (PAP)- Approval Notification','14':'Patient Assistance Program (PAP)- Refill Request','15':'Bridge Program – Approval Notification','18':'Unable to Contact Patient – Action Requested','25':'Welcome to Lembaz Family Support','26':'Commercial Copay Program – Approval Notification','28':'Patient Assistance Program (PAP) - Income Verification Request','29':'Patient Assistance Program (PAP) – Approval Notification','31':'BRIDGE Program - Approval Notification','34':'Unable to Reach You','38':'Prior Authorization -Approval Notification','39':'Prior Authorization (PA) – Approval Notification','40':'Prior Authorization - Denial Notification','41':'Prior Authorization (PA) – Denial Notification','42':'Missing Information – Case Support Action Required'};
+
+
 /* ---------- scene list ---------- */
 const SCENES=[];
 SCENES.push({id:'title',nav:'Title',group:'Overview',sub:'What, who, where it stands',build:titleScene,ms:12000});
 SCENES.push({id:'big',nav:'Big picture',group:'Overview',sub:'Catalogue, component and sequence diagrams',build:bigScene,ms:16000});
 J.forEach(j=>SCENES.push({id:j.id,nav:j.nav,group:'Journeys',sub:j.title,build:()=>journeyScene(j),ms:14000}));
+SCENES.push({id:'tpl-matrix',nav:'Who uses which template',group:'Templates',sub:'28 templates x team, scenario, trigger, recipient',build:matrixScene,ms:18000});
+T.forEach(t=>{const c=tplCat(t.code);SCENES.push({id:'tpl-'+t.code,nav:t.code+' · '+c.name,group:'Templates',sub:TEAMS[t.team].replace(/&amp;/g,'&')+(t.assumed?' (assumed)':'')+(c.active?'':' · inactive'),build:()=>templateScene(t),ms:14000});});
 SCENES.push({id:'state',nav:'State machine',group:'Technical',sub:'PRO_Letter_Request__c.Status__c',build:stateScene,ms:12000});
 SCENES.push({id:'contract',nav:'Data contract',group:'Technical',sub:'148 extract inputs by object',build:contractScene,ms:12000});
 SCENES.push({id:'security',nav:'Security',group:'Technical',sub:'Access checklist',build:securityScene,ms:12000});
@@ -1073,6 +1596,7 @@ function go(i,user){
   if(typeof VOICE!=='undefined'&&VOICE.on){speakScene(i);}
   try{history.replaceState(null,'','#'+SCENES[i].id);}catch(e){}
 }
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-go]');if(!a)return;e.preventDefault();const i=SCENES.findIndex(s=>s.id===a.getAttribute('data-go'));if(i>=0)go(i,true);});
 $('#prev').addEventListener('click',()=>go(cur-1,true));
 $('#next').addEventListener('click',()=>go(cur+1,true));
 document.addEventListener('keydown',e=>{
@@ -1119,6 +1643,7 @@ const NARR={
  jira:"The Jira map. TD fifteen eighty-two is the wave one story, in progress with the testing and sign-off sub-tasks open. TD nineteen twenty-one, wave two, moved to UAT on the fourth of November. TD nineteen eleven covers the Summary of Benefits letters and is blocked on a retest. Our deploy, data and configuration sub-tasks are TD twenty-three twenty-eight, twenty-nine and thirty. TD twenty-three seventy-four, the coverage formula bug, is done in production.",
  close:"Closing. What is proven: the UAT build generates every wave one and wave two letter end to end on realistic data, with letterhead, FAM contact, copay member ID and check boxes working. What is open: six mapping defects with Victor, the letter set and testers with Nicole Cross, round three and sign-off with Rachel. Then production: retire the old build, install the new one, unhide the button, and grant the Beren users. Thank you."
 };
+Object.assign(NARR,NARR_T);
 function journeyNarration(j){
   const parts=[];
   parts.push(plain(j.nav)+'. '+plain(j.title)+'.');
@@ -1180,7 +1705,7 @@ if('speechSynthesis' in window){
 }
 
 /* footer */
-$('#foot').innerHTML='Sources (all on the Desktop, read 2026-11-06; nothing in this demo was read live from an org): <code>Correspondence-Letters-JOURNEYS-and-Technical-2026-11-06.md</code> · <code>Correspondence-Letters-MASTER-Technical-2026-11-06.md</code> · <code>Correspondence-Letters-RENDER-TIME-Analysis-2026-11-06.md</code> · <code>Correspondence-UAT-Readiness-Report-2026-11-05.md</code>. Grey italics marked "unverified" repeat the sources\' own [U] / unverified markers. Mermaid diagrams load from cdn.jsdelivr.net; offline, the diagram source is shown as text.';
+$('#foot').innerHTML='Sources (all on the Desktop, read 2026-11-06; apart from the letter-type check noted below, nothing in this demo was read live from an org): <code>Correspondence-Letters-JOURNEYS-and-Technical-2026-11-06.md</code> · <code>Correspondence-Letters-MASTER-Technical-2026-11-06.md</code> · <code>Correspondence-Letters-RENDER-TIME-Analysis-2026-11-06.md</code> · <code>Correspondence-UAT-Readiness-Report-2026-11-05.md</code> · <code>Attestation-ProDemo-Blocked-RootCause-2026-11-06.md</code> (D9). Exception to "nothing read live": the 28 <code>PRO_Letter_Type__mdt</code> rows behind the Templates group were confirmed with one read-only query of fulluat on 2026-11-06. Grey italics marked "unverified" repeat the sources\' own [U] / unverified markers. Mermaid diagrams load from cdn.jsdelivr.net; offline, the diagram source is shown as text.';
 
 /* print: build every scene so Ctrl+P has them all */
 window.addEventListener('beforeprint',()=>{SCENES.forEach((s,i)=>ensureBuilt(i));document.querySelectorAll('.chain li').forEach(l=>l.classList.add('lit'));mmRenderIn(document);});

@@ -61,6 +61,25 @@ html.embedded .rail{top:58px;max-height:calc(100vh - 70px)}
 }`,
   },
   {
+    src: `${SF}/docs/analysis/2026-11-06-prodemo-relationship-model/staff-to-doctor-demo.html`,
+    mirrors: [],
+    out: `${REPO}/staff-to-doctor/index.html`,
+    css: `html.embedded header{padding:8px 16px;gap:12px}
+html.embedded header h1{font-size:17px}
+html.embedded header .sub{font-size:12px}
+html.embedded .wrap{grid-template-columns:230px 1fr}
+html.embedded nav a{padding:6px 16px;font-size:13.5px}
+html.embedded main{padding:18px 22px 70px;max-width:none}
+@media (max-width:1000px){
+ html.embedded .wrap{grid-template-columns:1fr}
+ html.embedded nav{display:flex;flex-wrap:wrap;gap:4px 6px;padding:8px 10px;position:sticky;top:52px;z-index:4;border-right:0;border-bottom:1px solid var(--line);max-height:none}
+ html.embedded nav .t{width:100%;padding:4px 2px 0;margin:0}
+ html.embedded nav .hint{display:none}
+ html.embedded nav a{padding:4px 10px;border:1px solid var(--line);border-left:1px solid var(--line);border-radius:999px;font-size:12.5px}
+ html.embedded main{padding:14px 14px 70px}
+}`,
+  },
+  {
     src: `${SF}/docs/td-2280/product-replacement-journey-demo.html`,
     mirrors: [],
     out: `${REPO}/product-replacement/index.html`,
