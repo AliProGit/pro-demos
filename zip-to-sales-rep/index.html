@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zip to Sales Rep: how client field teams reach a case</title>
+<style>
+:root{--ink:#172b4d;--muted:#5e6c84;--line:#dfe1e6;--bg:#fafbfc;--blue:#0052cc;--blue2:#deebff;--red:#de350b;--red2:#ffebe6;--green:#00875a;--green2:#e3fcef;--amber:#ff991f;--amber2:#fffae6;--purple:#6554c0;--purple2:#eae6ff}
+*{box-sizing:border-box}
+body{font-family:Segoe UI,system-ui,sans-serif;color:var(--ink);margin:0;line-height:1.5;background:#fff}
+header{padding:28px 32px 10px;border-bottom:1px solid var(--line)}
+header h1{margin:0 0 6px;font-size:1.7rem}
+header p{margin:0;color:var(--muted)}
+nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:8px 32px;display:flex;gap:6px;flex-wrap:wrap;z-index:5}
+nav button{border:1px solid var(--line);background:var(--bg);padding:6px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:.9rem;color:var(--ink)}
+nav button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+main{max-width:1100px;margin:0 auto;padding:24px 32px 80px}
+section{display:none}
+section.on{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+h2{font-size:1.35rem;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 18px}
+.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin:18px 0}
+.step{flex:1 1 150px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg);position:relative;min-width:150px}
+.step b{display:block;font-size:.95rem;margin-bottom:4px}
+.step small{color:var(--muted);display:block;line-height:1.35}
+.step.bad{border-color:var(--red);background:var(--red2)}
+.step.good{border-color:var(--green);background:var(--green2)}
+.step.new{border-color:var(--purple);background:var(--purple2)}
+.step .tag{position:absolute;top:-10px;right:10px;font-size:.7rem;padding:2px 8px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--muted)}
+.step.bad .tag{border-color:var(--red);color:var(--red)}
+.step.new .tag{border-color:var(--purple);color:var(--purple)}
+.arrow{align-self:center;color:var(--muted);font-size:1.4rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg)}
+.card h3{margin:0 0 6px;font-size:1rem}
+.card p,.card li{margin:4px 0;font-size:.93rem}
+.card.red{border-left:5px solid var(--red)}
+.card.green{border-left:5px solid var(--green)}
+.card.amber{border-left:5px solid var(--amber)}
+.card.purple{border-left:5px solid var(--purple)}
+.kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+.kpi div{border:1px solid var(--line);border-radius:10px;padding:10px 16px;background:#fff;min-width:150px}
+.kpi b{display:block;font-size:1.5rem}
+.kpi span{color:var(--muted);font-size:.85rem}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg)}
+code{background:#f4f5f7;padding:1px 5px;border-radius:4px;font-size:.88em}
+.demo{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff;margin:16px 0}
+.demo h3{margin:0 0 10px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.row label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted);gap:4px}
+select,input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;min-width:200px}
+button.run{background:var(--blue);color:#fff;border:0;border-radius:6px;padding:8px 16px;font:inherit;cursor:pointer}
+.result{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.result .box{border-radius:10px;padding:12px 14px;border:1px solid var(--line)}
+.result .box h4{margin:0 0 6px;font-size:.9rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.result .box.bad{background:var(--red2);border-color:var(--red)}
+.result .box.good{background:var(--green2);border-color:var(--green)}
+.result .box p{margin:3px 0;font-size:.93rem}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:6px 0 14px}
+.toggle button{border:0;background:#fff;padding:6px 14px;font:inherit;cursor:pointer}
+.toggle button.on{background:var(--ink);color:#fff}
+.note{font-size:.85rem;color:var(--muted)}
+.notes{display:none;border-top:1px dashed var(--line);margin-top:18px;padding-top:10px;font-size:.9rem;color:var(--muted)}
+body.n .notes{display:block}
+.keys{position:fixed;bottom:10px;right:14px;font-size:.75rem;color:var(--muted)}
+ul.tight li{margin:2px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Zip to Sales Rep: how a client's field team reaches a patient case</h1>
+  <p>Journey demo for 2026-11-11. Synthetic examples. Counts are production metadata/row counts as of 2026-11-10 evening, no patient data.</p>
+</header>
+<nav id="nav">
+  <button data-s="0" class="on">1. The idea</button>
+  <button data-s="1">2. How data is loaded</button>
+  <button data-s="2">3. What happened today</button>
+  <button data-s="3">4. Try it: before / after</button>
+  <button data-s="4">5. What we built</button>
+  <button data-s="5">6. From now on</button>
+  <button data-s="6">7. How we built it</button>
+</nav>
+<main>
+
+<!-- 1 -->
+<section class="on">
+  <h2>One junction object answers one question</h2>
+  <p class="lead">"For this program, in this zip code, who is the Sales Rep, the FRM, the ARM and the CTN?"</p>
+  <div class="flow">
+    <div class="step"><b>Client alignment file</b><small>One row per zip: territory name, zip, city, county. Plus a people sheet: rep name, role, territory.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step"><b>Contacts</b><small>One Contact per person. Record type = role (Sales Rep, FRM, ARM, CTN). Account = the client. Territory on the contact.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step good"><b>Zip to Sales Rep row</b><small>Program + Zip + Territory. The trigger fills four lookups: Sales Rep, FRM Contact, ARM Contact, CTN Contact.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step"><b>Enrollment case</b><small>Case is saved with a healthcare provider. Flow reads provider billing zip + case program, finds the row, copies the people onto the case.</small></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>Why zip + program, not address or territory</h3><p>Territory names repeat between clients ("Dallas TX" belongs to many). Patients move. The provider's zip and the program are stable and already on every case.</p></div>
+    <div class="card"><h3>Why one object</h3><p>No separate FRM table, ARM table, CTN table. The same row that gives a rep gives the whole field team. Load once, read everywhere.</p></div>
+    <div class="card"><h3>What the case shows</h3><p>Sales Rep Contact, FRM Contact, ARM Contact, CTN Contact, Case Manager, and the zip row it came from, so anyone can audit the match.</p></div>
+  </div>
+  <div class="notes">Presenter: the question we are answering is "why was this FRM not on this case" and "is the rep on this case the right one". Everything that follows is the mechanics behind those two questions.</div>
+</section>
+
+<!-- 2 -->
+<section>
+  <h2>How client data gets loaded</h2>
+  <p class="lead">Two screens in Salesforce, both already live. Azmath runs them when a client sends an alignment file.</p>
+  <div class="flow">
+    <div class="step"><b>Step 1. Contact import</b><small>Screen <code>proContactSalesRepComponent</code>. Pick the client Account, upload the people sheet. Each row becomes a Contact with the role record type and the territory.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step"><b>Step 2. Zip import</b><small>Screen <code>proZipToSalesRepComponent</code>. Pick the Program, upload the zip sheet. Program is forced by the screen. Each row becomes a Zip to Sales Rep record.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step good"><b>Step 3. Trigger</b><small><code>PROZipToSalesRepTrigger</code> fires on insert and on territory or program change. Finds the contacts for program + territory, stamps the lookups.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step"><b>Step 4. Cases</b><small>Two flows copy from the row to the case: <code>Case - Update Case Manager</code> (Case after save) and <code>Associate HealthCare Provider - Update Related ZIP</code> (after save on the HCP junction).</small></div>
+  </div>
+  <h3>The file the client sends (synthetic)</h3>
+  <table>
+    <tr><th>Territory</th><th>Zip</th><th>City</th><th>Sales Rep</th><th>FRM</th><th>ARM</th><th>CTN</th></tr>
+    <tr><td>RICHMOND VA</td><td>23666</td><td>Hampton</td><td>Rep East 1</td><td>FRM South</td><td></td><td>CTN 2</td></tr>
+    <tr><td>RICHMOND VA</td><td>23120</td><td>Moseley</td><td>Rep East 1</td><td>FRM South</td><td></td><td>CTN 2</td></tr>
+    <tr><td>Boston MA</td><td>02108</td><td>Boston</td><td>Rep NE 3</td><td>FRM Northeast</td><td></td><td>CTN 1</td></tr>
+    <tr><td>Dallas TX</td><td>75201</td><td>Dallas</td><td>Rep TX 2</td><td>FRM West</td><td></td><td></td></tr>
+  </table>
+  <p class="note">The zip import screen reads Territory, Zip, City, County. People come from the contact import. The trigger joins the two by program + territory, so the people sheet does not need zips.</p>
+  <div class="notes">Presenter: stress that Program is required by the screen but, until today, not by the object. Data Loader and scripts skipped it. That is the root of section 3.</div>
+</section>
+
+<!-- 3 -->
+<section>
+  <h2>What happened today (2026-11-10)</h2>
+  <p class="lead">A YcanthRx enrollment case showed an Invivyd sales rep and an FRM the team did not expect. We traced it.</p>
+  <div class="kpi">
+    <div><b>1,356,464</b><span>zip rows in production</span></div>
+    <div><b>1,069,840</b><span>rows with blank zip AND blank program (79%)</span></div>
+    <div><b>14,601</b><span>rows with a zip but no program (Nov 2025 load)</span></div>
+    <div><b>394</b><span>cases linked to a program-less row</span></div>
+    <div><b>1 of 278</b><span>territory values shared by Contact and Zip picklists</span></div>
+  </div>
+  <div class="grid">
+    <div class="card red"><h3>Bug 1. Case flows matched blank program</h3><p>Both case flows look up the Program with a filter "Use Zip To Territory Mapping = true". YcanthRx had the flag off, so the lookup returned nothing, and the next query ran with <em>Program = blank</em>. That matched a legacy row for zip 23666 that carried an Invivyd rep.</p><p><b>Result:</b> Invivyd rep on a YcanthRx case. 394 cases across 9 programs sit on such rows.</p></div>
+    <div class="card red"><h3>Bug 2. Trigger matched territory text only</h3><p>The trigger took the newest Sales Rep contact whose territory text equalled the row's territory. No program or client check. "Dallas TX" for Client A could pick Client B's newest rep. It also only handled Sales Rep, never FRM, ARM or CTN.</p></div>
+    <div class="card red"><h3>Bug 3. Contacts and zip rows could not meet</h3><p>Contact territory picklist has 29 values, zip picklist has 278, only 1 in common. The contact import also re-cased values ("Richmond Va"). Only 54 of 442 Sales Rep contacts even have a territory. The join almost never happened.</p></div>
+    <div class="card amber"><h3>Data debt</h3><p>Two bulk loads (May 2026 and 2026-11-10) inserted 1.07M rows with no zip and no program. They match nothing but they are 79% of the object and they make every report and list view lie.</p></div>
+    <div class="card green"><h3>What was NOT broken</h3><p>The FRM answer itself. Zip 23666 and 23120 both belong to the Southeast FRM in the YcanthRx table. The FRM asked about covers the Northeast plus 25 Richmond zips. The bond worked; it just pointed at the right person, not the expected one.</p></div>
+  </div>
+  <div class="notes">Presenter: the "same program, same address" intuition is why this felt wrong. The key is program + provider zip, and Richmond VA is split between two FRMs at zip level.</div>
+</section>
+
+<!-- 4 -->
+<section>
+  <h2>Try it: the same case, before and after</h2>
+  <p class="lead">Pick a program, a provider zip and the people on file. See what each version of the automation puts on the case.</p>
+  <div class="demo">
+    <div class="row">
+      <label>Program<select id="prog"><option value="Y">YcanthRx (flag OFF until today)</option><option value="F">Fennec Hears (flag ON)</option><option value="N">New client, no zip table yet</option></select></label>
+      <label>Provider billing zip<select id="zip"><option>23666</option><option>23120</option><option>75201</option><option>02108</option></select></label>
+      <label>Contacts on file for this client<select id="people"><option value="full">Sales Rep + FRM + CTN, territory spelled like the zip table</option><option value="case">Same, but territory typed "Richmond Va"</option><option value="none">Rep exists only for another client, same territory</option></select></label>
+      <button class="run" id="run">Save the case</button>
+    </div>
+    <div class="result">
+      <div class="box bad"><h4>Before (prod on 2026-11-10 morning)</h4><div id="before"></div></div>
+      <div class="box good"><h4>After (fulluat today, prod next)</h4><div id="after"></div></div>
+    </div>
+    <p class="note" id="why"></p>
+  </div>
+  <div class="notes">Presenter: run YcanthRx + 23666 + first option. Before: Invivyd rep via blank-program row. After: nothing from a foreign row; rep/FRM/CTN from the YcanthRx row because the flag is now on and the trigger matched program + territory. Then switch to "Richmond Va" to show case-insensitive matching, and to the third option to show no cross-client pick.</div>
+</section>
+
+<!-- 5 -->
+<section>
+  <h2>What we built (fulluat, 2026-11-11)</h2>
+  <p class="lead">Small, in the objects that already exist. No new object, no new integration.</p>
+  <div class="grid">
+    <div class="card purple"><h3>Two case flows: one decision added</h3><p><code>Program_Uses_Zip_Mapping</code>. If the Program lookup found nothing, stop. The zip query can no longer run with a blank program.</p><p class="note">Case - Update Case Manager v8, Associate HCP - Update Related ZIP v4.</p></div>
+    <div class="card purple"><h3>YcanthRx flag turned on</h3><p><code>PRO_Use_Zip_To_Territory_Mapping__c</code> = true on YcanthRx Patient Support Services. The case flows now match its 41,558 zip rows.</p></div>
+    <div class="card purple"><h3>Trigger handler rewritten</h3><p>Program-aware: a contact matches when its Program equals the row's program, or its Account is the program's client account. Case-insensitive territory. All four roles: Sales Rep, FRM, ARM, CTN. No match = field left as loaded, never wiped.</p></div>
+    <div class="card purple"><h3>Validation rule</h3><p><code>Program_and_Zip_Required</code>: Program and a 5-digit zip on every row, whatever tool inserts it. Stops the next 1M blank rows.</p></div>
+    <div class="card purple"><h3>CTN Contact lookup + CTN role</h3><p>New <code>CTN_Contact__c</code> on the zip row (filtered to CTN contacts). Contact import accepts role CTN.</p></div>
+    <div class="card purple"><h3>Contact import keeps the zip spelling</h3><p>Territory is validated against the zip table's picklist, case-insensitive, and stored with the zip table's spelling. No more "Richmond Va" vs "RICHMOND VA".</p></div>
+    <div class="card purple"><h3>Zip import tells you what did not match</h3><p>After the load, a yellow box lists each territory that got no Sales Rep / FRM / ARM / CTN, so the loader creates the contact and re-saves.</p></div>
+    <div class="card green"><h3>Tests</h3><p>7 new handler tests: cross-client collision, program beats recency, case folding, no-match keeps loaded value, territory and program change, bulk 200. 26 tests green in the prod check-only validation.</p></div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section>
+  <h2>From now on</h2>
+  <div class="flow">
+    <div class="step new"><span class="tag">Azmath</span><b>1. Load people</b><small>Contact import, client account selected, role column (blank = Sales Rep, FRM, ARM, CTN), territory spelled as in the zip file.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step new"><span class="tag">Azmath</span><b>2. Load zips</b><small>Zip import, program selected. Validation rule rejects rows without program or 5-digit zip. Yellow box lists territories with nobody matched.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step new"><span class="tag">Automatic</span><b>3. Trigger stamps the team</b><small>Sales Rep, FRM, ARM, CTN from contacts of that client and that territory. Re-runs when territory or program changes on the row.</small></div>
+    <div class="arrow">&#8594;</div>
+    <div class="step new"><span class="tag">Automatic</span><b>4. Case gets the team</b><small>Flag on for the program. Case saved with a provider: flow finds program + provider zip, copies Sales Rep and Case Manager; FRM flow copies FRM. ARM and CTN copy is the next increment.</small></div>
+  </div>
+  <h3>Still to do</h3>
+  <ul class="tight">
+    <li><b>Prod deploy</b> of this package (validated check-only, 26/26 tests). Needs Ali's go.</li>
+    <li><b>Clean-up</b>: remove the 1,069,840 blank rows and decide the 14,601 program-less Nov 2025 rows (assign Invivyd Care or delete). Separate, confirmed step.</li>
+    <li><b>Re-point 394 cases</b> that sit on program-less rows once the rows are fixed.</li>
+    <li><b>One case flow for all four roles</b>: fold the FRM-only before-save flow into Case - Update Case Manager so ARM and CTN also land on the case.</li>
+    <li><b>Field names in sync</b>: fulluat still has <code>FRM__c</code>/<code>ARM__c</code> on the zip row where prod has <code>FRM_Contact__c</code>/<code>ARM_Contact__c</code>; rename in fulluat, then deploy the handler there.</li>
+    <li><b>Test contacts in prod</b> with FRM/ARM/CTN record types (five obvious test names) to retire.</li>
+  </ul>
+</section>
+
+<!-- 7 -->
+<section>
+  <h2>How we built it</h2>
+  <table>
+    <tr><th>When (UTC)</th><th>What</th><th>Where</th><th>Evidence</th></tr>
+    <tr><td>2026-11-10 20:30</td><td>Read-only analysis of the two records, both orgs, 3 flows, 6 Apex classes, 1.36M-row object profile</td><td>prod + fulluat</td><td>docs/releases/2026-11-10-zip-to-sales-rep-frm-bonding-analysis.md</td></tr>
+    <tr><td>2026-11-11 00:40</td><td>YcanthRx flag set true</td><td>fulluat</td><td>Pro_Program__c a1LQL000009phVZ2AY</td></tr>
+    <tr><td>2026-11-11 01:20</td><td>Stage A deployed: 2 flows, CTN lookup, CTN role, validation rule, contact import controller + test, zip import LWC</td><td>fulluat</td><td>deploy 0AfQL00000ts2tD0AQ, 8/8 components, 13/13 tests</td></tr>
+    <tr><td>2026-11-11 01:35</td><td>Stage A + B check-only validation (trigger handler, 7 tests, zip import warnings)</td><td>prod, nothing deployed</td><td>validate 0AfPl0000038lmPKAQ, 11/11 components, 26/26 tests</td></tr>
+    <tr><td>pending</td><td>Stage B deploy to fulluat (needs field rename), then prod deploy on Ali's go</td><td>fulluat, prod</td><td>build folder ztr-fix-1111/</td></tr>
+  </table>
+  <h3>Method</h3>
+  <ul class="tight">
+    <li>Facts first: every claim in section 3 is a query against production, counts and Ids only.</li>
+    <li>Fix the rule, not the record: no case was edited by hand.</li>
+    <li>fulluat first, prod check-only, prod deploy only with explicit go.</li>
+    <li>Every build script asserts its match count, so a silent no-op cannot ship.</li>
+    <li>Tests encode the three bugs: a collision test, a case-folding test, a no-wipe test.</li>
+  </ul>
+  <div class="notes">Presenter: if asked "why not just fix the data", the answer is section 3 bug 1: the same flows would re-create the problem on the next program with the flag off.</div>
+</section>
+
+</main>
+<div class="keys">&#8592; &#8594; sections &middot; N presenter notes</div>
+<script>
+const secs=[...document.querySelectorAll('main section')],btns=[...document.querySelectorAll('nav button')];
+let cur=0;
+function go(i){cur=Math.max(0,Math.min(secs.length-1,i));secs.forEach((s,k)=>s.classList.toggle('on',k===cur));btns.forEach((b,k)=>b.classList.toggle('on',k===cur));window.scrollTo({top:0});}
+btns.forEach(b=>b.onclick=()=>go(+b.dataset.s));
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(cur+1);if(e.key==='ArrowLeft')go(cur-1);if(e.key.toLowerCase()==='n')document.body.classList.toggle('n');});
+
+// demo
+const ZIPTABLE={ // program -> zip -> row
+  Y:{'23666':{terr:'RICHMOND VA'},'23120':{terr:'RICHMOND VA'},'75201':{terr:'Dallas TX'},'02108':{terr:'Boston MA'}},
+  F:{'23666':{terr:'Raleigh'},'23120':{terr:'WASHINGTON DC'},'75201':{terr:'Dallas Ft Worth'},'02108':{terr:'Boston'}},
+  N:{}
+};
+const LEGACY={'23666':'Rep (Invivyd, legacy row, no program)','23120':'Rep (Invivyd, legacy row, no program)'};
+const PEOPLE={ // what the client has on file by territory (synthetic)
+  'RICHMOND VA':{rep:'Rep East 1',frm:'FRM South',ctn:'CTN 2'},
+  'Dallas TX':{rep:'Rep TX 2',frm:'FRM West',ctn:null},
+  'Boston MA':{rep:'Rep NE 3',frm:'FRM Northeast',ctn:'CTN 1'},
+  'Raleigh':{rep:'Fennec Rep Raleigh',frm:null,ctn:null},'WASHINGTON DC':{rep:'Fennec Rep DC',frm:null,ctn:null},'Dallas Ft Worth':{rep:'Fennec Rep DFW',frm:null,ctn:null},'Boston':{rep:'Fennec Rep Boston',frm:null,ctn:null}
+};
+function line(k,v,cls){return `<p><b>${k}:</b> <span class="${cls||''}">${v}</span></p>`}
+function run(){
+  const p=prog.value,z=zip.value,pp=people.value;
+  const row=ZIPTABLE[p][z];
+  let b='',a='',why='';
+  // BEFORE
+  if(p==='Y'||p==='N'){ // flag off or no program row -> blank program query
+    if(LEGACY[z]){b+=line('Zip row matched','legacy row, Program = blank')+line('Sales Rep',LEGACY[z],'')+line('FRM','blank (flow did not exist / no FRM on legacy row)')+line('CTN','blank');why='Before: the Program lookup returned nothing (flag off), so the zip query ran with Program = blank and matched a legacy Invivyd row. ';}
+    else {b+=line('Zip row matched','none')+line('Sales Rep','blank')+line('FRM','blank')+line('CTN','blank');why='Before: no legacy row for this zip, so nothing was stamped. ';}
+  } else { // Fennec flag on
+    const old= pp==='full'?PEOPLE[row.terr].rep:(pp==='case'?'blank (territory text did not match)':'Client B newest rep with same territory text');
+    b+=line('Zip row matched',`Fennec row ${z} / ${row.terr}`)+line('Sales Rep',old)+line('FRM','blank (trigger ignored FRM)')+line('CTN','blank (trigger ignored CTN)');
+    why='Before: territory text only, newest wins, Sales Rep only. ';
+  }
+  // AFTER
+  if(!row){a+=line('Zip row matched','none, program has no zip table')+line('Sales Rep','blank')+line('FRM','blank')+line('CTN','blank');why+='After: the new decision stops the flow when the program has no mapping, nothing foreign is stamped.';}
+  else {
+    const ppl=PEOPLE[row.terr];
+    const rep= pp==='none'?'blank (other client\'s rep not eligible)':ppl.rep;
+    const frm= pp==='none'?'blank':(ppl.frm||'blank, listed in the yellow box after load');
+    const ctn= pp==='none'?'blank':(ppl.ctn||'blank, listed in the yellow box after load');
+    a+=line('Zip row matched',`${p==='Y'?'YcanthRx':'Fennec'} row ${z} / ${row.terr}`)+line('Sales Rep',rep)+line('FRM',frm)+line('CTN',ctn);
+    why+= pp==='case'?'After: "Richmond Va" and "RICHMOND VA" are the same key, so the match holds.':pp==='none'?'After: a contact must belong to this program or this client account; same territory text on another client is ignored.':'After: program + territory match through the client account; all four roles stamped from one row.';
+  }
+  before.innerHTML=b;after.innerHTML=a;document.getElementById('why').textContent=why;
+}
+document.getElementById('run').onclick=run;run();
+</script>
+</body>
+</html>
