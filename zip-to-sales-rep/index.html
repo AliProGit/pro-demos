@@ -131,7 +131,7 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
   <div class="tile ok"><div class="v">1</div><div class="l">table answers the question</div><div class="d">Zip to Sales Rep: for this program, in this zip, who is the Sales Rep, FRM, ARM, CTN and FAM.</div></div>
   <div class="tile ok"><div class="v">0</div><div class="l">cases can pick a foreign rep</div><div class="d">The flows stop when a program has no zip table. New rows must have a program and a zip.</div></div>
   <div class="tile ok"><div class="v">5 + 1</div><div class="l">roles filled from one row</div><div class="d">Sales Rep, FRM, ARM, CTN, FAM, plus Case Manager. Matched on program + territory. Upper or lower case does not matter.</div></div>
-  <div class="tile warn"><div class="v">UAT</div><div class="l">Azmath tests in fulluat, prod waits</div><div class="d">Code is in prod (0AfPl0000038xVpKAI, 29 tests) but switched off: YcanthRx flag off, no nightly job. Go-live = UAT sign-off + two config steps.</div></div>
+  <div class="tile ok"><div class="v">Live</div><div class="l">YcanthRx in prod since 11 Nov, 15:40 ET</div><div class="d">Azmath confirmed T1 and T2 in fulluat. 21 cases cleared of the foreign rep, flag on, nightly batch at midnight PT, one-time YcanthRx re-stamp tonight. Upload screens still in UAT.</div></div>
 </div>
 <div class="callout ok">Load the client file once. The trigger fills the team on the zip row. The flows and the nightly batch copy the team onto the cases. Everyone can see which row the case came from.</div>
 </div>
@@ -232,7 +232,7 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <tr><td>Territory list on the zip row</td><td>279 values</td><td class="warn">272 values. Missing: Atlantic, Central, East, Little Rock, Ohio Valley, Pacific, South</td></tr>
 <tr><td>Rows</td><td>1,356,464 (about 287k real)</td><td>50,893</td></tr>
 </table>
-<div class="callout warn">Prod status: the same components are deployed (0AfPl0000038xVpKAI, flows v3 and v4 active) but the chain is <b>switched off</b> until Azmath signs off UAT: YcanthRx flag off, no scheduled batch. Go-live is two config steps: flag on, schedule the batch. Rollback plan is in the Deployment Items doc.</div>
+<div class="callout ok">Prod status: components deployed (0AfPl0000038xVpKAI, flows v3 and v4 active) and <b>switched on for YcanthRx</b> on 11 Nov after Azmath's T1/T2 sign-off: flag on, 21 wrongly linked cases cleared, nightly batch at midnight PT, one-time YcanthRx re-stamp at 00:05 PT on 12 Nov. The new upload screens (Program search, record type, Zip Import tab) are fulluat-only until the working session on 12 Nov.</div>
 </div>
 <div class="target-only">
 <span class="mode target">TARGET: both orgs identical for this chain</span>
@@ -328,7 +328,7 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <li>Whole package validated against prod, check-only: 0AfPl0000038wbNKAQ, 17 components, 29 tests green.</li>
 <li><b>Zip Import page</b> (both import screens) and tab in PRO Console, fulluat only, Default On for System Administrator (0AfQL00000ttXA90AM, app 0AfQL00000ttX8Y0AU).</li>
 <li>Contact importer re-keyed to <b>Program</b> instead of exact Account name; CTN/FAM accepted on the screen; account derived from the Program (0AfQL00000ttY7p0AE, 16 tests; labels 0AfQL00000ttYpN0AU). Not in prod yet, joins the go-live package.</li>
-<li>Components also deployed to prod (0AfPl0000038xVpKAI, 17 components, 29 tests, flows v3/v4 active) and then <b>paused</b>: YcanthRx flag back off, nightly job aborted. Nothing in prod changes a case until UAT is signed off.</li>
+<li>Components deployed to prod (0AfPl0000038xVpKAI, 17 components, 29 tests, flows v3/v4 active). Paused at 13:00 ET, then <b>switched on for YcanthRx at 15:40 ET</b> after Azmath confirmed T1 and T2: 21 cases cleared (list in docs/releases), flag on, nightly batch 00:00 PT, one-time YcanthRx run 00:05 PT on 12 Nov.</li>
 </ul></div>
 </div>
 </div>
@@ -337,8 +337,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <div class="two">
 <div class="owner"><h3 style="margin-top:0">This week</h3><ul class="plan">
 <li><b>Rachel:</b> review Azmath's results; T2, T8, T12, T13 are click-through.</li>
-<li><b>Azmath:</b> run the 13 UAT scenarios in fulluat (hand-off doc 2026-11-11-zip-to-sales-rep-UAT-handoff-azmath.md). No re-import needed there.</li>
-<li><b>Ali, after sign-off:</b> prod go-live = deploy the contact importer change + Zip Import page/tab, YcanthRx flag on, schedule the batch under an active admin, first manual run over YcanthRx rows.</li>
+<li><b>12 Nov morning, Ali:</b> check the overnight run: YcanthRx enrollment cases with an FRM (was 8 of 1,030) and cases on a program-less row (must stay 0).</li>
+<li><b>12 Nov, Azmath + Ali:</b> working session on the upload screens (Program search, record type column, Zip Import tab); then those go to prod.</li>
 <li><b>KAD:</b> on hold until Ali decides how KAD reps are identified (today they are Sales Rep contacts on 130 cases).</li>
 </ul></div>
 <div class="owner"><h3 style="margin-top:0">After the deploy</h3><ul class="plan">
