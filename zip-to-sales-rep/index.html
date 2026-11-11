@@ -89,13 +89,16 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 .sim .box p{margin:3px 0;font-size:14px}
 .sim .why{margin-top:10px;color:var(--ink2);font-size:13.5px}
 .owner{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.roles{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.roles span{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;font-size:12.5px}
+.roles span.hold{border-style:dashed;color:var(--ink3)}
 @media (max-width:1000px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}.tiles,.stores,.arrows{grid-template-columns:repeat(2,1fr)}.two,.sim .out{grid-template-columns:1fr}}
 @media print{nav,header .hdr-r{display:none}section{display:block;page-break-after:always}}
 </style>
 </head>
 <body>
 <header>
-  <div><h1>Zip to Sales Rep: one row, the whole field team</h1><div class="sub">How a client's Sales Rep, FRM, ARM and CTN get onto a patient case. Read from production and fulluat on 2026-11-10 and 11. Counts only, no patient data, people shown as roles.</div></div>
+  <div><h1>Zip to Sales Rep: one row, the whole field team</h1><div class="sub">How a client's Sales Rep, FRM, ARM, CTN and FAM get onto a patient case. Read from production and fulluat on 10 and 11 Nov 2026, plus Azmath's walkthrough on the 09:50 call. Counts only, no patient data, people shown as roles.</div></div>
   <div class="hdr-r">
     <div class="switch" id="modeSwitch"><button data-m="today" class="on">TODAY</button><button data-m="target">TARGET</button></div>
     <button class="ghost" onclick="document.body.classList.toggle('notes')" title="presenter notes (N)">Notes</button>
@@ -109,6 +112,7 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <section data-k="s1" data-t="1  The question">
 <h2>1. The question</h2>
 <p class="lede">One YcanthRx enrollment case. One YcanthRx FRM contact. Same program. Why are they not linked, and is the Sales Rep on the case the right one? Press <b>T</b> to switch between TODAY and TARGET on every page.</p>
+<div class="roles"><span>Sales Rep</span><span>FRM</span><span>ARM</span><span>CTN</span><span>FAM</span><span class="hold">KAD, on hold</span><span>Case Manager</span></div>
 
 <div class="today-only">
 <span class="mode today">TODAY: what we found</span>
@@ -124,12 +128,12 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <div class="target-only">
 <span class="mode target">TARGET: what is true after the fix</span>
 <div class="tiles">
-  <div class="tile ok"><div class="v">1</div><div class="l">table answers the question</div><div class="d">Zip to Sales Rep: for this program, in this zip, who is the Sales Rep, FRM, ARM and CTN.</div></div>
+  <div class="tile ok"><div class="v">1</div><div class="l">table answers the question</div><div class="d">Zip to Sales Rep: for this program, in this zip, who is the Sales Rep, FRM, ARM, CTN and FAM.</div></div>
   <div class="tile ok"><div class="v">0</div><div class="l">cases can pick a foreign rep</div><div class="d">The flows stop when a program has no zip table. New rows must have a program and a zip.</div></div>
-  <div class="tile ok"><div class="v">4</div><div class="l">roles filled from one row</div><div class="d">Sales Rep, FRM, ARM, CTN. Matched on program + territory. Upper or lower case does not matter.</div></div>
-  <div class="tile ok"><div class="v">26 / 26</div><div class="l">tests green against production</div><div class="d">Check-only validation 0AfPl0000038lmPKAQ. Nothing deployed to prod yet.</div></div>
+  <div class="tile ok"><div class="v">5 + 1</div><div class="l">roles filled from one row</div><div class="d">Sales Rep, FRM, ARM, CTN, FAM, plus Case Manager. Matched on program + territory. Upper or lower case does not matter.</div></div>
+  <div class="tile ok"><div class="v">0</div><div class="l">manual batch runs</div><div class="d">The nightly job runs under an active admin and copies the whole team to existing cases.</div></div>
 </div>
-<div class="callout ok">Load the client file once. The trigger fills the team on the zip row. The case flows copy the team onto the case. Everyone can see which row the case came from.</div>
+<div class="callout ok">Load the client file once. The trigger fills the team on the zip row. The flows and the nightly batch copy the team onto the cases. Everyone can see which row the case came from.</div>
 </div>
 <div class="notes">Start with the two records. The surprise: FRM was right, Sales Rep was wrong. Save "394" for section 6 unless asked.</div>
 </section>
@@ -137,10 +141,10 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <!-- 2 -->
 <section data-k="s2" data-t="2  The journey">
 <h2>2. The journey</h2>
-<p class="lede">From the client's spreadsheet to the people on a case. Five steps. Click a step to open it.</p>
-<div class="today-only"><span class="mode today">TODAY: how it works, and where each step breaks</span><div class="steps" id="stepsToday"></div></div>
-<div class="target-only"><span class="mode target">TARGET: the same five steps, fixed</span><div class="steps" id="stepsTarget"></div></div>
-<div class="notes">Same five steps in both modes. In TODAY each step has a red "breaks here". In TARGET the same step shows the fix.</div>
+<p class="lede">What Azmath does today, step by step, as she showed it on the 09:50 call. Then the same steps after the fix. Click a step to open it.</p>
+<div class="today-only"><span class="mode today">TODAY: Azmath's steps, and where each one breaks</span><div class="steps" id="stepsToday"></div></div>
+<div class="target-only"><span class="mode target">TARGET: the same steps, fixed. Azmath does steps 1 and 2, the rest is automatic</span><div class="steps" id="stepsTarget"></div></div>
+<div class="notes">Same steps in both modes. TODAY step 3 is the surprise: the nightly batch has failed every night since the Minlopro admin user was deactivated, so Azmath runs it by hand.</div>
 </section>
 
 <!-- 3 -->
@@ -150,20 +154,21 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <div class="today-only"><span class="mode today">TODAY: each link has a gap</span></div>
 <div class="target-only"><span class="mode target">TARGET: each link is closed</span></div>
 <div class="stores">
-  <div class="store file"><h3>1. Client file</h3><div class="kv"><b>Who owns it</b>Client field ops</div><div class="kv"><b>What is in it</b>Territory, zip, city, county. A people sheet with name, role, territory.</div><div class="kv"><b>Status</b><span class="pill part today-only">No program column</span><span class="pill yes target-only">Program chosen on the import screen</span></div></div>
-  <div class="store contact"><h3>2. Contacts</h3><div class="kv"><b>Who owns it</b>Azmath, contact import screen</div><div class="kv"><b>What is in it</b>One Contact per person: role, client account, territory.</div><div class="kv"><b>Status</b><span class="pill no today-only">Territory rewritten in Title Case. Only 29 allowed values.</span><span class="pill yes target-only">Territory kept exactly as in the zip table. CTN role added.</span></div></div>
-  <div class="store zip"><h3>3. Zip row</h3><div class="kv"><b>Who owns it</b>Azmath, zip import screen. Trigger fills people.</div><div class="kv"><b>What is in it</b>Program, zip, territory, Sales Rep, FRM, ARM, Case Manager.</div><div class="kv"><b>Status</b><span class="pill no today-only">1.07M empty rows. Trigger matches text only, Sales Rep only.</span><span class="pill yes target-only">Program and zip required. Trigger fills 4 roles by program + territory. CTN added.</span></div></div>
-  <div class="store case"><h3>4. Case</h3><div class="kv"><b>Who owns it</b>Two flows, run on save</div><div class="kv"><b>What is in it</b>Sales Rep, FRM, Case Manager, link to the zip row.</div><div class="kv"><b>Status</b><span class="pill no today-only">Program flag off = blank program = old row with a foreign rep</span><span class="pill yes target-only">No zip table for the program = flow stops. YcanthRx flag on.</span></div></div>
+  <div class="store file"><h3>1. Client file</h3><div class="kv"><b>Who owns it</b>Client field ops</div><div class="kv"><b>What is in it</b>People sheet: name, email, role, territory. Zip sheet: territory, zip, city, county.</div><div class="kv"><b>Status</b><span class="pill part today-only">Program only added by Azmath at load time</span><span class="pill yes target-only">Program required on every row by rule</span></div></div>
+  <div class="store contact"><h3>2. Contacts</h3><div class="kv"><b>Who owns it</b>Azmath, Data Loader or contact import screen</div><div class="kv"><b>What is in it</b>One Contact per person: role (record type), client account, program, territory.</div><div class="kv"><b>Status</b><span class="pill no today-only">FRM / CTN contacts have no territory. Import screen rewrites case and knows 29 names.</span><span class="pill yes target-only">Territory kept as in the zip table. Roles: Sales Rep, FRM, ARM, CTN, FAM.</span></div></div>
+  <div class="store zip"><h3>3. Zip row</h3><div class="kv"><b>Who owns it</b>Azmath loads, trigger fills people</div><div class="kv"><b>What is in it</b>Program, zip, territory, Sales Rep, FRM, ARM, CTN, FAM, Case Manager.</div><div class="kv"><b>Status</b><span class="pill no today-only">1.07M empty rows. Trigger matches text only, Sales Rep only.</span><span class="pill yes target-only">Program + zip required. Trigger fills 5 roles by program + territory, keeps what the file carries.</span></div></div>
+  <div class="store case"><h3>4. Case</h3><div class="kv"><b>Who owns it</b>Two flows on save, one nightly batch</div><div class="kv"><b>What is in it</b>Sales Rep, FRM, ARM, CTN, FAM, Case Manager, link to the zip row.</div><div class="kv"><b>Status</b><span class="pill no today-only">Flow and batch copy Sales Rep and Case Manager only. Flag off = blank program = foreign rep.</span><span class="pill yes target-only">Flow and batch copy all roles. No zip table = stop.</span></div></div>
 </div>
-<div class="arrows"><div>people sheet → contacts</div><div>zip sheet → zip rows</div><div>trigger matches contacts to rows</div><div>case saved → flows copy the team</div></div>
+<div class="arrows"><div>people sheet → contacts</div><div>zip sheet → zip rows</div><div>trigger matches contacts to rows</div><div>case saved or nightly batch → copy the team</div></div>
 
-<h3>The two bugs, side by side</h3>
+<h3>The gaps, side by side</h3>
 <table class="tt">
 <tr><th style="width:18%">Piece</th><th>TODAY</th><th>TARGET</th></tr>
-<tr><td>Case flows</td><td class="bad">The flow first looks for the program with a filter "mapping flag = on". YcanthRx had the flag off, so it found nothing. It then searched zip rows with program = <i>blank</i>. 14,601 old rows have a blank program and Invivyd reps. One matched.</td><td class="ok">New decision: if the program was not found, stop. YcanthRx flag turned on. Live in fulluat (flows v8 and v4).</td></tr>
-<tr><td>Trigger on the zip row</td><td class="bad">Takes the newest Sales Rep contact with the same territory text. Does not check which client. Ignores FRM, ARM, CTN.</td><td class="ok">Takes contacts of the same program or the program's client account. Territory compared without caring about case. Fills Sales Rep, FRM, ARM, CTN. If nobody matches, leaves the field as loaded.</td></tr>
-<tr><td>Contact import screen</td><td class="bad">Changes "RICHMOND VA" to "Richmond Va". Checks against a 29-value list. Roles: Sales Rep, FRM, ARM.</td><td class="ok">Keeps the zip table spelling. Checks against the 278-value zip list. Role CTN added.</td></tr>
-<tr><td>Zip table</td><td class="bad">Program required only by the screen. Data Loader skipped it: 1,069,840 rows with no zip and no program.</td><td class="ok">Validation rule: program and a 5-digit zip on every row, from any tool. After a load, a yellow box lists territories where nobody matched.</td></tr>
+<tr><td>Case flows</td><td class="bad">The flow first looks for the program with a filter "mapping flag = on". YcanthRx had the flag off, so it found nothing. It then searched zip rows with program = <i>blank</i>. 14,601 old rows have a blank program and Invivyd reps. One matched. Copies Sales Rep and Case Manager only.</td><td class="ok">New decision: if the program was not found, stop. YcanthRx flag turned on. Copies Sales Rep, FRM, ARM, CTN, FAM, Case Manager. Live in fulluat (flows v8 and v4), role copy is the next deploy.</td></tr>
+<tr><td>Nightly batch <code>PRO_ZiptoSalesRep</code></td><td class="bad">Scheduled 17:00 PT under the Minlopro Admin user, who is inactive. Fails every night with "owner or user is inactive". Azmath runs it by hand (5 runs on 10 Nov). Copies Sales Rep and Case Manager only, and only for cases with a junction row (3 of 1,030 YcanthRx cases).</td><td class="ok">Rescheduled under an active admin. Copies all roles. Reads the provider from the case lookup as well as the junction row.</td></tr>
+<tr><td>Trigger on the zip row</td><td class="bad">Takes the newest Sales Rep contact with the same territory text. Does not check which client. Ignores FRM, ARM, CTN, FAM.</td><td class="ok">Takes contacts of the same program or the program's client account. Territory compared without caring about case. Fills Sales Rep, FRM, ARM, CTN, FAM. If nobody matches, leaves the field as loaded. Live in fulluat.</td></tr>
+<tr><td>Contact import screen</td><td class="bad">Changes "RICHMOND VA" to "Richmond Va". Checks against a 29-value list. Roles: Sales Rep, FRM, ARM.</td><td class="ok">Keeps the zip table spelling. Checks against the 278-value zip list. Roles CTN and FAM added. Live in fulluat (FAM next deploy).</td></tr>
+<tr><td>Zip table</td><td class="bad">Program required only by the screen. Data Loader skipped it: 1,069,840 rows with no zip and no program, 51,642 of them on 10 Nov.</td><td class="ok">Validation rule: program and a 5-digit zip on every row, from any tool. After a load, a yellow box lists territories where nobody matched. Live in fulluat.</td></tr>
 </table>
 <div class="notes">If someone says "just fix the data": the flows would recreate the problem for the next program with the flag off. Fix the rule first, then the data.</div>
 </section>
@@ -173,18 +178,20 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <h2>4. Who did what</h2>
 <div class="today-only">
 <span class="mode today">TODAY: how we got here</span>
-<p class="lede">Nobody did anything unreasonable. Two import screens, two picklists, one flag and one query added up.</p>
+<p class="lede">Nobody did anything unreasonable. Two import paths, two picklists, one flag, one inactive user and one query added up.</p>
 <table>
 <tr><th>When</th><th>Who</th><th>What</th><th>Effect</th></tr>
-<tr><td>Aug 2024</td><td>Minlopro (vendor)</td><td>Built the zip object, the trigger and the first flow</td><td>Match by territory text, Sales Rep only</td></tr>
+<tr><td>Aug 2024</td><td>Minlopro (vendor)</td><td>Built the zip object, the trigger, the batch and the first flow. Scheduled the batch under the Minlopro Admin user.</td><td>Match by territory text, Sales Rep only</td></tr>
 <tr><td>Nov to Dec 2025</td><td>David Berman</td><td>Loaded 14,600 rows without a program. Built the Case flow.</td><td>The old rows that later matched "blank"</td></tr>
 <tr><td>Jan 2026</td><td>Azmath, David</td><td>Changed the Case flow six times</td><td>Program flag filter added</td></tr>
 <tr><td>Apr to May 2026</td><td>Minlopro, Azmath</td><td>Two import screens. A load of 1,018,116 rows with no zip and no program.</td><td>Screen forces program, loader does not</td></tr>
 <tr><td>Jun and Aug 2026</td><td>Ali</td><td>Added FRM and ARM lookups to the zip row</td><td>Fields existed, nothing filled them</td></tr>
-<tr><td>5 Nov 2026</td><td>Rachel</td><td>Created three YcanthRx FRM contacts, no territory</td><td>Nothing could match them</td></tr>
-<tr><td>10 Nov 2026, evening</td><td>Ali</td><td>Renamed the prod fields, built the FRM flow, stamped FRM on all 41,558 YcanthRx rows</td><td>FRM reaches cases. Fulluat field names now differ.</td></tr>
-<tr><td>10 Nov 2026, 23:16 UTC</td><td>Azmath</td><td>Load of 51,642 rows</td><td>All empty: no zip, no program, no rep</td></tr>
-<tr><td>10 to 11 Nov 2026</td><td>Ali</td><td>Analysis, fulluat build, prod validation, this page</td><td>Section 9</td></tr>
+<tr><td>2026</td><td>unknown date</td><td>Minlopro Admin user deactivated</td><td>Nightly batch fails every night from then on</td></tr>
+<tr><td>5 Nov 2026</td><td>Rachel</td><td>Created three YcanthRx FRM contacts, with program, no territory</td><td>Only matchable by Id in the file</td></tr>
+<tr><td>10 Nov 2026, evening</td><td>Ali</td><td>Renamed the prod fields to FRM_Contact__c / ARM_Contact__c, built the FRM before-save flow</td><td>FRM reaches new cases</td></tr>
+<tr><td>10 Nov 2026, 6:16 PM ET</td><td>Azmath</td><td>Load of 51,642 rows</td><td>All empty: no zip, no program, no contact</td></tr>
+<tr><td>10 Nov 2026, 6:48 PM ET</td><td>Azmath</td><td>Load of 41,558 YcanthRx rows with FRM Contact Id, then 5 manual batch runs</td><td>Zip table for YcanthRx complete, FRM on every row</td></tr>
+<tr><td>10 to 11 Nov 2026</td><td>Ali</td><td>Analysis, fulluat build stages A and B, sandbox field rename, prod validation, this page</td><td>Section 9</td></tr>
 </table>
 </div>
 <div class="target-only">
@@ -192,52 +199,56 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <p class="lede">One owner per step. No step depends on remembering a rule.</p>
 <table>
 <tr><th>Step</th><th>Owner</th><th>Does</th><th>The system checks</th></tr>
+<tr><td>Turn on a program</td><td>Ali</td><td>Tick "Use Zip To Territory Mapping" on the Program</td><td>Until ticked, no zip matching for that program</td></tr>
 <tr><td>Client sends the file</td><td>Client field ops</td><td>Zip sheet and people sheet</td><td>Nothing yet</td></tr>
-<tr><td>Load people</td><td>Azmath</td><td>Contact import screen. Pick the client account. Upload.</td><td>Role must be blank, FRM, ARM or CTN. Territory must exist in the zip list. Spelling is fixed to match.</td></tr>
-<tr><td>Load zips</td><td>Azmath</td><td>Zip import screen. Pick the program. Upload.</td><td>Program and 5-digit zip required. Yellow box shows territories with nobody matched.</td></tr>
-<tr><td>Fill the team</td><td>Trigger, automatic</td><td>Sales Rep, FRM, ARM, CTN onto each zip row</td><td>Same program or same client. Same territory, any case.</td></tr>
-<tr><td>Copy to the case</td><td>Flows, automatic</td><td>Team onto the case when it is saved with a provider</td><td>Program must have a zip table. Otherwise stop.</td></tr>
-<tr><td>Turn on a program</td><td>Ali</td><td>Tick the mapping flag on the program</td><td>Until ticked, no zip matching for that program</td></tr>
+<tr><td>Load people</td><td>Azmath</td><td>Data Loader or contact import screen. Client account, program, role, territory.</td><td>Role must be Sales Rep, FRM, ARM, CTN or FAM. Territory must exist in the zip list. Spelling fixed to match.</td></tr>
+<tr><td>Load zips</td><td>Azmath</td><td>Zip import screen or Data Loader. Program on every row. Contact Ids in the file are welcome.</td><td>Program and 5-digit zip required. Trigger fills blank roles. Yellow box shows territories with nobody matched.</td></tr>
+<tr><td>Fill the team</td><td>Trigger, automatic</td><td>Sales Rep, FRM, ARM, CTN, FAM onto each zip row</td><td>Same program or same client. Same territory, any case. Never overwrites what the file carried.</td></tr>
+<tr><td>Copy to existing cases</td><td>Nightly batch, automatic</td><td>All roles and Case Manager onto cases that match program + provider zip</td><td>Runs under an active admin. Alert if it fails.</td></tr>
+<tr><td>Copy to new cases</td><td>Flows, automatic</td><td>Same copy when a case is saved with a provider</td><td>Program must have a zip table. Otherwise stop.</td></tr>
 <tr><td>Check</td><td>Rachel, quarterly</td><td>Two reports</td><td>Rows with no contact per program. Cases whose zip row program differs from the case program (must be 0).</td></tr>
 </table>
 </div>
-<div class="notes">TODAY is the timeline. TARGET is the operating model. Point at the last row: two reports replace the detective work we did this week.</div>
+<div class="notes">TODAY is the timeline. TARGET is the operating model. Azmath keeps two steps; the manual batch run disappears.</div>
 </section>
 
 <!-- 5 -->
 <section data-k="s5" data-t="5  Prod vs fulluat">
 <h2>5. Prod vs fulluat</h2>
 <div class="today-only">
-<span class="mode today">TODAY: where the two orgs differ</span>
-<p class="lede">Ali asked to keep UAT and prod the same. These are the differences in this chain right now.</p>
+<span class="mode today">TODAY: where the two orgs differ (11 Nov, 11:00 ET)</span>
 <table>
 <tr><th>Item</th><th>prod</th><th>fulluat</th></tr>
-<tr><td>Lookups on the zip row</td><td>Sales Rep, <b>FRM_Contact__c</b>, <b>ARM_Contact__c</b>, Case Manager</td><td class="warn">Sales Rep, <b>FRM__c</b>, <b>ARM__c</b>, Case Manager, <b>CTN_Contact__c</b> (new)</td></tr>
+<tr><td>Lookups on the zip row</td><td class="ok">Sales Rep, FRM_Contact__c, ARM_Contact__c, Case Manager</td><td class="ok">Same names since this morning, plus <b>CTN_Contact__c</b> (new). FAM next.</td></tr>
 <tr><td>Case flows</td><td class="bad">Old versions with the blank-program bug</td><td class="ok">Fixed versions v8 and v4</td></tr>
 <tr><td>YcanthRx mapping flag</td><td class="bad">Off</td><td class="ok">On</td></tr>
 <tr><td>Rule: program and zip required</td><td class="bad">Missing</td><td class="ok">Active</td></tr>
 <tr><td>Contact import screen</td><td class="bad">Old</td><td class="ok">New: keeps spelling, CTN role</td></tr>
 <tr><td>Zip import screen</td><td class="bad">Old</td><td class="ok">New: yellow box for unmatched territories</td></tr>
-<tr><td>Trigger</td><td class="bad">Old</td><td class="bad">Old. New one waits for the field rename.</td></tr>
+<tr><td>Trigger</td><td class="bad">Old</td><td class="ok">New: program-aware, 4 roles, 7 tests green</td></tr>
+<tr><td>Nightly batch</td><td class="bad">Fails every night, inactive owner</td><td class="warn">Not scheduled</td></tr>
+<tr><td>Case FRM field used by the FRM flow</td><td>Case.FRM_Contact__c</td><td class="warn">Case.FRM_Pro__c. fulluat has no Case.FRM_Contact__c</td></tr>
 <tr><td>Territory list on the zip row</td><td>279 values</td><td class="warn">272 values. Missing: Atlantic, Central, East, Little Rock, Ohio Valley, Pacific, South</td></tr>
 <tr><td>Rows</td><td>1,356,464 (about 287k real)</td><td>50,893</td></tr>
 </table>
-<div class="callout warn">One manual step blocks the rest: rename FRM__c and ARM__c in fulluat to FRM_Contact__c and ARM_Contact__c. Two clicks in Setup. The CLI could not do it.</div>
+<div class="callout ok">The field rename is done in fulluat, davidb and prodemo. All four orgs use the prod names now. Azmath's Data Loader mapping already points at them.</div>
 </div>
 <div class="target-only">
 <span class="mode target">TARGET: both orgs identical for this chain</span>
 <table>
 <tr><th>Item</th><th>prod and fulluat</th><th>How it gets there</th></tr>
-<tr><td>Lookups on the zip row</td><td class="ok">Sales Rep, FRM_Contact__c, ARM_Contact__c, CTN_Contact__c, Case Manager</td><td>Rename in fulluat. CTN deploys to prod with the package.</td></tr>
-<tr><td>Case flows</td><td class="ok">Fixed versions</td><td>Prod deploy, Wednesday window</td></tr>
+<tr><td>Lookups on the zip row</td><td class="ok">Sales Rep, FRM_Contact__c, ARM_Contact__c, CTN_Contact__c, FAM_Contact__c, Case Manager</td><td>CTN and FAM deploy to prod with the package</td></tr>
+<tr><td>Case flows, trigger, rule, screens</td><td class="ok">New</td><td>Prod deploy, Wednesday window. 26 tests already green against prod.</td></tr>
+<tr><td>Role copy to the case (FRM, ARM, CTN, FAM)</td><td class="ok">In the Case flow and the batch</td><td>Next fulluat build, then same prod deploy</td></tr>
 <tr><td>YcanthRx mapping flag</td><td class="ok">On</td><td>Flip in prod with the deploy</td></tr>
-<tr><td>Rule, screens, trigger</td><td class="ok">New</td><td>Same package, 26 tests already green against prod</td></tr>
+<tr><td>Nightly batch</td><td class="ok">Scheduled under an active admin</td><td>Abort the old job, schedule again</td></tr>
+<tr><td>Case FRM field</td><td class="ok">One name</td><td>Decide FRM_Contact__c or FRM_Pro__c, align the sandbox</td></tr>
 <tr><td>Territory list</td><td class="ok">279 values</td><td>Add the 7 missing values to fulluat</td></tr>
 <tr><td>Rows</td><td class="ok">Real rows only</td><td>Delete the empty rows in prod by Id list, confirmed step</td></tr>
 </table>
 <div class="callout ok">After this, a change made in fulluat deploys to prod without edits. That is what "in sync" means here.</div>
 </div>
-<div class="notes">Two decisions needed from Ali: the rename (or delete and recreate) and the prod go.</div>
+<div class="notes">Two decisions remain: the Case FRM field name, and the prod go.</div>
 </section>
 
 <!-- 6 -->
@@ -247,9 +258,9 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <span class="mode today">TODAY: what can go wrong, and already has</span>
 <div class="tiles">
   <div class="tile bad"><div class="v">394</div><div class="l">cases carry a rep from an old program-less row</div><div class="d">388 of them are not Invivyd cases</div></div>
+  <div class="tile bad"><div class="v">every night</div><div class="l">the scheduled batch fails</div><div class="d">Owner is the inactive Minlopro Admin user. Nobody is told. Existing cases never get their team unless someone runs it by hand.</div></div>
   <div class="tile bad"><div class="v">2</div><div class="l">programs with the flag off</div><div class="d">YcanthRx and CorMedix. Every save of a case with a provider in an old zip stamps a foreign rep.</div></div>
-  <div class="tile warn"><div class="v">5</div><div class="l">YcanthRx territories split between two FRMs</div><div class="d">Richmond VA, Minneapolis, Dallas, Fort Worth, Houston. "Same territory" does not tell you the FRM.</div></div>
-  <div class="tile warn"><div class="v">54 / 442</div><div class="l">Sales Rep contacts that have a territory at all</div><div class="d">The join between people and zips mostly could not happen</div></div>
+  <div class="tile warn"><div class="v">8 of 1,030</div><div class="l">YcanthRx enrollment cases with an FRM</div><div class="d">Batch and Case flow never copy FRM. Only new saves get one.</div></div>
 </div>
 <div class="callout">A rep from one client appears on another client's patient case. Wrong routing, wrong emails, wrong reports. Reps do not log in, so patients are not exposed, but the case record is wrong.</div>
 <div class="callout warn">Territory names like "Dallas TX" repeat across clients. Each new client with US-city territories raises the chance that the text-only trigger picks the wrong client's rep.</div>
@@ -258,9 +269,9 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <span class="mode target">TARGET: what is covered, what remains</span>
 <div class="tiles">
   <div class="tile ok"><div class="v">Covered</div><div class="l">Foreign rep on a case</div><div class="d">Flows stop without a program match. Trigger only picks the program's own people.</div></div>
-  <div class="tile ok"><div class="v">Covered</div><div class="l">Empty rows</div><div class="d">Validation rule blocks them from any tool</div></div>
-  <div class="tile ok"><div class="v">Covered</div><div class="l">Spelling mismatch</div><div class="d">Contact import keeps the zip table spelling. Trigger ignores case.</div></div>
-  <div class="tile warn"><div class="v">Open</div><div class="l">Until the clean-up</div><div class="d">394 cases keep the wrong rep until the old rows are fixed and the cases re-saved</div></div>
+  <div class="tile ok"><div class="v">Covered</div><div class="l">Empty rows and silent batch failures</div><div class="d">Validation rule blocks empty rows. Batch runs under an active admin with a failure alert.</div></div>
+  <div class="tile ok"><div class="v">Covered</div><div class="l">Roles missing on existing cases</div><div class="d">Batch copies FRM, ARM, CTN, FAM too, every night</div></div>
+  <div class="tile warn"><div class="v">Open</div><div class="l">Until the clean-up</div><div class="d">394 cases keep the wrong rep until the old rows are fixed and the batch re-runs</div></div>
 </div>
 <div class="callout ok">Remaining risk is data, not rules: the old rows and the 394 cases. Both are fixed by one confirmed clean-up with counts before and after.</div>
 </div>
@@ -273,9 +284,9 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <p class="lede">Pick a program, a provider zip and what the client has on file. Then save the case. The TODAY/TARGET switch highlights the matching side.</p>
 <div class="sim">
   <div class="row">
-    <label>Program<select id="prog"><option value="Y">YcanthRx (flag was off)</option><option value="F">Fennec Hears (flag on)</option><option value="N">New client, no zip table yet</option></select></label>
+    <label>Program<select id="prog"><option value="Y">YcanthRx (flag was off)</option><option value="F">Fennec Hears (flag on)</option><option value="N">Lembaz, no zip table yet</option></select></label>
     <label>Provider billing zip<select id="zip"><option>23666</option><option>23120</option><option>75201</option><option>02108</option></select></label>
-    <label>Contacts on file for this client<select id="people"><option value="full">Sales Rep, FRM, CTN. Territory spelled like the zip table</option><option value="case">Same people. Territory typed "Richmond Va"</option><option value="none">Only another client's rep has this territory</option></select></label>
+    <label>Contacts on file for this client<select id="people"><option value="full">Sales Rep, FRM, CTN, FAM. Territory spelled like the zip table</option><option value="case">Same people. Territory typed "Richmond Va"</option><option value="none">Only another client's rep has this territory</option></select></label>
     <button class="run" id="run">Save the case</button>
   </div>
   <div class="out">
@@ -284,13 +295,13 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
   </div>
   <div class="why" id="why"></div>
 </div>
-<div class="notes">Run YcanthRx + 23666 + first option. TODAY: Invivyd rep. TARGET: YcanthRx team. Then "Richmond Va" for spelling. Then the third option to show no cross-client pick.</div>
+<div class="notes">Run YcanthRx + 23666 + first option. TODAY: Invivyd rep. TARGET: YcanthRx team. Then "Richmond Va" for spelling. Then the third option to show no cross-client pick. Lembaz shows "stays blank", which is correct until Beren sends a file.</div>
 </section>
 
 <!-- 8 -->
 <section data-k="s8" data-t="8  Test scenarios">
 <h2>8. Test scenarios</h2>
-<p class="lede">What Rachel or Azmath can run in fulluat. The switch highlights the TODAY or TARGET column. Six of these are also automated Apex tests.</p>
+<p class="lede">What Rachel or Azmath can run in fulluat. The switch highlights the TODAY or TARGET column. Seven of these are also automated Apex tests.</p>
 <div class="today-only"><span class="mode today">TODAY column: what happens before the fix</span></div>
 <div class="target-only"><span class="mode target">TARGET column: what must happen after the fix</span></div>
 <table id="tests" class="tt"><tr><th>#</th><th>Scenario</th><th>Set up</th><th>Do</th><th>TODAY</th><th>TARGET</th></tr></table>
@@ -301,17 +312,17 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <section data-k="s9" data-t="9  What we do">
 <h2>9. What we do</h2>
 <div class="today-only">
-<span class="mode today">TODAY: done so far</span>
+<span class="mode today">TODAY: done so far (11 Nov, 11:00 ET)</span>
 <div class="two">
 <div class="owner"><h3 style="margin-top:0">Analysis (10 Nov)</h3><ul class="plan">
 <li>Read the two records, both orgs, three flows, six Apex classes and the 1.36M-row table. Counts and Ids only.</li>
-<li>Found the blank-program match in two flows, the text-only trigger, the picklist mismatch and the empty rows.</li>
-<li>Written up in docs/releases, 10 and 11 Nov.</li>
+<li>Found the blank-program match in two flows, the text-only trigger, the picklist mismatch, the empty rows and the failing nightly batch.</li>
+<li>Walked Azmath's real process on the 09:50 call and checked it against prod.</li>
 </ul></div>
 <div class="owner"><h3 style="margin-top:0">Build in fulluat (11 Nov)</h3><ul class="plan">
-<li>YcanthRx flag on.</li>
-<li>Deployed: two fixed flows, CTN lookup, CTN role, validation rule, new contact import, new zip import screen. Deploy 0AfQL00000ts2tD0AQ, 13 tests green.</li>
-<li>Ready, not yet deployed: new trigger with 7 tests, zip import warnings. Waits for the field rename.</li>
+<li>YcanthRx flag on. Fields renamed to the prod names in fulluat, davidb, prodemo.</li>
+<li>Deployed: two fixed flows, CTN lookup, CTN role, validation rule, new contact import, new zip import screen (0AfQL00000ts2tD0AQ, 13 tests).</li>
+<li>Deployed: program-aware trigger, 7 tests (0AfQL00000tt9RB0AY); zip import warnings (0AfQL00000ttAIP0A2).</li>
 <li>Whole package validated against prod, check-only: 0AfPl0000038lmPKAQ, 26 tests green.</li>
 </ul></div>
 </div>
@@ -320,20 +331,21 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <span class="mode target">TARGET: next steps with owners</span>
 <div class="two">
 <div class="owner"><h3 style="margin-top:0">This week</h3><ul class="plan">
-<li><b>Ali:</b> rename FRM__c and ARM__c in fulluat Setup. Then deploy the trigger.</li>
-<li><b>Rachel:</b> run T1 to T7 in fulluat with the two import screens.</li>
+<li><b>Ali:</b> add FAM to the zip row, the trigger and the contact import. KAD on hold.</li>
+<li><b>Ali:</b> Case flow and nightly batch copy FRM, ARM, CTN, FAM to the case. Batch reads the provider from the case lookup too.</li>
+<li><b>Ali:</b> reschedule the nightly batch under an active admin.</li>
+<li><b>Rachel:</b> run T1 to T8 in fulluat.</li>
 <li><b>Ali:</b> deploy the package and flip the YcanthRx flag in prod, Wednesday window.</li>
-<li><b>Azmath:</b> load the Verrica file: people sheet with roles into the contact import, zip sheet into the zip import. Read the yellow box.</li>
 </ul></div>
 <div class="owner"><h3 style="margin-top:0">After the deploy</h3><ul class="plan">
-<li><b>Ali, confirmed step:</b> delete the 1,069,840 empty rows by Id list. Decide the 14,601 old rows: give them Invivyd Care or delete. Re-save the 394 cases.</li>
-<li><b>Ali:</b> one case flow for all four roles, so ARM and CTN also reach the case.</li>
-<li><b>Ali:</b> same Case FRM field name in both orgs. Add the 7 missing territory values to fulluat.</li>
+<li><b>Azmath:</b> confirm which sheet made the 51,642 empty rows on 10 Nov.</li>
+<li><b>Ali, confirmed step:</b> delete the 1,069,840 empty rows by Id list. Decide the 14,601 old rows: give them Invivyd Care or delete. Let the batch re-stamp the 394 cases.</li>
+<li><b>Ali:</b> one Case FRM field name in both orgs. Add the 7 missing territory values to fulluat.</li>
 <li><b>Rachel:</b> retire the five test contacts with field-team record types in prod.</li>
 </ul></div>
 </div>
 </div>
-<div class="notes">Ask for two decisions: the rename, and the prod go. Everything else is scheduled.</div>
+<div class="notes">Ask for two decisions: the Case FRM field name, and the prod go. Everything else is scheduled.</div>
 </section>
 
 <!-- 10 -->
@@ -342,13 +354,13 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <div class="today-only">
 <span class="mode today">TODAY: explaining what happened</span>
 <div class="two">
-<div><h3 style="margin-top:0">To the team (status)</h3><div class="msg">Asked: why one YcanthRx case shows a different FRM than expected, and whether its Sales Rep is right.
+<div><h3 style="margin-top:0">To Azmath (two things from last night)</h3><div class="msg">Hi Azmath, two things I noticed while checking the zip loads from last night, both easy to fix.
 
-Issue: the FRM is right, zip 23666 is Southeast FRM territory. The Sales Rep is wrong. Two Case flows match zip rows with a blank program when a program's mapping flag is off, and 1.07M zip rows are empty.
+1. The nightly batch has been failing. The scheduled job runs every evening at 17:00 PT but it is owned by the old Minlopro Admin user, which is inactive. Every run ends with "owner or user is inactive". That is why running it by hand was the only thing that worked. I will reschedule it under an active admin, so after a load you will not need to run it manually any more.
 
-Done: fulluat has the flow fix, the YcanthRx flag on, the program-aware trigger ready, a validation rule and a CTN lookup. Prod validated with 26 tests green, not deployed.
+2. One of yesterday's loads created 51,642 empty rows. At 6:16 PM ET a Zip to Sales Rep load went in with no zip code, no program, no territory and no contact on any row. Your YcanthRx load from the same evening is fine, 41,558 rows with FRM contact filled. Could you tell me which file or sheet the 6:16 PM load was? I will delete those rows once you confirm. From the next load on, a validation rule rejects any row without a program and a 5-digit zip.
 
-Your action: Ali renames two fulluat fields and gives the prod go. Rachel runs T1 to T7 in fulluat.</div></div>
+Nothing else changes in how you load. Keep putting the contact Ids in the file as you do today.</div></div>
 <div><h3 style="margin-top:0">To Rachel (why the FRM looked wrong)</h3><div class="msg">The case links to its FRM through the provider's zip, not the patient's address. Zip 23666 is covered by the Southeast FRM in the YcanthRx zip table. The FRM you expected covers the Northeast and 25 Richmond zips. So the case is right.
 
 The Sales Rep on that case is wrong. It came from an old row that has no program. We fixed the flows in fulluat and will deploy to prod this week.</div></div>
@@ -357,18 +369,18 @@ The Sales Rep on that case is wrong. It came from an old row that has no program
 <div class="target-only">
 <span class="mode target">TARGET: announcing the new way of working</span>
 <div class="two">
-<div><h3 style="margin-top:0">To Azmath and Rachel</h3><div class="msg">From now on a client alignment file is loaded in two steps.
+<div><h3 style="margin-top:0">To Azmath and Rachel</h3><div class="msg">From now on a client alignment file is loaded in two steps, and nothing is run by hand afterwards.
 
-1. People sheet into the contact import screen. Pick the client account. Role column: blank for Sales Rep, or FRM, ARM, CTN. Territory spelled as in the zip sheet.
+1. People sheet: one Contact per person with the client account, the program, the role (Sales Rep, FRM, ARM, CTN, FAM) and the territory spelled as in the zip sheet.
 
-2. Zip sheet into the zip import screen. Pick the program. Every row needs a program and a 5-digit zip. After the load, a yellow box lists territories where no contact matched. Create the contact and re-save those rows.
+2. Zip sheet: one row per zip with the program. Contact Ids in the file are fine. Every row needs a program and a 5-digit zip. After the load, a yellow box lists territories where no contact matched. Create the contact and re-save those rows.
 
-The trigger fills Sales Rep, FRM, ARM and CTN on each zip row. When an enrollment case is saved with a provider, the flows copy the team onto the case.
+The trigger fills the team on each zip row. New cases get the team when saved with a provider. Existing cases get it from the nightly batch.
 
 Rachel, the FRM and ARM lookups were added to the zip row in June and August for exactly this.</div></div>
-<div><h3 style="margin-top:0">To the team (after prod deploy)</h3><div class="msg">Deployed to prod: fixed Case flows, program-aware trigger, validation rule, CTN lookup, new import screens. YcanthRx mapping flag on.
+<div><h3 style="margin-top:0">To the team (after prod deploy)</h3><div class="msg">Deployed to prod: fixed Case flows, program-aware trigger, validation rule, CTN and FAM lookups, new import screens, nightly batch rescheduled. YcanthRx mapping flag on.
 
-Next: clean-up of 1.07M empty zip rows and re-save of 394 cases, counted before and after.
+Next: clean-up of 1.07M empty zip rows, then the batch re-stamps the 394 affected cases, counted before and after.
 
 How to check: report "zip rows with no contact" per program, and report "cases whose zip row program differs from the case program" must be zero.</div></div>
 </div>
@@ -379,29 +391,28 @@ How to check: report "zip rows with no contact" per program, and report "cases w
 </div>
 <script>
 const stepsToday=[
- ["1. The client sends a file","Client field ops → Azmath","A zip sheet: territory, zip, city, county. A people sheet: name, role, territory.<br><b style='color:var(--red)'>Breaks here:</b> no program column. The program is only chosen on the screen."],
- ["2. People become Contacts","Azmath, contact import screen","Azmath picks the client (for example Verrica) and uploads the people sheet. For every person Salesforce creates one Contact with four things: the name, the role (Sales Rep, FRM or ARM), the client account, and the territory name.<br><br><b style='color:var(--red)'>Breaks here:</b> the screen changes the territory text to Title Case. \"RICHMOND VA\" becomes \"Richmond Va\". It also accepts only 29 territory names, but the zip table uses 278 different names. Later the trigger compares the two texts letter by letter, so \"Richmond Va\" never finds \"RICHMOND VA\". Result: the contact is created but no zip row ever links to it."],
- ["3. Zips become rows","Azmath, zip import screen","One Zip to Sales Rep row per zip with program, zip, territory.<br><b style='color:var(--red)'>Breaks here:</b> Data Loader does not use the screen. 1,069,840 rows were inserted with no zip and no program."],
- ["4. The trigger fills the team","Automatic, on insert","Finds the newest Sales Rep contact with the same territory text.<br><b style='color:var(--red)'>Breaks here:</b> does not check the client. Ignores FRM, ARM, CTN. \"Richmond Va\" never equals \"RICHMOND VA\"."],
- ["5. The case gets the team","Automatic, two flows on save","Reads the provider zip and the case program, finds the zip row, copies Sales Rep and Case Manager.<br><b style='color:var(--red)'>Breaks here:</b> if the program's mapping flag is off, the flow searches with program = blank and finds an old row with a foreign rep."]
+ ["1. Azmath loads the people","Azmath, Data Loader","From the client's people sheet she creates one Contact per person: name, email, record type (Sales Rep or FRM), the client as account, and the <b>Program Id</b>. No territory on the contact.<br><br><b style='color:var(--red)'>Breaks here:</b> without a territory the trigger can never match these contacts to a zip row. It only works because Azmath puts the Contact Id straight into the zip file in step 2. The contact import screen, when used instead, rewrites \"RICHMOND VA\" as \"Richmond Va\" and knows only 29 territory names."],
+ ["2. Azmath loads the zip rows","Azmath, Data Loader","From the zip sheet she creates one Zip to Sales Rep row per zip: zip, district, territory, <b>Program Id</b>, and the <b>FRM Contact Id</b> from step 1. On 10 Nov: 41,558 YcanthRx rows, FRM on every one.<br><br><b style='color:var(--red)'>Breaks here:</b> nothing forces the program or the zip. Another load the same evening created 51,642 rows with nothing in them. The trigger only fills Sales Rep, by territory text, any client."],
+ ["3. Azmath runs the batch by hand","Azmath, Developer Console, one line of code","The batch <code>PRO_ZiptoSalesRep</code> looks at zip rows changed in the last day, finds cases whose provider zip and program match, and copies Sales Rep and Case Manager onto them.<br><br><b style='color:var(--red)'>Breaks here:</b> the scheduled nightly run of this batch fails every night because its owner, the Minlopro Admin user, is inactive. Nobody is alerted. The batch never copies FRM, ARM or CTN. It only sees cases with a row in the provider junction: 3 of 1,030 YcanthRx cases."],
+ ["4. A case is saved with a provider","Automatic, two flows on save","When an enrollment case is created or its provider changes, the Case flow reads the provider zip and the case program, finds the zip row and copies Sales Rep and Case Manager. Since 10 Nov a second flow copies FRM on the same save.<br><br><b style='color:var(--red)'>Breaks here:</b> if the program's mapping flag is off, the flow searches with program = blank and finds an old row with a foreign rep. That is the Invivyd rep on a YcanthRx case. Existing cases are never revisited."]
 ];
 const stepsTarget=[
- ["1. The client sends a file","Client field ops → Azmath","Same two sheets.<br><b style='color:var(--green)'>Fixed:</b> the program is chosen on the import screen and is now required on every row by a validation rule."],
- ["2. People become Contacts","Azmath, contact import screen","Same screen, same upload. One Contact per person: name, role, client account, territory.<br><br><b style='color:var(--green)'>Fixed:</b> the screen now accepts any territory name that exists in the zip table, typed in upper or lower case, and saves it exactly as the zip table spells it. The contact and the zip row always carry the same text, so the trigger can link them. The role CTN is accepted too."],
- ["3. Zips become rows","Azmath, zip import screen","Same screen.<br><b style='color:var(--green)'>Fixed:</b> program and 5-digit zip required from any tool. After the load a yellow box lists territories where nobody matched."],
- ["4. The trigger fills the team","Automatic, on insert and on change of territory or program","<b style='color:var(--green)'>Fixed:</b> takes only contacts of the same program or the program's client. Compares territory without caring about case. Fills Sales Rep, FRM, ARM and CTN. Leaves a field alone if nobody matches."],
- ["5. The case gets the team","Automatic, two flows on save","<b style='color:var(--green)'>Fixed:</b> if the program has no zip table, the flow stops. YcanthRx flag on. Next step: one flow copies all four roles."]
+ ["1. Azmath loads the people","Azmath, Data Loader or contact import screen","Same sheet, one Contact per person with client account, program, role and <b>territory</b>. Roles: Sales Rep, FRM, ARM, CTN, FAM.<br><br><b style='color:var(--green)'>Fixed:</b> the import screen accepts any territory that exists in the zip table, in any case, and stores the zip table spelling. With a territory on the contact the trigger can fill the zip rows itself; the Contact Id in the file is no longer required, though still welcome."],
+ ["2. Azmath loads the zip rows","Azmath, Data Loader or zip import screen","Same sheet, program on every row.<br><br><b style='color:var(--green)'>Fixed:</b> a row without program or 5-digit zip is rejected. The trigger fills every blank people field from contacts of the same client and territory: Sales Rep, FRM, ARM, CTN, FAM. Whatever the file already carried stays. The import screen shows a yellow box with territories where nobody matched."],
+ ["3. The batch runs itself","Automatic, nightly, active admin owner","<b style='color:var(--green)'>Fixed:</b> rescheduled under an active admin with a failure alert. Copies Sales Rep, Case Manager, FRM, ARM, CTN and FAM onto existing cases that match program + provider zip. Reads the provider from the case lookup as well as the junction row, so it reaches all 56 YcanthRx cases with a provider, not 3. Azmath runs nothing by hand."],
+ ["4. A case is saved with a provider","Automatic, Case flow on save","<b style='color:var(--green)'>Fixed:</b> if the program has no zip table the flow stops; nothing foreign is ever copied. Otherwise it copies the same six fields as the batch. YcanthRx flag on. Lembaz stays blank until Beren sends a file, which is the right answer."]
 ];
 const tests=[
  ["T1","Program with flag off, provider zip has an old program-less row","YcanthRx, zip 23666","Save an enrollment case with the provider","Invivyd rep on the case","Nothing from the old row. With flag on: YcanthRx team"],
  ["T2","Two clients use the same territory text","Client A and Client B reps both \"Dallas TX\"","Insert a zip row for Program A","Newest rep of either client","Client A rep only"],
  ["T3","Territory typed in a different case","Contact \"Richmond Va\", zip row \"RICHMOND VA\"","Contact import, then zip import","No match. Contact saved as \"Richmond Va\"","Contact saved as \"RICHMOND VA\". Match made"],
  ["T4","File already carries an FRM, no FRM contact for that territory","Zip row inserted with FRM filled","Insert","FRM kept but Sales Rep wiped when no rep matched","Everything kept, nothing wiped"],
- ["T5","Territory or program changed on a row","Row RICHMOND VA → Dallas TX, then Program A → B","Edit the row","Re-match only on territory change, Sales Rep only","Re-match on either change, all four roles"],
+ ["T5","Territory or program changed on a row","Row RICHMOND VA → Dallas TX, then Program A → B","Edit the row","Re-match only on territory change, Sales Rep only","Re-match on either change, all roles"],
  ["T6","Row without program, or 4-digit zip","Data Loader row","Insert","Saved. Matches nothing. Joins the 1.07M","Rejected by the validation rule"],
- ["T7","Territory with no contact","Zip sheet with \"Oklahoma\", no Oklahoma contacts","Zip import","Rows saved, nobody told","Rows saved. Yellow box: Oklahoma has no Sales Rep / FRM / ARM / CTN"],
- ["T8","200 rows at once","Bulk zip sheet","Zip import","Works","Works, two queries per batch"],
- ["T9","Audit a case","Any case with a team","Open the case","Sales Rep, Case Manager, link to the row","Same, and the row shows all four roles so the match can be checked"]
+ ["T7","Territory with no contact","Zip sheet with \"Oklahoma\", no Oklahoma contacts","Zip import","Rows saved, nobody told","Rows saved. Yellow box: Oklahoma has no Sales Rep / FRM / ARM / CTN / FAM"],
+ ["T8","Existing case, zip row loaded later","Case with provider zip 23666 exists, then YcanthRx rows loaded","Wait for the nightly batch","Batch fails (inactive owner); if run by hand, Sales Rep only, and only if a junction row exists","Batch runs itself, copies all roles, reads the provider from the case"],
+ ["T9","Program with no zip table","Lembaz case with provider zip 78258","Save the case","Blank, by luck: 8 other programs have 78258 rows but none with a blank program","Blank, by rule: flow stops because Lembaz has no mapping"],
+ ["T10","Audit a case","Any case with a team","Open the case","Sales Rep, Case Manager, link to the row","Same, and the row shows all roles so the match can be checked"]
 ];
 const secs=[...document.querySelectorAll('section')];
 const nav=document.getElementById('nav');
@@ -422,25 +433,24 @@ const start=secs.findIndex(s=>'#'+s.dataset.k===location.hash);show(start<0?0:st
 // simulator
 const ZIPTABLE={Y:{'23666':{terr:'RICHMOND VA'},'23120':{terr:'RICHMOND VA'},'75201':{terr:'Dallas TX'},'02108':{terr:'Boston MA'}},F:{'23666':{terr:'Raleigh'},'23120':{terr:'WASHINGTON DC'},'75201':{terr:'Dallas Ft Worth'},'02108':{terr:'Boston'}},N:{}};
 const LEGACY={'23666':'Invivyd rep (old row, program blank)','23120':'Invivyd rep (old row, program blank)'};
-const PEOPLE={'RICHMOND VA':{rep:'YcanthRx Rep East',frm:'FRM Southeast',ctn:'CTN 2'},'Dallas TX':{rep:'YcanthRx Rep Texas',frm:'FRM West',ctn:null},'Boston MA':{rep:'YcanthRx Rep Northeast',frm:'FRM Northeast',ctn:'CTN 1'},'Raleigh':{rep:'Fennec Rep Raleigh',frm:null,ctn:null},'WASHINGTON DC':{rep:'Fennec Rep DC',frm:null,ctn:null},'Dallas Ft Worth':{rep:'Fennec Rep DFW',frm:null,ctn:null},'Boston':{rep:'Fennec Rep Boston',frm:null,ctn:null}};
+const PEOPLE={'RICHMOND VA':{rep:'YcanthRx Rep East',frm:'FRM Southeast',ctn:'CTN 2',fam:'FAM East'},'Dallas TX':{rep:'YcanthRx Rep Texas',frm:'FRM West',ctn:null,fam:null},'Boston MA':{rep:'YcanthRx Rep Northeast',frm:'FRM Northeast',ctn:'CTN 1',fam:'FAM North'},'Raleigh':{rep:'Fennec Rep Raleigh',frm:null,ctn:null,fam:null},'WASHINGTON DC':{rep:'Fennec Rep DC',frm:null,ctn:null,fam:null},'Dallas Ft Worth':{rep:'Fennec Rep DFW',frm:null,ctn:null,fam:null},'Boston':{rep:'Fennec Rep Boston',frm:null,ctn:null,fam:null}};
 const line=(k,v)=>`<p><b>${k}:</b> ${v}</p>`;
 function run(){
   const p=prog.value,z=zip.value,pp=people.value,row=ZIPTABLE[p][z];let b='',a='',why='';
   if(p==='Y'||p==='N'){
-    if(LEGACY[z]){b=line('Zip row used','old row, program blank')+line('Sales Rep',LEGACY[z])+line('FRM','blank')+line('CTN','blank');why='TODAY: the program was not found (flag off or no zip table), so the flow searched with program = blank and found an old Invivyd row. ';}
-    else{b=line('Zip row used','none')+line('Sales Rep','blank')+line('FRM','blank')+line('CTN','blank');why='TODAY: no old row for this zip, so nothing was copied. ';}
+    if(LEGACY[z]&&p==='Y'){b=line('Zip row used','old row, program blank')+line('Sales Rep',LEGACY[z])+line('FRM','blank')+line('CTN','blank')+line('FAM','blank');why='TODAY: the program was not found (flag off), so the flow searched with program = blank and found an old Invivyd row. ';}
+    else{b=line('Zip row used','none')+line('Sales Rep','blank')+line('FRM','blank')+line('CTN','blank')+line('FAM','blank');why=p==='N'?'TODAY: Lembaz has no zip rows and no blank-program row exists for this zip, so nothing was copied, by luck. ':'TODAY: no old row for this zip, so nothing was copied. ';}
   }else{
     const old=pp==='full'?PEOPLE[row.terr].rep:(pp==='case'?'blank (spelling did not match)':"other client's newest rep with the same territory text");
-    b=line('Zip row used',`Fennec row ${z} / ${row.terr}`)+line('Sales Rep',old)+line('FRM','blank (trigger ignored FRM)')+line('CTN','blank (trigger ignored CTN)');why='TODAY: territory text only, newest wins, Sales Rep only. ';
+    b=line('Zip row used',`Fennec row ${z} / ${row.terr}`)+line('Sales Rep',old)+line('FRM','blank (never copied)')+line('CTN','blank (never copied)')+line('FAM','blank (never copied)');why='TODAY: territory text only, newest wins, Sales Rep only. ';
   }
-  if(!row){a=line('Zip row used','none: this program has no zip table')+line('Sales Rep','blank')+line('FRM','blank')+line('CTN','blank');why+='TARGET: the flow stops when the program has no zip table. Nothing foreign is copied.';}
+  if(!row){a=line('Zip row used','none: this program has no zip table')+line('Sales Rep','blank')+line('FRM','blank')+line('CTN','blank')+line('FAM','blank');why+='TARGET: the flow stops when the program has no zip table. Nothing foreign is copied. Blank is the correct answer until the client sends a file.';}
   else{
     const ppl=PEOPLE[row.terr];
     const rep=pp==='none'?"blank (another client's rep does not count)":ppl.rep;
-    const frm=pp==='none'?'blank':(ppl.frm||'blank, shown in the yellow box after the load');
-    const ctn=pp==='none'?'blank':(ppl.ctn||'blank, shown in the yellow box after the load');
-    a=line('Zip row used',`${p==='Y'?'YcanthRx':'Fennec'} row ${z} / ${row.terr}`)+line('Sales Rep',rep)+line('FRM',frm)+line('CTN',ctn);
-    why+=pp==='case'?'TARGET: "Richmond Va" and "RICHMOND VA" are treated as the same, so the match holds.':pp==='none'?'TARGET: a contact must belong to this program or this client. Same territory text on another client is ignored.':'TARGET: program + territory match through the client account. All four roles from one row.';
+    const g=v=>pp==='none'?'blank':(v||'blank, shown in the yellow box after the load');
+    a=line('Zip row used',`${p==='Y'?'YcanthRx':'Fennec'} row ${z} / ${row.terr}`)+line('Sales Rep',rep)+line('FRM',g(ppl.frm))+line('CTN',g(ppl.ctn))+line('FAM',g(ppl.fam));
+    why+=pp==='case'?'TARGET: "Richmond Va" and "RICHMOND VA" are treated as the same, so the match holds.':pp==='none'?'TARGET: a contact must belong to this program or this client. Same territory text on another client is ignored.':'TARGET: program + territory match through the client account. All roles from one row, copied to the case on save and by the nightly batch.';
   }
   before.innerHTML=b;after.innerHTML=a;document.getElementById('why').textContent=why;
 }
