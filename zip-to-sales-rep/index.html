@@ -131,7 +131,7 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
   <div class="tile ok"><div class="v">1</div><div class="l">table answers the question</div><div class="d">Zip to Sales Rep: for this program, in this zip, who is the Sales Rep, FRM, ARM, CTN and FAM.</div></div>
   <div class="tile ok"><div class="v">0</div><div class="l">cases can pick a foreign rep</div><div class="d">The flows stop when a program has no zip table. New rows must have a program and a zip.</div></div>
   <div class="tile ok"><div class="v">5 + 1</div><div class="l">roles filled from one row</div><div class="d">Sales Rep, FRM, ARM, CTN, FAM, plus Case Manager. Matched on program + territory. Upper or lower case does not matter.</div></div>
-  <div class="tile ok"><div class="v">Live</div><div class="l">YcanthRx in prod since 11 Nov, 15:40 ET</div><div class="d">Azmath confirmed T1 and T2 in fulluat. 21 cases cleared of the foreign rep, flag on, nightly batch at midnight PT, one-time YcanthRx re-stamp tonight. Upload screens still in UAT.</div></div>
+  <div class="tile ok"><div class="v">8 → 53</div><div class="l">YcanthRx enrollment cases with their FRM</div><div class="d">Live in prod since 11 Nov. Overnight batch 12 Nov: 0 errors, 0 cases on a foreign row, 0 foreign reps. Nightly job runs at midnight ET. Upload screens still in UAT.</div></div>
 </div>
 <div class="callout ok">Load the client file once. The trigger fills the team on the zip row. The flows and the nightly batch copy the team onto the cases. Everyone can see which row the case came from.</div>
 </div>
@@ -337,7 +337,7 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <div class="two">
 <div class="owner"><h3 style="margin-top:0">This week</h3><ul class="plan">
 <li><b>Rachel:</b> review Azmath's results; T2, T8, T12, T13 are click-through.</li>
-<li><b>12 Nov morning, Ali:</b> check the overnight run: YcanthRx enrollment cases with an FRM (was 8 of 1,030) and cases on a program-less row (must stay 0).</li>
+<li><b>12 Nov, overnight result:</b> both batch runs completed at midnight ET, 208 batches each, 0 errors. YcanthRx enrollment cases with an FRM went from <b>8 to 53</b> of 1,032, every one of them linked to a YcanthRx zip row; cases on a program-less row: <b>0</b>; foreign Sales Reps: <b>0</b>. The nightly job is waiting for tonight.</li>
 <li><b>12 Nov, Azmath + Ali:</b> working session on the upload screens (Program search, record type column, Zip Import tab); then those go to prod.</li>
 <li><b>KAD:</b> on hold until Ali decides how KAD reps are identified (today they are Sales Rep contacts on 130 cases).</li>
 </ul></div>
