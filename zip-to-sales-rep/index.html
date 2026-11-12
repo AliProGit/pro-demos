@@ -92,6 +92,32 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 .roles{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .roles span{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;font-size:12.5px}
 .roles span.hold{border-style:dashed;color:var(--ink3)}
+.rj{display:grid;gap:16px;margin-top:14px}
+.rj-step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.rj-step h3{margin:0 0 2px;font-size:17px}
+.rj-step .who{color:var(--ink3);font-size:12.5px;margin-bottom:10px}
+.rj-step .who b{color:var(--ink2)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:10px}
+.card{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.card .hd{padding:8px 12px;font-weight:600;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.card .hd span{font-weight:400;color:var(--ink3);font-size:11.5px}
+.card.file .hd{background:var(--filebg);color:var(--file)}
+.card.contact .hd{background:var(--contactbg);color:var(--contact)}
+.card.zip .hd{background:var(--zipbg);color:var(--zip)}
+.card.case .hd{background:var(--casebg);color:var(--case)}
+.card table{margin:0;border:0;font-size:12.5px}
+.card td{border:0;border-top:1px solid #f0f2f5;padding:5px 12px}
+.card td:first-child{color:var(--ink3);width:46%}
+.card td.new{background:var(--greenbg);font-weight:600}
+.card td.auto{color:var(--green)}
+.card td.muted{color:var(--ink3);font-style:italic}
+.sheet{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px;background:#fff}
+.sheet th{background:#1e7e34;color:#fff;font-weight:600;padding:5px 8px;border:1px solid #d7dbe0}
+.sheet td{padding:5px 8px;border:1px solid #d7dbe0}
+.rj-arrow{text-align:center;color:var(--ink3);font-size:12.5px;padding:2px 0}
+.rj-note{font-size:13px;color:var(--ink2);margin-top:10px;padding:8px 12px;border-left:3px solid var(--green);background:var(--greenbg);border-radius:4px}
+.rj-note.warn{border-color:var(--amber);background:var(--amberbg)}
+@media (max-width:1000px){.cards{grid-template-columns:1fr}}
 @media (max-width:1000px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}.tiles,.stores,.arrows{grid-template-columns:repeat(2,1fr)}.two,.sim .out{grid-template-columns:1fr}}
 @media print{nav,header .hdr-r{display:none}section{display:block;page-break-after:always}}
 </style>
@@ -147,9 +173,164 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 <div class="notes">Same steps in both modes. TODAY step 3 is the surprise: the nightly batch has failed every night since the Minlopro admin user was deactivated, so Azmath runs it by hand.</div>
 </section>
 
-<!-- 3 -->
-<section data-k="s3" data-t="3  Four stores, one chain">
-<h2>3. Four stores, one chain</h2>
+
+<!-- 3 record by record -->
+<section data-k="s3r" data-t="3  Record by record">
+<h2>3. Record by record: Azmath's journey from the file to the case</h2>
+<p class="lede">The same journey as the previous page, but showing the actual records. Example client: Verrica, program YcanthRx. Names are made up. Green cells are filled by Salesforce, not by Azmath.</p>
+<div class="rj">
+
+<div class="rj-step">
+  <h3>Step 0. Verrica sends the alignment file</h3>
+  <div class="who"><b>Who:</b> Verrica field operations → Azmath. <b>What gets created:</b> nothing yet. Two sheets in one Excel file.</div>
+  <div class="cards">
+    <div class="card file"><div class="hd">Sheet 1: People <span>one row per person</span></div>
+      <table class="sheet"><tr><th>FirstName</th><th>LastName</th><th>Email</th><th>RecordType</th><th>PRO_Territory_Name__c</th></tr>
+      <tr><td>Sasha</td><td>Manbru</td><td>s.manbru@verrica.com</td><td>FRM</td><td>RICHMOND VA</td></tr>
+      <tr><td>Monica</td><td>Maharjan</td><td>m.maharjan@verrica.com</td><td>FRM</td><td>Boston MA</td></tr>
+      <tr><td>Nicki</td><td>Ycanth</td><td>n.ycanth@verrica.com</td><td>CTN</td><td>RICHMOND VA</td></tr>
+      <tr><td>Dana</td><td>Reyes</td><td>d.reyes@verrica.com</td><td>Sales Rep</td><td>RICHMOND VA</td></tr></table></div>
+    <div class="card file"><div class="hd">Sheet 2: Zips <span>one row per zip</span></div>
+      <table class="sheet"><tr><th>Zip</th><th>Territory</th><th>City</th><th>County</th></tr>
+      <tr><td>23666</td><td>RICHMOND VA</td><td>Hampton</td><td>Hampton City</td></tr>
+      <tr><td>23120</td><td>RICHMOND VA</td><td>Moseley</td><td>Chesterfield</td></tr>
+      <tr><td>02108</td><td>Boston MA</td><td>Boston</td><td>Suffolk</td></tr></table></div>
+  </div>
+  <div class="rj-note">The zip sheet carries <b>no people</b>. The territory name is the only thing that connects a zip to a person. That is why the spelling must be identical on both sheets.</div>
+</div>
+
+<div class="rj-arrow">▼</div>
+
+<div class="rj-step">
+  <h3>Step 1. Azmath loads the people: Zip Import tab → Step 1</h3>
+  <div class="who"><b>Who:</b> Azmath. <b>Clicks:</b> search "canth", pick <b>YcanthRx Patient Support Services</b>, leave the record-type dropdown on "Sales Rep" (the sheet has its own RecordType column), upload Sheet 1, Import Contacts. <b>What gets created:</b> one Contact per row.</div>
+  <div class="cards">
+    <div class="card contact"><div class="hd">Contact <span>from row 1</span></div><table>
+      <tr><td>Name</td><td>Sasha Manbru</td></tr>
+      <tr><td>Record Type</td><td>FRM <span class="muted">(from the RecordType column)</span></td></tr>
+      <tr><td>Program</td><td class="auto">YcanthRx Patient Support Services ← picked on screen</td></tr>
+      <tr><td>Account</td><td class="auto">Verrica Pharmaceuticals ← the Program's client, automatic</td></tr>
+      <tr><td>Territory Name</td><td>RICHMOND VA</td></tr>
+      <tr><td>Email</td><td>s.manbru@verrica.com</td></tr></table></div>
+    <div class="card contact"><div class="hd">Contact <span>from row 3</span></div><table>
+      <tr><td>Name</td><td>Nicki Ycanth</td></tr>
+      <tr><td>Record Type</td><td>CTN</td></tr>
+      <tr><td>Program</td><td class="auto">YcanthRx Patient Support Services</td></tr>
+      <tr><td>Account</td><td class="auto">Verrica Pharmaceuticals</td></tr>
+      <tr><td>Territory Name</td><td>RICHMOND VA</td></tr></table></div>
+    <div class="card contact"><div class="hd">Contact <span>from row 4</span></div><table>
+      <tr><td>Name</td><td>Dana Reyes</td></tr>
+      <tr><td>Record Type</td><td>Sales Rep</td></tr>
+      <tr><td>Program</td><td class="auto">YcanthRx Patient Support Services</td></tr>
+      <tr><td>Account</td><td class="auto">Verrica Pharmaceuticals</td></tr>
+      <tr><td>Territory Name</td><td>RICHMOND VA</td></tr></table></div>
+  </div>
+  <div class="rj-note">If a row said "richmond va" in lower case, the screen saves it as "RICHMOND VA", the spelling the zip table uses. If a row said "Pharmacist" as record type, that row is rejected with its row number and the rest still load.</div>
+</div>
+
+<div class="rj-arrow">▼</div>
+
+<div class="rj-step">
+  <h3>Step 2. Azmath loads the zips: Zip Import tab → Step 2</h3>
+  <div class="who"><b>Who:</b> Azmath. <b>Clicks:</b> pick <b>YcanthRx</b> again, upload Sheet 2, Import Zip Records. <b>What gets created:</b> one Zip to Sales Rep row per zip, and the trigger fills the people on each row the moment it is saved.</div>
+  <div class="cards">
+    <div class="card zip"><div class="hd">Zip to Sales Rep row <span>as Azmath's sheet sends it</span></div><table>
+      <tr><td>Program</td><td>YcanthRx Patient Support Services</td></tr>
+      <tr><td>Zip Code</td><td>23666</td></tr>
+      <tr><td>Territory Name</td><td>RICHMOND VA</td></tr>
+      <tr><td>City / County</td><td>Hampton / Hampton City</td></tr>
+      <tr><td>Sales Rep</td><td class="muted">blank</td></tr>
+      <tr><td>FRM Contact</td><td class="muted">blank</td></tr>
+      <tr><td>CTN Contact</td><td class="muted">blank</td></tr>
+      <tr><td>ARM / FAM Contact</td><td class="muted">blank</td></tr></table></div>
+    <div class="card zip"><div class="hd">Same row <span>one second later, after the trigger</span></div><table>
+      <tr><td>Program</td><td>YcanthRx Patient Support Services</td></tr>
+      <tr><td>Zip Code</td><td>23666</td></tr>
+      <tr><td>Territory Name</td><td>RICHMOND VA</td></tr>
+      <tr><td>Sales Rep</td><td class="new">Dana Reyes</td></tr>
+      <tr><td>FRM Contact</td><td class="new">Sasha Manbru</td></tr>
+      <tr><td>CTN Contact</td><td class="new">Nicki Ycanth</td></tr>
+      <tr><td>ARM / FAM Contact</td><td class="muted">blank, nobody with that role for RICHMOND VA</td></tr></table></div>
+    <div class="card zip"><div class="hd">Row for 02108 <span>Boston MA</span></div><table>
+      <tr><td>Program</td><td>YcanthRx Patient Support Services</td></tr>
+      <tr><td>Zip Code</td><td>02108</td></tr>
+      <tr><td>Territory Name</td><td>Boston MA</td></tr>
+      <tr><td>FRM Contact</td><td class="new">Monica Maharjan</td></tr>
+      <tr><td>Sales Rep / CTN / ARM / FAM</td><td class="muted">blank, no Boston contacts with those roles</td></tr></table></div>
+  </div>
+  <div class="rj-note">How the trigger picks: same <b>Program</b> (or same client account) <b>and</b> same territory, letter case ignored. A Fennec rep with territory "RICHMOND VA" is never considered for a YcanthRx row.</div>
+  <div class="rj-note warn">After the load the screen shows a yellow box: "Territory Boston MA: no Sales Rep / CTN / ARM / FAM contact found". That is information, not an error. The rows are saved. If Azmath's sheet already carried a contact Id in a column, the trigger keeps it and does not overwrite.</div>
+</div>
+
+<div class="rj-arrow">▼</div>
+
+<div class="rj-step">
+  <h3>Step 3. Nothing. The nightly batch updates the existing cases</h3>
+  <div class="who"><b>Who:</b> nobody, runs every night at midnight Eastern. <b>What it does:</b> for every zip row changed today, finds the cases of the <b>same program</b> whose provider sits in that zip, and copies the team.</div>
+  <div class="cards">
+    <div class="card case"><div class="hd">Enrollment case <span>before the batch</span></div><table>
+      <tr><td>Program</td><td>YcanthRx Patient Support Services</td></tr>
+      <tr><td>Associated HealthCare Provider</td><td>Dr. Example, Forefront Dermatology</td></tr>
+      <tr><td>Provider's account zip</td><td>23666</td></tr>
+      <tr><td>Zip to Sales Rep</td><td class="muted">blank</td></tr>
+      <tr><td>Sales Rep</td><td class="muted">blank</td></tr>
+      <tr><td>FRM Contact</td><td class="muted">blank</td></tr>
+      <tr><td>CTN Contact</td><td class="muted">blank</td></tr></table></div>
+    <div class="card case"><div class="hd">Same case <span>next morning</span></div><table>
+      <tr><td>Program</td><td>YcanthRx Patient Support Services</td></tr>
+      <tr><td>Associated HealthCare Provider</td><td>Dr. Example, Forefront Dermatology</td></tr>
+      <tr><td>Zip to Sales Rep</td><td class="new">ZIP - 160696 (23666 / RICHMOND VA / YcanthRx)</td></tr>
+      <tr><td>Sales Rep</td><td class="new">Dana Reyes</td></tr>
+      <tr><td>FRM Contact</td><td class="new">Sasha Manbru</td></tr>
+      <tr><td>CTN Contact</td><td class="new">Nicki Ycanth</td></tr>
+      <tr><td>ARM / FAM Contact</td><td class="muted">unchanged, the row has none</td></tr></table></div>
+  </div>
+  <div class="rj-note">Match key = <b>program + zip</b>. The batch finds the provider either on the case itself or through the Associated Healthcare Provider junction. A blank on the zip row never erases a value on the case.</div>
+</div>
+
+<div class="rj-arrow">▼</div>
+
+<div class="rj-step">
+  <h3>Step 4. A new case: the team arrives on save</h3>
+  <div class="who"><b>Who:</b> a case manager, for example Rachel, creates an Enrollment case and picks the provider. <b>What happens:</b> the Case flow reads the provider's zip and the case program, finds the zip row, copies the team. No batch needed.</div>
+  <div class="cards">
+    <div class="card case"><div class="hd">New Enrollment case <span>what Rachel types</span></div><table>
+      <tr><td>Program</td><td>YcanthRx Patient Support Services</td></tr>
+      <tr><td>Associated HealthCare Provider</td><td>Dr. Example (account zip 23120)</td></tr>
+      <tr><td>Sales Rep, FRM, CTN</td><td class="muted">she leaves them blank</td></tr></table></div>
+    <div class="card case"><div class="hd">Same case <span>after Save</span></div><table>
+      <tr><td>Zip to Sales Rep</td><td class="new">row 23120 / RICHMOND VA / YcanthRx</td></tr>
+      <tr><td>Sales Rep</td><td class="new">Dana Reyes</td></tr>
+      <tr><td>FRM Contact</td><td class="new">Sasha Manbru</td></tr>
+      <tr><td>CTN Contact</td><td class="new">Nicki Ycanth</td></tr></table></div>
+    <div class="card case"><div class="hd">New Lembaz case <span>program with no zip table</span></div><table>
+      <tr><td>Program</td><td>Lembaz Family Support</td></tr>
+      <tr><td>Associated HealthCare Provider</td><td>Dr. Other (account zip 78258)</td></tr>
+      <tr><td>Zip to Sales Rep, Sales Rep, FRM</td><td class="muted">stay blank: Lembaz has no mapping, the flow stops. Correct until Beren sends a file.</td></tr></table></div>
+  </div>
+  <div class="rj-note">Two things make this safe: the program's "Use Zip To Territory Mapping" box must be ticked, and the zip row must belong to the same program. Another client's row can never be used.</div>
+</div>
+
+<div class="rj-step">
+  <h3>What Azmath does, in one line</h3>
+  <div class="who">Zip Import tab → Step 1: pick the Program, upload the people sheet → Step 2: pick the Program, upload the zip sheet → read the yellow box, create any missing contact, re-save those rows. Everything else is automatic.</div>
+  <table class="tt">
+    <tr><th>If the file has…</th><th>Then</th></tr>
+    <tr><td>a RecordType column</td><td>each row gets that record type</td></tr>
+    <tr><td>no RecordType column</td><td>every row gets the record type chosen in the dropdown on screen</td></tr>
+    <tr><td>a territory spelled differently on the two sheets</td><td>no match for that territory, it shows in the yellow box; fix the spelling in the contact and re-save the zip rows</td></tr>
+    <tr><td>a zip row without Program or with a 4-digit zip</td><td>that row is rejected with its row number</td></tr>
+    <tr><td>contact Ids already filled on the zip rows (old way)</td><td>kept as they are, the trigger only fills blanks</td></tr>
+  </table>
+</div>
+
+</div>
+<div class="notes">Walk this page top to bottom in two minutes. Point at the green cells each time: those are the ones nobody types. Step 3 is the one Azmath cares about: existing cases, no manual batch.</div>
+</section>
+
+<!-- 4 -->
+<section data-k="s3" data-t="4  Four stores, one chain">
+<h2>4. Four stores, one chain</h2>
 <p class="lede">"Who covers zip 23666 for YcanthRx" passes through four places. Each one has to agree with the next.</p>
 <div class="today-only"><span class="mode today">TODAY: each link has a gap</span></div>
 <div class="target-only"><span class="mode target">TARGET: each link is closed</span></div>
@@ -174,8 +355,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 4 -->
-<section data-k="s4" data-t="4  Who did what">
-<h2>4. Who did what</h2>
+<section data-k="s4" data-t="5  Who did what">
+<h2>5. Who did what</h2>
 <div class="today-only">
 <span class="mode today">TODAY: how we got here</span>
 <p class="lede">Nobody did anything unreasonable. Two import paths, two picklists, one flag, one inactive user and one query added up.</p>
@@ -213,8 +394,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 5 -->
-<section data-k="s5" data-t="5  Prod vs fulluat">
-<h2>5. Prod vs fulluat</h2>
+<section data-k="s5" data-t="6  Prod vs fulluat">
+<h2>6. Prod vs fulluat</h2>
 <div class="today-only">
 <span class="mode today">TODAY: where the two orgs differed before the prod package (components now identical, prod switched off)</span>
 <table>
@@ -253,8 +434,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 6 -->
-<section data-k="s6" data-t="6  The risk">
-<h2>6. The risk</h2>
+<section data-k="s6" data-t="7  The risk">
+<h2>7. The risk</h2>
 <div class="today-only">
 <span class="mode today">TODAY: what can go wrong, and already has</span>
 <div class="tiles">
@@ -280,8 +461,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 7 -->
-<section data-k="s7" data-t="7  Try it">
-<h2>7. Try it</h2>
+<section data-k="s7" data-t="8  Try it">
+<h2>8. Try it</h2>
 <p class="lede">Pick a program, a provider zip and what the client has on file. Then save the case. The TODAY/TARGET switch highlights the matching side.</p>
 <div class="sim">
   <div class="row">
@@ -300,8 +481,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 8 -->
-<section data-k="s8" data-t="8  Test scenarios">
-<h2>8. Test scenarios</h2>
+<section data-k="s8" data-t="9  Test scenarios">
+<h2>9. Test scenarios</h2>
 <p class="lede">What Rachel or Azmath can run in fulluat. The switch highlights the TODAY or TARGET column. Seven of these are also automated Apex tests.</p>
 <div class="today-only"><span class="mode today">TODAY column: what happens before the fix</span></div>
 <div class="target-only"><span class="mode target">TARGET column: what must happen after the fix</span></div>
@@ -310,8 +491,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 9 -->
-<section data-k="s9" data-t="9  What we do">
-<h2>9. What we do</h2>
+<section data-k="s9" data-t="10  What we do">
+<h2>10. What we do</h2>
 <div class="today-only">
 <span class="mode today">TODAY: done so far (11 Nov, 12:30 ET)</span>
 <div class="two">
@@ -353,8 +534,8 @@ code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
 </section>
 
 <!-- 10 -->
-<section data-k="s10" data-t="10  Messages">
-<h2>10. Messages</h2>
+<section data-k="s10" data-t="11  Messages">
+<h2>11. Messages</h2>
 <div class="today-only">
 <span class="mode today">TODAY: explaining what happened</span>
 <div class="two">
