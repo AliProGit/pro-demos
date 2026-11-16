@@ -96,6 +96,14 @@ html.embedded body{font-size:15px}`,
     css: `html.embedded body{font-size:14.5px}
 html.embedded main,html.embedded .wrap{max-width:none;padding:0 16px}`,
   },
+  {
+    src: (() => { const dir = `${HOME}/Desktop/OngoingDevelopment/daily-reports`; const f = fs.readdirSync(dir).filter(n => /^\d{4}-\d{2}-\d{2}-jira-board-dashboard\.html$/.test(n)).sort().pop(); if (!f) throw new Error("no jira-board-dashboard html"); return `${dir}/${f}`; })(),
+    mirrors: [],
+    out: `${REPO}/jira-board-dashboard/index.html`,
+    css: `html.embedded body{max-width:none;margin:12px auto;padding:0 14px;font-size:14px}`,
+    // public copy only: mask patient identifiers that appear in ticket summaries
+    publicOnly: html => html.replace(/OTH-PT-\d{2}-\d{6}/g, "OTH-PT-xx-xxxxxx").replace(/\b\d{3}-\d{2}-\d{4}\b/g, "xxx-xx-xxxx"),
+  },
 ];
 
 function inject(html, css) {
@@ -115,6 +123,6 @@ for (const d of demos) {
   fs.writeFileSync(d.src, after);
   for (const m of d.mirrors) fs.writeFileSync(m, after);
   fs.mkdirSync(path.dirname(d.out), { recursive: true });
-  fs.writeFileSync(d.out, after);
+  fs.writeFileSync(d.out, d.publicOnly ? d.publicOnly(after) : after);
   console.log(`${path.basename(path.dirname(d.out))}: ${before.length} -> ${after.length} chars${before.includes(MARK) ? " (re-applied)" : ""}; mirrors ${d.mirrors.length}`);
 }
