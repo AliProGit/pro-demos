@@ -66,8 +66,10 @@ body.notes .notes{display:block}
 .switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .switch button{border:0;background:#fff;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink2)}
 .switch button.on{background:var(--blue);color:#fff}
-.target-only{display:none}.today-only{display:block}
-body.target .target-only{display:block}body.target .today-only{display:none}
+body:not(.target) .target-only{display:none !important}body.target .today-only{display:none !important}
+body.target #tests td.bad{opacity:.45}body:not(.target) #tests td.ok{opacity:.45}
+.tile.ok .v{color:var(--green)}
+.owner{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
 @media (max-width:1000px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}.tiles{grid-template-columns:repeat(2,1fr)}.stores,.arrows,.two{grid-template-columns:1fr}}
 @media print{nav,header .hdr-r{display:none}section{display:block;page-break-after:always}}
 </style>
@@ -108,14 +110,21 @@ a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</s
 
 <section data-k="s1" data-t="1  The question">
 <h2>1. The question</h2>
-<p class="lede">Rachel asked why her portal test persona is tied to Elizabeth Smyers in the portal but nothing in the CRM shows that tie. The answer is bigger than one persona: the rule "staff see only the patients of the doctors they support" is stored in three places that never meet.</p>
-<div class="tiles">
+<p class="lede">Rachel asked why her portal test persona is tied to Elizabeth Smyers in the portal but nothing in the CRM shows that tie. The answer is bigger than one persona: the rule "staff see only the patients of the doctors they support" is stored in three places that never meet. Use <b>TODAY / TARGET</b> in the header (or press T) on every section.</p>
+<div class="tiles today-only">
   <div class="tile bad"><div class="v">3</div><div class="l">copies of the staff-to-doctor truth</div><div class="d">Heroku database, Contact-Contact Relations, Staff Physician Assignment</div></div>
   <div class="tile bad"><div class="v">0</div><div class="l">assignment rows in production</div><div class="d">Staff_Physician_Assignment__c, Practice_Admin_Role__c, Practice_Clinic_Association__c</div></div>
   <div class="tile warn"><div class="v">152</div><div class="l">staff ↔ doctor relations built by Ops in prod</div><div class="d">Contact-Contact Relations, Nov 2026 (Sara Bryant 114, Rachel 38); read by no code</div></div>
   <div class="tile bad"><div class="v">18,597</div><div class="l">patients the prod HCP endpoint returns unfiltered</div><div class="d">HcpPortalPatientListResource filters by program only; fix waiting in UAT since 10/14 (TD-1793)</div></div>
 </div>
-<div class="callout">The portal decides who sees which patient from its own database. Salesforce cannot show it, audit it, or stop it.</div>
+<div class="callout today-only">The portal decides who sees which patient from its own database. Salesforce cannot show it, audit it, or stop it.</div>
+<div class="tiles target-only">
+  <div class="tile ok"><div class="v">1</div><div class="l">copy of the staff-to-doctor truth</div><div class="d">Contact-Contact Relation in the CRM is the master; Heroku reads it; Staff Physician Assignment is a mirror kept by a flow</div></div>
+  <div class="tile ok"><div class="v">152</div><div class="l">assignment rows in production</div><div class="d">mirrored from the 152 Ops relations by the backfill, then kept in step by the flow</div></div>
+  <div class="tile ok"><div class="v">152</div><div class="l">relations read by the code</div><div class="d">StaffPatientListResource and ProSpectusPatientController take a contact id and read the mirror; program check added</div></div>
+  <div class="tile ok"><div class="v">0</div><div class="l">patients returned without an HCP identity</div><div class="d">TD-1793 filter in prod: identity required, only linked patients, HTTP 400 for a roster request</div></div>
+</div>
+<div class="callout ok target-only">Salesforce decides who sees which patient. The portal writes the assignment to the CRM and reads the list from it. One report on the Contact-Contact Relation answers the audit question.</div>
 <div class="notes">Open with Rachel's question, then widen it. The number that lands is "three copies". Keep the 18,597 for section 6 unless someone asks about risk first.</div>
 </section>
 
@@ -123,7 +132,11 @@ a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</s
 <h2>2. The journey, step by step</h2>
 <p class="lede">Click a step for the detail. Dates and names are from Jira change history and the org metadata.</p>
 <div class="steps" id="steps"></div>
-<div class="notes">The story is: a good design, two teams building on different assumptions, a tester who found it, and tickets closed before the finding became work. Nobody's villain; a missing owner.</div>
+<div class="target-only">
+<h3 style="margin:22px 0 6px">How the journey continues (target, November to December 2026)</h3>
+<div class="steps" id="stepsTarget"></div>
+</div>
+<div class="notes">The story is: a good design, two teams building on different assumptions, a tester who found it, and tickets closed before the finding became work. Nobody's villain; a missing owner. In TARGET the next five steps appear underneath with an owner each.</div>
 </section>
 
 <section data-k="s3" data-t="3  Three stores">
@@ -177,13 +190,42 @@ a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</s
 <tr><td>TD-22 Clinical Staff</td><td>Rachel 5/08: relation shows the doctor, does not filter the list; BLOCKED</td><td class="warn">Smitha Rai</td><td>2026-06-02</td></tr>
 <tr><td>TD-14 Epic</td><td>"all items Done"</td><td>Nicole Cross</td><td>2026-08-03</td></tr>
 </table>
-<div class="callout warn">Not one person's fault. The design said "the portal writes the assignment", the vendor kept it in Heroku, QA closed on "deployed", the tester's finding never became a ticket. The missing piece is an owner for the contract between the portal and Salesforce. That is the architect's job from now on.</div>
+<div class="callout warn today-only">Not one person's fault. The design said "the portal writes the assignment", the vendor kept it in Heroku, QA closed on "deployed", the tester's finding never became a ticket. The missing piece is an owner for the contract between the portal and Salesforce. That is the architect's job from now on.</div>
+<div class="target-only">
+<h3>Who owns what from now on</h3>
+<table><tr><th>Piece</th><th>Owner</th><th>Proof it is done</th></tr>
+<tr><td>The contract between the portal and Salesforce (which object is the master, which endpoints, which identity)</td><td>Ali Mammadov (architect)</td><td>one page in the repo, signed by Ji and Ms. Reinhardt; every change to it is a ticket</td></tr>
+<tr><td>Staff ↔ doctor relations (create, change, deactivate)</td><td>Rachel Johnson, Sara Bryant (Ops), on the contact page</td><td>Contact-Contact Relation rows; quarterly review list</td></tr>
+<tr><td>Mirror flow, backfill, the two staff endpoints, the HCP filter in prod</td><td>Ali Mammadov</td><td>deploy ids on TD-1793 and the two re-opened stories; tests T1 to T12 green in Pro Demo, then prod</td></tr>
+<tr><td>Portal writes assignments to the CRM and reads patient lists from it</td><td>Ji Park, Carlos Lino (LaunchPad Lab)</td><td>no assignment table left in Heroku; T4 and T5 pass</td></tr>
+<tr><td>Decision A (relation as master) and re-opening TD-11 / TD-12</td><td>Ms. Myra Reinhardt</td><td>decision recorded on the epic</td></tr>
+<tr><td>Closing a ticket</td><td>the tester who raised the last finding, never the builder</td><td>Done requires the test row that proved it</td></tr>
+</table>
+<div class="callout ok">Same people, one owner per piece, and a rule that Done means tested. That is the whole governance change.</div>
+</div>
 <div class="notes">Say the TD-12 line yourself before anyone else does. Then move to "what the owner does now".</div>
 </section>
 
 <section data-k="s5" data-t="5  Prod vs Pro Demo">
 <h2>5. Prod versus Pro Demo, end to end</h2>
+<div class="target-only">
+<p class="lede">Every org carries the same model after the plan: one master, one mirror, filtered endpoints, nothing hand-made.</p>
 <table><tr><th>Item</th><th>Prod</th><th>Pro Demo</th><th>davidb / fullUAT</th></tr>
+<tr><td>The three assignment objects</td><td class="ok">exist; Staff Physician Assignment is a mirror, the other two filled by the same flow family</td><td class="ok">same</td><td class="ok">same</td></tr>
+<tr><td>Rows in them</td><td class="ok">152 mirrored from the Ops relations, kept in step by the flow; 0 hand-made</td><td class="ok">mirrored from the 92 Pro Demo relations</td><td class="ok">mirrored</td></tr>
+<tr><td>Staff and admin Apex (5 classes)</td><td class="ok">all five, reading the mirror with a contact id and a program check</td><td class="ok">all five</td><td class="ok">all five</td></tr>
+<tr><td>HcpPortalPatientListResource</td><td class="ok">TD-1793 filter: HCP identity required, linked patients only</td><td class="ok">same</td><td class="ok">same</td></tr>
+<tr><td>Heroku user may call it</td><td class="ok">yes, through PRO_INT_Heroku_Portal (v3 set, no Modify All)</td><td class="ok">same</td><td class="ok">same</td></tr>
+<tr><td>Staff ↔ practitioner Contact-Contact rows</td><td class="ok">the master: Office Staff, Clinical Staff, Practice Admin, Multi Site Staff, maintained by Ops</td><td class="ok">same, test personas</td><td class="ok">same, anonymised</td></tr>
+<tr><td>Reciprocal roles for staff</td><td class="ok">all four ↔ Practitioner (today only "office staff")</td><td class="ok">all four</td><td class="ok">all four</td></tr>
+<tr><td>Staff contacts without a practice (Contact.AccountId)</td><td class="ok">0; validation rule on staff record types</td><td class="ok">0 (25 fixed)</td><td class="ok">0</td></tr>
+<tr><td>Practitioners invited to the portal</td><td class="ok">only after the filter is live; first wave Luminopia Phase 2 (TD-1788)</td><td>test personas</td><td>test personas</td></tr>
+<tr><td>Heroku's own assignment table</td><td class="ok">gone; the portal writes the relation to the CRM and reads it back</td><td class="ok">gone</td><td class="ok">gone</td></tr>
+<tr><td>Audit question "who can see patient X"</td><td class="ok">one report on the Contact-Contact Relation + the program sharing of the internal redesign</td><td class="ok">same</td><td class="ok">same</td></tr>
+</table>
+<div class="callout ok">Prod and Pro Demo stop diverging because the same package (flow, five classes, filter, validation rule, reciprocal roles) is promoted davidb → fullUAT → Pro Demo → prod with the deploy ids on the tickets.</div>
+</div>
+<table class="today-only"><tr><th>Item</th><th>Prod</th><th>Pro Demo</th><th>davidb / fullUAT</th></tr>
 <tr><td>The three assignment objects</td><td>exist (2026-07-22 / 07-30)</td><td>exist</td><td>exist</td></tr>
 <tr><td>Rows in them</td><td class="bad">0 / 0 / 0</td><td class="warn">4 / 0 / 0, all hand-made</td><td>davidb 3; fullUAT 0</td></tr>
 <tr><td>Staff and admin Apex (5 classes)</td><td class="bad">none of the five</td><td>4 of 5</td><td>davidb 5; fullUAT 4</td></tr>
@@ -196,24 +238,33 @@ a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</s
 <tr><td>Patients with a portal user id</td><td class="ok">0</td><td>test patients</td><td>—</td></tr>
 <tr><td>Apex REST traffic</td><td class="ok">one small log file (11/04): effectively idle</td><td>LPL testing</td><td>—</td></tr>
 </table>
-<div class="notes">Green in the prod column means "the risk is latent, not live". That is what buys us the time to fix it properly.</div>
+<div class="notes">Green in the prod column means "the risk is latent, not live". That is what buys us the time to fix it properly. In TARGET every cell is green because one package is promoted to every org.</div>
 </section>
 
 <section data-k="s6" data-t="6  The risk">
 <h2>6. The risk we cannot take</h2>
-<p class="lede">The production HCP patient list returns all patients of a program, with name, birth date, address, phone and e-mail, to any caller authenticated as the Heroku user.</p>
-<div class="two">
+<p class="lede today-only">The production HCP patient list returns all patients of a program, with name, birth date, address, phone and e-mail, to any caller authenticated as the Heroku user.</p>
+<p class="lede target-only">The production HCP patient list refuses any call without an HCP identity and returns only the patients linked to that doctor. A staff member's list is derived from the CRM relation, inside their program. The portal identity holds no master key.</p>
+<div class="two today-only">
   <div class="tile bad"><div class="v">18,597</div><div class="l">person accounts in prod</div><div class="d">the size of one unfiltered call</div></div>
   <div class="tile ok"><div class="v">0</div><div class="l">practitioners live on the prod portal</div><div class="d">1,315 Not Invited; endpoint not being called today</div></div>
 </div>
-<div class="callout">Rule: the filtered class (TD-1793, in UAT and Pro Demo since 10/14) is deployed to production before any practitioner or staff member is invited. Luminopia Phase 2 (TD-1788) is the first date that matters.</div>
-<p>What the fixed version does: requires an HCP identity (contact id, portal user id or NPI), returns only patients linked to that HCP through a case prescriber or servicing provider or an active patient-provider row, and never returns a roster.</p>
+<div class="two target-only">
+  <div class="tile ok"><div class="v">0</div><div class="l">patients returned to a roster request</div><div class="d">HTTP 400 without hcpContactId / portalUserId / NPI; T2 green in prod</div></div>
+  <div class="tile ok"><div class="v">3 of 3</div><div class="l">T1: doctor A sees exactly A's patients</div><div class="d">prescriber, servicing provider or active patient-provider link, program checked</div></div>
+</div>
+<div class="callout today-only">Rule: the filtered class (TD-1793, in UAT and Pro Demo since 10/14) is deployed to production before any practitioner or staff member is invited. Luminopia Phase 2 (TD-1788) is the first date that matters.</div>
+<div class="callout ok target-only">Gate kept: the filter went to production before the first invite; the Heroku identity runs on the v3 set (46 objects, no Modify All) and portal records are shared through PRG_INTEGRATION, so even a wrong call cannot read beyond the portal record types.</div>
+<p class="today-only">What the fixed version does: requires an HCP identity (contact id, portal user id or NPI), returns only patients linked to that HCP through a case prescriber or servicing provider or an active patient-provider row, and never returns a roster.</p>
+<p class="target-only">What is left to watch: a weekly count of HCP-list calls without identity (should be zero), the mirror flow error log, and the quarterly Ops review of staff relations.</p>
 <div class="notes">Rachel's UAT pass is the gate. If it does not come this week, Ali runs the script and records it on TD-1793.</div>
 </section>
 
 <section data-k="s7" data-t="7  Test scenarios">
 <h2>7. Test scenarios</h2>
-<p class="lede">Run in Pro Demo first (davidb for code changes), then prod after the fix lands. Expected result today versus target.</p>
+<p class="lede">Run in Pro Demo first (davidb for code changes), then prod after the fix lands. Expected result today versus target; the header switch highlights the column that applies.</p>
+<div class="callout today-only">Today: 2 of 12 scenarios pass, and only in Pro Demo (T1, T2). Prod passes none.</div>
+<div class="callout ok target-only">Target: 12 of 12 pass in every org; T4 and T5 are the ones that prove the CRM is the master.</div>
 <table id="tests"><tr><th>#</th><th>Scenario</th><th>Setup</th><th>Action</th><th>Today</th><th>Target</th></tr></table>
 <div class="notes">T1, T2 and T5 are the ones to show live. T5 is Rachel's case.</div>
 </section>
@@ -234,6 +285,8 @@ a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</s
   <li><b>Fold into the access-model redesign</b> (program-key sharing): this is the external half of "who can see which patient".</li>
 </ol>
 <p>Owner: Ali for 1, 2, 3, 5; Ji and Carlos for 4; Ms. Reinhardt confirms A over B and the re-opening.</p>
+<div class="callout warn today-only">Status today: nothing started. Decision A versus B is open; TD-1793 waits for Rachel's UAT pass; TD-11 and TD-12 still say Done.</div>
+<div class="callout ok target-only">Definition of done: mirror flow active in all four orgs with the backfill counted (prod 152); five classes in prod; T1 to T12 green in Pro Demo and prod with the run recorded on the tickets; TD-11 and TD-12 re-opened and closed again by the tester; LaunchPad Lab confirms the Heroku assignment table is retired; the ownership table in section 4 published with the master.</div>
 <div class="notes">If asked "why not just fix the portal": because the CRM must be able to answer "who can see this patient" without asking the vendor. That is the audit requirement.</div>
 </section>
 
@@ -290,7 +343,15 @@ nav.innerHTML='<div class="t">SECTIONS</div>'+secs.map((s,i)=>`<a href="#${s.dat
 let cur=0;
 function show(i){cur=(i+secs.length)%secs.length;secs.forEach((s,j)=>s.classList.toggle('on',j===cur));[...nav.querySelectorAll('a')].forEach((a,j)=>a.classList.toggle('on',j===cur));history.replaceState(null,'','#'+secs[cur].dataset.k);document.getElementById('main').scrollIntoView({block:'start'});}
 nav.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();show(+a.dataset.i)});
+const stepsTarget=[
+ ["Week of 11/10: decide and re-open","Ms. Reinhardt decides; Ali re-opens TD-11 and TD-12 as new stories","Contact-Contact Relation confirmed as master, Staff Physician Assignment as mirror. Two new stories replace the false Done; TD-1793 gets Rachel's UAT run or Ali's recorded script."],
+ ["Week of 11/10: mirror flow and backfill in davidb","Ali","Record-triggered flow on the relation upserts the assignment row (staff, doctor, practice from the doctor's account, staff type, active). Backfill the 152 prod rows in a sandbox copy first; counts before and after on the ticket."],
+ ["Week of 11/17: the two readers and the HCP filter","Ali, then Rachel tests in fullUAT and Pro Demo","StaffPatientListResource takes a contact id; ProSpectusPatientController gets its case query back; program check on both. TD-1793 filter promoted to prod in the Wednesday window, before any invite."],
+ ["Week of 11/17: LaunchPad Lab writes to the CRM","Ji Park, Carlos Lino","Practice admin assigns staff in the portal, the portal creates the Contact-Contact Relation through the API and reads the patient list with the staff contact id. Heroku's private assignment table is retired. T4 and T5 pass."],
+ ["Week of 11/24: clean-up and steady state","Rachel, Sara Bryant (Ops), Ali","Duplicate Elizabeth Smyers merged; staff contacts get their practice; reciprocal roles for all four staff types in prod; quarterly review of relations; the audit report 'who can see which patient' published. Folded into the access-model redesign as the external half of program sharing."]
+];
 document.getElementById('steps').innerHTML=steps.map((s,i)=>`<div class="step" onclick="this.classList.toggle('open')"><div class="n">${i+1}</div><div><h3>${s[0]}</h3><div class="who">${s[1]}</div></div><div class="chev">⌄</div><div class="more">${s[2]}</div></div>`).join('');
+document.getElementById('stepsTarget').innerHTML=stepsTarget.map((s,i)=>`<div class="step open" onclick="this.classList.toggle('open')"><div class="n" style="background:var(--green)">${steps.length+i+1}</div><div><h3>${s[0]}</h3><div class="who">${s[1]}</div></div><div class="chev">⌄</div><div class="more">${s[2]}</div></div>`).join('');
 document.getElementById('tests').insertAdjacentHTML('beforeend',tests.map(t=>`<tr><td>${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td><td><code>${t[3]}</code></td><td class="bad">${t[4]}</td><td class="ok">${t[5]}</td></tr>`).join(''));
 const sw=document.getElementById('modeSwitch');
 function mode(m){document.body.classList.toggle('target',m==='target');[...sw.children].forEach(b=>b.classList.toggle('on',b.dataset.m===m));}

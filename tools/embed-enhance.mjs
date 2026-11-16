@@ -89,6 +89,13 @@ html.embedded .hero{padding:18px 0 6px}
 html.embedded .hero h1{font-size:1.7rem}
 html.embedded body{font-size:15px}`,
   },
+  {
+    src: `${HOME}/Desktop/OngoingDevelopment/daily-reports/2026-11-13-caretend-tickets-dependencies.html`,
+    mirrors: [],
+    out: `${REPO}/caretend-tickets-board/index.html`,
+    css: `html.embedded body{font-size:14.5px}
+html.embedded main,html.embedded .wrap{max-width:none;padding:0 16px}`,
+  },
 ];
 
 function inject(html, css) {

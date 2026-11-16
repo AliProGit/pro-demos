@@ -1,0 +1,153 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>CareTend / prescription tickets — live list, block lines and dependency draft</title>
+<style>
+body{font:15px/1.5 Segoe UI,system-ui,sans-serif;max-width:1400px;margin:32px auto;padding:0 24px;color:#1b1b1b;background:#fafafa}
+h1{font-size:22px;border-bottom:2px solid #2b4c7e;padding-bottom:6px}h2{font-size:18px;color:#2b4c7e;margin-top:28px}h3{font-size:16px;margin-top:22px}
+li{margin:4px 0}code{background:#eef;padding:1px 4px;border-radius:3px;font-size:13px}strong{color:#8a1c1c}
+table{border-collapse:collapse;margin:10px 0;font-size:13.5px;width:100%}th,td{border:1px solid #cfd6e0;padding:5px 8px;vertical-align:top;text-align:left}th{background:#e8edf5}tr:nth-child(even) td{background:#f3f5f9}
+pre{background:#1e2430;color:#e6e9ef;padding:12px 14px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.35}
+</style><!-- embed-enhance v1 --><style id="embed-css">html.embedded .embed-fs{position:fixed;right:12px;bottom:12px;z-index:9999;background:#0052cc;color:#fff;font:600 12px/1 "Segoe UI",system-ui,sans-serif;padding:9px 12px;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.92}
+html.embedded .embed-fs:hover{opacity:1;background:#0747a6}
+html.embedded{scrollbar-width:thin}
+html.embedded body{font-size:14.5px}
+html.embedded main,html.embedded .wrap{max-width:none;padding:0 16px}</style><script id="embed-js">(function(){var f=false;try{f=window.self!==window.top}catch(e){f=true}
+var q=location.search;if(q.indexOf('embed=0')>-1)f=false;if(q.indexOf('embed=1')>-1)f=true;
+if(!f)return;document.documentElement.classList.add('embedded');
+document.addEventListener('DOMContentLoaded',function(){var a=document.createElement('a');a.className='embed-fs';
+a.href=location.origin+location.pathname+location.hash;a.target='_blank';a.rel='noopener';a.title='Open this demo in its own tab';
+a.textContent='Open full screen \u2197';document.body.appendChild(a);});})();</script>
+</head><body><h1>CareTend / prescription tickets — live list, block lines and dependency draft</h1>
+<p>NEO, 2026-11-13 ~10:30 ET. Refresh of docs/caretend/2026-11-12-caretend-prescription-tickets-and-dependencies.md: live Jira read (Basic auth REST, <code>/rest/api/3/issue</code> status + assignee + issuelinks + full comment history) for the 53 tickets named in Ali's ask ("add block line and add what is blocked and what we are waiting from who"), 2026-11-13 ~10:15 ET. Every ticket row below now carries two extra columns, <strong>Blocked by</strong> and <strong>Waiting on</strong> (who, exact ask, since when, where asked — Jira comment id or Teams). Rows with nothing open say "none". Dates ET. Ids only, no patient data. Master tracker: Desktop\OngoingDevelopment\OngoingDevelopment.md (CareTend section, H21, H26).</p>
+<p><strong>NEW since 11/13</strong>: all production deploys now go through NEO's deployment-gate agent (<code>docs/standards/deployment-gate-procedure.md</code>). The CareTend switch-on package (<code>caretend-switch-on/</code>) will be the first gated release — build the gate check into the runbook before any prod quick-deploy.</p>
+<h2>0. Blocking summary, 2026-11-13</h2>
+<p>The critical path to flipping <code>PRO_Automation_Control.CareTend_Prescription</code> ON in production, in order:</p>
+<ol>
+<li><strong>TD-2054 exception owner — STATUS CHANGED, VERIFY.</strong> Jira shows TD-2054 moved to <strong>Done 2026-11-12 19:35 ET</strong> (Ms. Cross: "Requirements were already provided. Closing this work item as complete."). No comment in the thread names who actually works the CareTend Review list or the target time per row — the last substantive answer is still Ali's 11/11 proposal (PSAs per program, one business day/row) and Ms. Cross's 11/5 "we will review with Sara later today." <strong>Treat the owner question as still open</strong> until Ms. Cross confirms a name outside Jira; do not assign the CareTend_Review permission set on the strength of the Done status alone. Deadline that was asked: 11/14.</li>
+<li><strong>DD-815 CareTend ids missing in Mule PROD (Frey) — still open.</strong> Jira shows DD-815 Done, but all 21 production EHR Medication Prescription rows still carry blank CareTend patient id / order id / program name (verified 11/12 00:30 ET smoke test; no production row contradicts this as of this refresh). The four MuleSoft questions are unanswered since asked on <strong>TD-2064 comment 34936, 2026-11-11 02:46 ET</strong>. This gates TD-2064 E2E and the patient/program matcher.</li>
+<li><strong>Rachel's three ticks gate TD-2061 / TD-2062 / TD-2468 to Done — still open.</strong> TD-2178 is <strong>BLOCKED</strong>, TD-2179 is <strong>New</strong>, TD-2470 is <strong>To Do</strong>; no Rachel comment on any of the three since the fulluat layout fix (11/5) and Ali's repeat asks (TD-2178 c34932, TD-2179 c34933, both 2026-11-11 02:14 ET; TD-2470 c35007, 2026-11-11 18:52 ET).</li>
+<li><strong>TD-2276 E2E slot (Frey, Chris, Emily) — still open.</strong> One comment on file (Ms. Cross, 2026-11-01), no scheduling activity since; the slot is also what TD-2064 c34936 is waiting on.</li>
+<li><strong>Housekeeping — confirmed this refresh:</strong></li>
+</ol>
+<p>   - <strong>TD-2469 closed as duplicate of DD-1044</strong> — confirmed: the key <code>TD-2469</code> now resolves to issue <code>DD-1044</code> in Jira (merge/close executed per NEO's 11/12 09:30 ET decision).</p>
+<p>   - <strong>TD-2063 confirmed Done</strong> — Angel Osterman moved Prod Ready → Done 2026-11-12 17:26 ET, matches the master tracker.</p>
+<p>   - <strong>TD-2221 Lembaz NDC + Delcath -01 still open</strong>, plus a <strong>new ask today</strong>: Angel Osterman, <strong>TD-2221 comment 35079, 2026-11-13 09:16 ET</strong>, "@Ali Mammadov add LOE" — Ali owes a Level of Effort estimate on top of the two open NDC-scope questions.</p>
+<p>   - <strong>TD-2449 closed with caveats, VERIFY</strong> — Ms. Cross closed it 2026-11-12 19:11 ET ("There are still remaining items... Closing this ticket out"), quoting Frey's 11/12 16:35 note that NDC/Program filtering work with Ali is still needed. Treat as closed-administratively, not as a signal that a switch-on gate cleared.</p>
+<h2>0b. Who owes what, by person (2026-11-13)</h2>
+<ul>
+<li><strong>Ms. Cross</strong> — confirm by name who works the CareTend Review list in production (TD-2054, substance still open despite Done status); accept/own TD-2474 security recommendation + TD-2468 fill-fields answer once Ali posts them; DD-1044 "which value wins on resend"; TD-2324 Document Number migration yes/no (with Nicki White).</li>
+<li><strong>Sara Bryant</strong> (no Jira seat — relay via Rachel or Ms. Cross, plain text only, no @-mention) — name(s) for the CareTend Review list (TD-2054); the three YcanthRx behaviour choices (TD-2052, asked via Ms. Cross/Sean O'Grady c34938); E2E scenario confirmation + attendee availability for TD-2064/TD-2276; TD-2470 step-6 confirmation.</li>
+<li><strong>Rachel Johnson</strong> — tick TD-2178 and TD-2179 in fulluat (15 min, screen share offered); TD-2470 UAT pass/fail + Sara's step-6 confirmation; TD-1736 review; why the 39 prod rows were deleted 11/10 (TD-2052 c34928); Lembaz NDC list (TD-2221); TD-2449 process-review meeting date (ticket now closed, date still not on record).</li>
+<li><strong>Frey Mitiku</strong> — the four MuleSoft answers on TD-2064 c34936 (DD-815 ids in Mule PROD, program-name mapping, prod run schedule, E2E slot with Chris Jurma + Emily Smith); map the 14 in-scope pharmacy fields and fix the DD-1044 description (c35009); confirm the 11/10 production run schedule on TD-2449 (c34937, still no reply on file).</li>
+<li><strong>Nicki White</strong> — Snowflake/Fivetran scope for the Identifier objects + 2 new Case fields (TD-2325 c34943); Luminopia Document Number migration yes/no, with Ms. Cross (TD-2324 c34942).</li>
+<li><strong>Ms. Reinhardt</strong> — no new open ask found this refresh (TD-2053 Done, her decision items from the 11/12 doc — Q7 Case-touch, Q10 success measure — are not tracked on an open ticket; confirm whether these still need an answer).</li>
+<li><strong>Ali</strong> — TD-2473 propose a peer reviewer; TD-2474 security recommendation (Health_Cloud_Base_Access, DEA, Tax Id); TD-2468 fill-fields recommendation + combined prod check-only; TD-2221 LOE for Angel (new ask today); confirm TD-2054/TD-2449 closures with Ms. Cross before treating either gate as cleared; prod schema drift F2 package into the switch-on runbook.</li>
+<li><strong>NEO</strong> — keep this page current as tickets move; run the CareTend switch-on package through the new deployment-gate agent (<code>docs/standards/deployment-gate-procedure.md</code>) once Ali gives the go — it will be the first gated release; flag the TD-2054/TD-2449 Done-but-unverified closures to Ali before any permission-set or switch-on action is taken on their strength.</li>
+</ul>
+<h2>1. Ticket list</h2>
+<h3>1a. Epic TD-2052 — CareTend Prescription Integration (In Progress, Ali)</h3>
+<table><thead><tr><th>Key</th><th>Type</th><th>Title (short)</th><th>Status</th><th>Assignee</th><th>Jira links</th><th>Blocked by</th><th>Waiting on</th></tr></thead><tbody>
+<tr><td>TD-2052</td><td>Epic</td><td>Prescriptions on the correct patient and program</td><td>In Progress</td><td>Ali</td><td>relates TD-2449; connects TD-1731</td><td>none</td><td>Rachel Johnson — why the 39 prod rows were deleted 11/10, since 11/11 02:14 ET (c34928); Sara Bryant (via Ms. Cross/Sean O'Grady) — 3 YcanthRx behaviour decisions, since 11/11 02:46 ET (c34938)</td></tr>
+<tr><td>TD-2053</td><td>Decision</td><td>Required prescription info, in-scope programs/NDCs, workflow</td><td>Done</td><td>Ms. Reinhardt</td><td>connected TD-2221</td><td>none</td><td>none</td></tr>
+<tr><td>TD-2054</td><td>Decision</td><td>Exception handling / who works unmatched prescriptions</td><td><strong>Done 11/12 19:35 ET</strong> — VERIFY, see Blocking summary #1</td><td>Ali (business: Ms. Cross + Sara)</td><td>blocked by TD-2061/2062/2063/2064</td><td>none (closed)</td><td>Ms. Cross — confirm the actual owner name by 11/14; no name appears in the ticket (c35067, 11/12 19:35 ET)</td></tr>
+<tr><td>TD-2055</td><td>Decision</td><td>Integration contract, MuleSoft vs Salesforce layer (ADR Confluence 172785665)</td><td>Done 11/11</td><td>Ali</td><td>blocked by TD-2061/2062/2063/2064</td><td>none</td><td>none</td></tr>
+<tr><td>TD-2059</td><td>Story</td><td>NDC → Program reference data</td><td>Done</td><td>Ali</td><td>blocks TD-2221</td><td>none</td><td>none</td></tr>
+<tr><td>TD-2237 / 2238 / 2239</td><td>Sub-tasks</td><td>Program NDCs field, resolver, NDC load</td><td>Done</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2061</td><td>Story</td><td>See and correct unmatched prescriptions (CareTend Review)</td><td>In Review</td><td>Ali</td><td>blocks TD-2054, TD-2055</td><td>none</td><td>Rachel Johnson — tick TD-2178 in fulluat, since 10/21 (re-asked 11/11 02:14 ET, c34932)</td></tr>
+<tr><td>TD-2236 / 2240 / 2241 / 2242 / 2243</td><td>Sub-tasks</td><td>match table + Set Program action, review fields, list view, Match/Reprocess actions, CareTend_Review perm set</td><td>Done (sandboxes; not in prod)</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2178</td><td>Sub-task</td><td>[Test] Rachel validates TD-2061</td><td><strong>BLOCKED</strong></td><td>Rachel</td><td></td><td>Rachel has not run the test</td><td>Rachel Johnson — run the 10/21 steps in fulluat, 15 min, screen share offered, since 11/11 02:14 ET (c34932)</td></tr>
+<tr><td>TD-2062</td><td>Story</td><td>Patient matching correction</td><td>In Review</td><td>Ali</td><td>blocks TD-2054, TD-2055</td><td>none</td><td>Rachel Johnson — tick TD-2179, since 11/5 (re-asked 11/11 02:14 ET, c34933)</td></tr>
+<tr><td>TD-2244 / 2245 / 2246</td><td>Sub-tasks</td><td>CareTend patient + order id fields, tiered matcher + trigger, kill switch</td><td>Done</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2179</td><td>Sub-task</td><td>[Test] Rachel validates TD-2062</td><td>New</td><td>Rachel</td><td></td><td>Rachel has not run the test</td><td>Rachel Johnson — run the 10/21 steps in fulluat, since 11/5 (re-asked 11/11 02:14 ET, c34933)</td></tr>
+<tr><td>TD-2063</td><td>Story</td><td>Approved prescription fields + visibility for business roles</td><td><strong>Done</strong> — Angel Osterman moved Prod Ready → Done 11/12 17:26 ET</td><td>Ali</td><td>blocks TD-2054, TD-2055</td><td>none</td><td>none</td></tr>
+<tr><td>TD-2247 / 2248 / 2249</td><td>Sub-tasks</td><td>Matching section on layout, Prescriptions related list on patient page, HC medication-list column reset</td><td>Done</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2064</td><td>Story</td><td>End-to-end validation in FullUAT</td><td>UAT</td><td>Ali</td><td>blocks TD-2054, TD-2055</td><td>TD-2276 slot not scheduled</td><td>Frey Mitiku — 4 MuleSoft answers (DD-815 ids in Mule PROD, program-name mapping, prod run schedule, 1-hr E2E slot with Chris Jurma + Emily Smith), since 11/11 02:46 ET (c34936); Sara Bryant (via Rachel/Ms. Cross) — confirm scenarios</td></tr>
+<tr><td>TD-2276</td><td>Sub-task</td><td>Coordinated test with MuleSoft, CRM, CareTend PMS (Frey, Chris, Emily)</td><td>In Progress (no slot)</td><td>Ali</td><td></td><td>none</td><td>Frey Mitiku, Chris Jurma, Emily Smith — schedule the session, since 11/1 (c34307, no update since)</td></tr>
+<tr><td>TD-2066 / 2069</td><td>Spike</td><td>Snowflake access for Frey + Ali</td><td>Done</td><td>Nicki White</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2071</td><td>Spike</td><td>Current-state root cause of unassociated prescriptions</td><td>Done</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-1731</td><td>Story</td><td>Shipment integration regression</td><td>Done</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-1736</td><td>Story</td><td>Multiple prescription IDs per patient (Identifier object)</td><td>In Review</td><td>Ali</td><td>blocked by TD-1735 (Done), TD-2324</td><td>TD-2324 decision</td><td>Rachel Johnson — review in FullUAT, since 11/6 (c34680); Nicki White + Ms. Cross — TD-2324 decision</td></tr>
+<tr><td>TD-2318 / 2319 / 2320 / 2321 / 2322</td><td>Sub-tasks</td><td>Identifier schema, External ID Source, Case fields, flows, matcher writes Identifier rows</td><td>Done (sandboxes)</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2324</td><td>Sub-task</td><td>Luminopia Document Number migration (248) yes/no</td><td>New</td><td>Ali (business: Nicki White + Ms. Cross)</td><td>blocks TD-1736, TD-2325</td><td>none</td><td>Nicki White + Ms. Cross — yes/no on running the migration with the TD-1735 release, since 11/5 (re-asked 11/11 02:46 ET, c34942)</td></tr>
+<tr><td>TD-2325</td><td>Sub-task</td><td>DS-003 classification / Snowflake scope of Identifier objects</td><td>In Progress</td><td>Ali (Nicki)</td><td>blocked by TD-2324</td><td>TD-2324 decision</td><td>Nicki White — Snowflake/Fivetran scope for Identifier objects + 2 new Case fields, since 11/5 (re-asked 11/11 02:46 ET, c34943)</td></tr>
+<tr><td>TD-2465</td><td>Task</td><td>Business requirements from Sara / Operations (pharmacy block)</td><td>Done</td><td>Ms. Cross</td><td>relates TD-2468, DD-1044</td><td>none</td><td>none</td></tr>
+<tr><td>TD-2468</td><td>Story</td><td>Pharmacy details fields + program / unmatched-reason list views</td><td>UAT — 21 fields in prod 0AfPl00000397jhKAA 11/11; 11 views + Pro_Program_Key__c in sandboxes only</td><td>Ali</td><td>relates TD-2465, DD-1044</td><td>none</td><td>Rachel Johnson — confirm the per-program/review-reason views in production, since 11/11 23:35 ET (c35015); status stays UAT until then</td></tr>
+<tr><td>TD-2470</td><td>Sub-task</td><td>[UAT] Business sign-off on TD-2468</td><td>To Do</td><td>Rachel</td><td></td><td>none</td><td>Rachel Johnson — pass/fail per UAT step + Sara Bryant's step-6 confirmation by name/date, since 11/11 18:52 ET (c35007)</td></tr>
+<tr><td>TD-2469</td><td>Story</td><td>MW: map CareTend pharmacy values (our copy)</td><td><strong>Closed — merged into DD-1044</strong> (key now resolves to DD-1044 in Jira)</td><td>Frey (was)</td><td>duplicate of DD-1044, closed per NEO 11/12 decision</td><td>none</td><td>none</td></tr>
+<tr><td>DD-1044</td><td>Story</td><td>MW: map CareTend pharmacy values into the new EHR Medication Prescription fields</td><td>To Do</td><td>Frey</td><td>relates TD-2465, TD-2468</td><td>none</td><td>Frey Mitiku — map the 14 in-scope fields + edit the ticket description to match Ms. Cross's scope note, since 11/11 19:05 ET (c35009)</td></tr>
+<tr><td>DD-814 / 831 / 832</td><td>Story + subs</td><td>MW: flag unresolved prescriptions with reason, reprocess path</td><td>Done</td><td>Frey</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>DD-815 / 835–838</td><td>Story + subs</td><td>MW: deliver approved prescription fields (incl. CareTend patient + order ids) on create and change</td><td>Done (Jira) — not observed in Mule PROD: all 21 prod rows have blank CareTend ids</td><td>Frey</td><td></td><td>none</td><td>Frey Mitiku — ship the ids into the Mule PROD payload; no comment posted on DD-815 itself since 10/30; ask is live on TD-2064 c34936, since 11/11 02:46 ET</td></tr>
+<tr><td>DD-816 / 840</td><td>Story + sub</td><td>MW: NDC → program resolution handling</td><td>Done</td><td>Frey</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2449</td><td>Service Request</td><td>Verrica: "no patients flowing from CareTend"</td><td><strong>Done 11/12 19:11 ET — closed with caveats, VERIFY</strong></td><td>Rachel (was) / Ms. Cross</td><td>relates TD-2052</td><td>none (closed)</td><td>VERIFY with Ms. Cross — closing comment cites Frey's 16:35 ET note that NDC/Program filtering work with Ali is still open; Rachel's process-review meeting date never landed on this ticket</td></tr>
+<tr><td>TD-2221</td><td>Task</td><td>Verrica: configure CareTend NDC prescription data flow (Lembaz NDC, Delcath -01 still open)</td><td>In Progress</td><td>unassigned</td><td>blocked by TD-2059 (Done)</td><td>none</td><td>Ali Mammadov — add LOE, asked today (c35079, 11/13 09:16 ET); Angel Osterman — Hepzato -01 pack scope; Rachel Johnson — Lembaz/Beren NDC list</td></tr>
+</tbody></table>
+<h3>1b. YcanthRx dispensing pharmacy (adjacent, same Pharmacy Account type)</h3>
+<p>*Not in this session's 53-ticket Jira refresh list (step 2); status/assignee carried from the 11/12 doc. Note: <code>OngoingDevelopment.md</code> H5 (2026-11-13) records TD-2310, TD-2313 and TD-2316 as now <strong>live in production across all 4 orgs</strong> (02:29–03:01 ET) — materially newer than "Prod Ready" below. Re-pull from Jira directly before relying on this table for TD-2310/2313/2316.*</p>
+<table><thead><tr><th>Key</th><th>Type</th><th>Title (short)</th><th>Status</th><th>Assignee</th><th>Links</th><th>Blocked by</th><th>Waiting on</th></tr></thead><tbody>
+<tr><td>TD-2252</td><td>Service Request</td><td>Add Dispensing Pharmacy field to Treatment Coordination</td><td>Done</td><td>Ms. Cross</td><td>connects TD-2293, TD-2310</td><td>none</td><td>none</td></tr>
+<tr><td>TD-2293</td><td>Spike</td><td>Feasibility and sizing</td><td>Done</td><td>Ali</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2310</td><td>Story</td><td>Dispensing Pharmacy lookup on Treatment Coordination</td><td>Prod Ready per 11/12 doc — <strong>see note above, master tracker says prod-live 11/13</strong></td><td>Ali</td><td>blocks TD-2313, TD-2316; blocked by TD-2327</td><td>TD-2327 (link only, not honoured)</td><td>not re-verified this session — confirm current Jira status before acting</td></tr>
+<tr><td>TD-2311 / 2312 / 2314 / 2315 / 2317</td><td>Sub-tasks</td><td>Pharmacy picklist value, lookup, layout, FLS, peer review</td><td>Done</td><td>Ali / Niti</td><td></td><td>none</td><td>none</td></tr>
+<tr><td>TD-2313</td><td>Sub-task</td><td>Tag existing pharmacy Accounts Type = Pharmacy (OptionCare duplicate open)</td><td>In Progress per 11/12 doc</td><td>Ali</td><td>blocked by TD-2310</td><td>TD-2310</td><td>Rachel Johnson — OptionCare duplicate decision; not re-verified this session</td></tr>
+<tr><td>TD-2316</td><td>Sub-task</td><td>Load YcanthRx dispensing pharmacies</td><td>In Progress per 11/12 doc</td><td>Ali</td><td>blocked by TD-2310</td><td>TD-2310</td><td>Ms. Cross — 2 NPI-less rows; not re-verified this session</td></tr>
+<tr><td>TD-2327</td><td>Solution Design</td><td>Restrict who can add pharmacy and payer names</td><td>New, unassigned</td><td>—</td><td>blocks TD-2310 (link only)</td><td>none</td><td>Ali, Ms. Cross — decide unlink vs. assign + finish first; nobody owns it</td></tr>
+<tr><td>TD-2379</td><td>Story</td><td>Sign-off ask on TD-2310</td><td>(see master)</td><td></td><td></td><td>not re-verified this session</td><td>not re-verified this session</td></tr>
+</tbody></table>
+<h3>1c. Beren / Courier prescription-related (MuleSoft)</h3>
+<p>*Not in this session's refresh list; carried from 11/12.*</p>
+<table><thead><tr><th>Key</th><th>Type</th><th>Title (short)</th><th>Status</th><th>Assignee</th><th>Blocked by</th><th>Waiting on</th></tr></thead><tbody>
+<tr><td>DD-1011</td><td>Sub-task</td><td>Deploy Beren SAPI query updates to PROD</td><td>Promotion DONE 11/11 21:20 ET per master tracker (H23)</td><td>Ali</td><td>none</td><td>Nicki White — Courier test result 11/12-13</td></tr>
+<tr><td>DD-1038</td><td>Sub-task</td><td>HIPAA Guard, "deferred rule"</td><td>New — contradicts decision D3 = SEND</td><td>Frey</td><td>none</td><td>Frey Mitiku — correction comment / cancel or re-scope, owed since 11/11</td></tr>
+<tr><td>DD-809</td><td>Spike</td><td>Rx / pharmacy / medication / shipment intake mapping for Courier prescriptionDetails</td><td>To Do</td><td>Frey</td><td>none</td><td>Frey Mitiku</td></tr>
+<tr><td>DD-576 / DD-854</td><td>Tasks</td><td>Courier pharmacy status mapping, prescription details mapping</td><td>Done</td><td>Frey</td><td>none</td><td>none</td></tr>
+</tbody></table>
+<h3>1d. CareTend PMS data load (Nicki's side, not the Salesforce feed)</h3>
+<p>DD-847 field mapping &amp; migration plan, DD-848 load method, DD-849 production load &amp; validation — all New, unassigned, parent DD-843. No dependency on our switch-on. <strong>Blocked by:</strong> none. <strong>Waiting on:</strong> Nicki White's team to assign an owner; not re-verified this session.</p>
+<h3>1e. Not included on purpose</h3>
+<p>DD-365 (Snowflake alert), TD-169 (cancelled 2024 validation), TD-1589/1703/1955 (pharmacy triage phase 2, cancelled), TD-1607, TD-1909, TD-2185, TD-2195, TD-2230, TD-2290/DD-972 (Luminopia SFTP), TD-1944, TD-2101, TD-2206, TD-2260 (Fennec / Free Goods layout work that only mentions "prescription"). <strong>Blocked by:</strong> n/a. <strong>Waiting on:</strong> n/a.</p>
+<h2>2. Dependency draft — what blocks what (updated 2026-11-13)</h2>
+<h3>2a. The chain to prod switch-on (PRO_Automation_Control.CareTend_Prescription ON in prod)</h3>
+<pre>
+Rachel test ticks ──► TD-2178 BLOCKED (TD-2061) ─┐
+                      TD-2179 New (TD-2062) ─────┤
+Frey E2E slot ──────► TD-2276 (no slot) → TD-2064 UAT ─┼──► TD-2054 "Done" 11/12 19:35 ET — NO NAMED OWNER, verify
+TD-2063 Done 11/12 17:26 ET ─────────────────────┘            │
+                                                      ▼
+Frey: DD-815 ids still blank in Mule PROD (asked TD-2064 c34936) ──────► Gate 3 ──┐
+Frey: program-name mapping still blank ───────────────────────────────────────────┤
+F2 prod drift: Pro_CareTend_Program_Name__c + Apex (unchanged) ───────────────────┼──► switch-on runbook steps 2–7
+Pro EHR Medication Prescription prod layout patch (unchanged) ────────────────────┤     (pkg-fields-layout → pkg-switch →
+Lembaz NDC + Delcath -01 scope (TD-2221, + new LOE ask 11/13) ────────────────────┤      CareTend_Review assign → reprocess)
+Rachel: why 39 rows deleted; reprocess vs restore (TD-2052 c34928, still unanswered) ┘
+                                                      │
+                                                      ▼
+                     TD-2052 still In Progress · TD-2449 "Done" 19:11 ET with caveats · TD-2061/2062/2064 still open
+</pre>
+<ul>
+<li><strong>Gate 1 — TD-2054.</strong> Jira status changed to Done (Ms. Cross, 11/12 19:35 ET) but the comment that closed it does not name an owner or a target time per row — the substantive question from Ali's 11/5 and 11/11 comments is unanswered on the record. Functionally still a gate; confirm with Ms. Cross before assigning CareTend_Review.</li>
+<li><strong>Gate 2 — TD-2055 is Done</strong>, layer split settled (unchanged from 11/12).</li>
+<li><strong>Gate 3 — DD-815 in Mule PROD.</strong> Still blank on all 21 prod rows as of the 11/12 00:30 ET smoke test; no reply from Frey on TD-2064 c34936 (11/11 02:46 ET) found in this refresh.</li>
+<li><strong>Gate 4 — prod schema (F2).</strong> Unchanged; still needs the Apex increment validated and added to the switch-on package.</li>
+<li><strong>Gate 5 — data decision.</strong> Unchanged; Rachel's reason for the 39-row deletion still not on TD-2052.</li>
+</ul>
+<h3>2b. Pharmacy block (TD-2468 / DD-1044)</h3>
+<pre>
+TD-2465 Done ──► TD-2468 fields IN PROD 11/11 (UAT) ──► DD-1044 Frey maps 14 fields (To Do, scope confirmed 11/11) ──► values appear after switch-on
+                 TD-2468 views + Pro_Program_Key__c (sandboxes) ──► TD-2470 Rachel sign-off (To Do) ──► prod package (views + formula + FLS)
+                 TD-2473 (Review, New, 0 comments) + TD-2474 (Security, New, 0 comments) ──► Ali owes the combined recommendation
+TD-2469 = closed, merged into DD-1044 (confirmed this refresh)
+</pre>
+<h3>2c. Identifier model (TD-1736)</h3>
+<pre>
+TD-1735 Done ──► TD-1736 In Review (Rachel review owed since 11/6) ──► TD-2324 migration yes/no (New, Nicki White + Ms. Cross, re-asked 11/11)
+                                                                     ──► TD-2325 Snowflake scope (In Progress, Nicki White, re-asked 11/11, blocked by TD-2324 per Jira link)
+CareTend matcher (TD-2322, Done) writes Identifier rows ──► TD-1736 must reach prod with or before switch-on
+</pre>
+<h2>3. Who answers what — superseded by section 0b</h2>
+<p>Section 0b above is the current "who owes what." The per-ticket why-it's-stuck detail from the 2026-11-12 clear-picture dashboard (<code>docs/caretend/2026-11-12-caretend-clear-picture.md</code>) still holds except where this refresh changed status: TD-2054, TD-2063, TD-2449, TD-2469.</p>
+<h2>4. Corrections for the master tracker (2026-11-13)</h2>
+<ul>
+<li><strong>TD-2054</strong> is now <strong>Done</strong> in Jira (11/12 19:35 ET) — but the master tracker row "no outcome since 11/5" is closer to the real state than the Jira status: no owner name is recorded. Update the tracker to "Done in Jira, owner still unconfirmed — verify with Ms. Cross" rather than either "Done" or "no outcome."</li>
+<li><strong>TD-2449</strong> is now <strong>Done</strong> in Jira (11/12 19:11 ET) — update from "In Assessment, assigned Rachel"; note the closing comment says remaining NDC/Program filtering work with Ali is still open.</li>
+<li><strong>TD-2469</strong> is confirmed <strong>closed/merged into DD-1044</strong> — the master tracker's "duplicate of DD-1044 → close (NEO decision 11/12)" is now verified done in Jira.</li>
+<li><strong>TD-2221</strong> has a new ask as of 2026-11-13 09:16 ET: Angel Osterman wants an LOE from Ali, in addition to the Lembaz NDC and Delcath -01 scope items already tracked.</li>
+<li><strong>TD-2310 / TD-2313 / TD-2316</strong>: not refreshed in this session (outside the 53-ticket list), but the master tracker (H5, 2026-11-13) records them as fully live in production across all 4 orgs — materially newer than this doc's section 1b. Re-pull before relying on 1b for those three.</li>
+</ul></body></html>
