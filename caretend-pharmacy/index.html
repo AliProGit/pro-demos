@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareTend pharmacy data into Salesforce: what happens, step by step (2026-11-17)</title>
+<style>
+:root{--ink:#172b4d;--ink2:#42526e;--ink3:#6b778c;--line:#dfe1e6;--panel:#fff;--surface:#f4f5f7;--blue:#0052cc;--red:#bf2600;--redbg:#ffebe6;--green:#006644;--greenbg:#e3fcef;--amber:#974f0c;--amberbg:#fff7d6;--ct:#5e4db2;--ctbg:#eae6ff;--sf:#0b6bcb;--sfbg:#e6f1fb;--sn:#1d7a8c;--snbg:#e0f4f7;--mu:#8a4d00;--mubg:#fff0d9}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,Arial,sans-serif;background:var(--surface);color:var(--ink);font-size:15px;line-height:1.45}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:10px 22px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px}
+header .sub{color:var(--ink3);font-size:13px}
+.hdr-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+button.ghost{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink2)}
+button.ghost:hover{background:var(--surface)}
+.wrap{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 52px)}
+nav{border-right:1px solid var(--line);background:var(--panel);padding:14px 0;position:sticky;top:52px;align-self:start;max-height:calc(100vh - 52px);overflow:auto}
+nav a{display:block;padding:8px 20px;color:var(--ink2);text-decoration:none;font-size:14px;border-left:3px solid transparent;cursor:pointer}
+nav a.on{border-left-color:var(--blue);color:var(--blue);background:#eaf0fb;font-weight:600}
+nav .t{color:var(--ink3);font-size:12px;padding:6px 20px;margin-top:8px;letter-spacing:.04em}
+nav .hint{color:var(--ink3);font-size:11.5px;padding:14px 20px 0;line-height:1.5}
+main{padding:26px 36px 80px;max-width:1280px;min-width:0}
+section{display:none}section.on{display:block}
+h2{font-size:26px;margin:0 0 6px}
+h3{font-size:17px;margin:20px 0 6px}
+.lede{color:var(--ink2);font-size:17px;max-width:72ch;margin:0 0 18px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.tile .v{font-size:30px;font-weight:700}
+.tile .l{color:var(--ink2);margin-top:2px}
+.tile .d{color:var(--ink3);font-size:12.5px;margin-top:6px}
+.tile.bad .v{color:var(--red)}.tile.ok .v{color:var(--green)}.tile.warn .v{color:var(--amber)}
+.callout{border-left:4px solid var(--red);background:var(--redbg);padding:12px 16px;border-radius:6px;margin:16px 0}
+.callout.ok{border-color:var(--green);background:var(--greenbg)}
+.callout.warn{border-color:var(--amber);background:var(--amberbg)}
+.callout.info{border-color:var(--blue);background:#eaf0fb}
+table{border-collapse:collapse;width:100%;background:var(--panel);font-size:13.5px;margin:12px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f0f2f5;font-weight:600}
+td.bad{background:var(--redbg)}td.ok{background:var(--greenbg)}td.warn{background:var(--amberbg)}
+.stores{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.store{border-radius:12px;padding:16px 18px;border:2px solid;position:relative}
+.store h3{margin:0 0 6px;font-size:16px}
+.store.ct{border-color:var(--ct);background:var(--ctbg)}
+.store.sn{border-color:var(--sn);background:var(--snbg)}
+.store.mu{border-color:var(--mu);background:var(--mubg)}
+.store.sf{border-color:var(--sf);background:var(--sfbg)}
+.store .kv{font-size:13px;margin:5px 0}
+.store .kv b{display:block;color:var(--ink2);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.store.lit{box-shadow:0 0 0 4px rgba(0,82,204,.25)}
+.arrows{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;color:var(--ink3);font-size:12.5px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid;margin-top:4px}
+.pill.no{color:var(--red);border-color:var(--red);background:var(--redbg)}
+.pill.yes{color:var(--green);border-color:var(--green);background:var(--greenbg)}
+.pill.part{color:var(--amber);border-color:var(--amber);background:var(--amberbg)}
+.pill.sf{color:var(--sf);border-color:var(--sf);background:var(--sfbg)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;white-space:pre-wrap;font-size:13.5px;line-height:1.5}
+.notes{display:none;background:#fff8e1;border:1px dashed #e0b400;padding:10px 14px;border-radius:8px;margin:12px 0;font-size:13.5px}
+body.notes .notes{display:block}
+code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:.9em}
+pre{background:#1e1e1e;color:#d4d4d4;border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.45;overflow:auto;margin:8px 0}
+pre .k{color:#9cdcfe}pre .s{color:#ce9178}pre .n{color:#b5cea8}pre .c{color:#6a9955}pre .hl{background:#3a3d41;display:inline-block;width:100%}
+.player{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+.player .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.player button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 14px;font:inherit;cursor:pointer}
+.player button.run{background:var(--blue);color:#fff;border-color:var(--blue)}
+.player .track{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
+.player .dot{height:8px;border-radius:4px;background:var(--line)}
+.player .dot.done{background:var(--green)}.player .dot.now{background:var(--blue)}
+.player .stage{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;min-height:260px}
+.player .stage h4{margin:0 0 6px;font-size:16px}
+.player .stage .who{color:var(--ink3);font-size:12.5px;margin-bottom:8px}
+.player .stage p{margin:6px 0;font-size:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h5{margin:0 0 8px;font-size:12.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
+.card .f{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px}
+.card .f b{color:var(--ink2);font-weight:600}
+.card .f .new{background:var(--greenbg);border-radius:4px;padding:0 4px}
+.card .f .blank{color:var(--ink3);font-style:italic}
+.sim{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+.sim .row{display:flex;gap:14px;flex-wrap:wrap;align-items:end}
+.sim label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink3)}
+.sim select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;min-width:300px;background:#fff}
+.sim button.run{background:var(--blue);color:#fff;border:0;border-radius:6px;padding:8px 16px;font:inherit;cursor:pointer}
+.sim .out{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.sim .box{border-radius:10px;padding:12px 16px;border:1px solid var(--line)}
+.sim .box h4{margin:0 0 8px;font-size:12.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
+.sim .box.bad{background:var(--redbg);border-color:var(--red)}
+.sim .box.ok{background:var(--greenbg);border-color:var(--green)}
+.sim .box.warn{background:var(--amberbg);border-color:var(--amber)}
+.sim .why{margin-top:10px;color:var(--ink2);font-size:13.5px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink2)}
+.filters button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tl{list-style:none;padding:0;margin:14px 0;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:4px 0 12px 20px}
+.tl li::before{content:"";position:absolute;left:-7px;top:10px;width:12px;height:12px;border-radius:50%;background:var(--green)}
+.tl li.next::before{background:#fff;border:2px solid var(--blue)}
+.tl li.hold::before{background:var(--amber)}
+.tl li b{display:block}
+.tl li span{color:var(--ink2);font-size:13.5px}
+small.src{color:var(--ink3);font-size:12px}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}.tiles,.stores,.arrows{grid-template-columns:1fr 1fr}.two,.player .stage,.sim .out{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>CareTend pharmacy data into Salesforce</h1><div class="sub">What happens when a pharmacist fills a prescription, step by step. Synthetic data only. State: dev build 2026-11-17.</div></div>
+  <div class="hdr-r"><button class="ghost" id="notesBtn">Presenter notes</button><button class="ghost" id="resetBtn">Reset</button></div>
+</header>
+<div class="wrap">
+<nav>
+  <div class="t">WALKTHROUGH</div>
+  <a data-s="pic" class="on">1. The picture</a>
+  <a data-s="follow">2. Follow one prescription</a>
+  <a data-s="map">3. Field by field</a>
+  <a data-s="try">4. Try a scenario</a>
+  <a data-s="watch">5. On hold and watch items</a>
+  <a data-s="who">6. Who sees it, where we are</a>
+  <div class="hint">About 12 minutes. Every number here is from the dev build, the Jira tickets and the sandbox read-backs of 11/16 and 11/17. Names, ids and NDCs on this page are invented.</div>
+</nav>
+<main>
+
+<section id="pic" class="on">
+  <h2>Four systems, one direction</h2>
+  <p class="lede">CareTend is the pharmacy system. Nobody in Salesforce types pharmacy data any more: it is copied from CareTend's own tables into the prescription record, every 30 minutes, and Salesforce decides which patient and program it belongs to.</p>
+  <div class="tiles">
+    <div class="tile ok"><div class="v">21</div><div class="l">pharmacy fields on the prescription</div><div class="d">built 11/11 (davidb, FullUAT), 11/16 (Pro-Demo)</div></div>
+    <div class="tile ok"><div class="v">16</div><div class="l">flow in from CareTend today</div><div class="d">of 19 that MuleSoft was asked to map</div></div>
+    <div class="tile warn"><div class="v">3</div><div class="l">on hold</div><div class="d">Refills Authorized, DAW Code, Prescriber NPI</div></div>
+    <div class="tile"><div class="v">30 min</div><div class="l">sync cadence (dev)</div><div class="d">at :02 and :32, two-minute safety cutoff</div></div>
+  </div>
+  <div class="stores">
+    <div class="store ct" id="st-ct"><h3>CareTend</h3><div class="kv"><b>What</b>Pharmacy system. Orders, prescriptions, fills, drugs, providers.</div><div class="kv"><b>Who touches it</b>Pharmacists, intake</div><div class="kv"><b>Tables used</b>PATIENTORDER, PRESCRIPTION, PRESCRIPTIONDOSE, PRESCRIPTIONFILL, DRUG, PARTYLICENSE</div></div>
+    <div class="store sn" id="st-sn"><h3>Snowflake</h3><div class="kv"><b>What</b>Read-only replica of CareTend, refreshed continuously.</div><div class="kv"><b>Why</b>Nobody queries the live pharmacy database.</div><div class="kv"><b>Owner</b>Data team (Emily, Chris)</div></div>
+    <div class="store mu" id="st-mu"><h3>MuleSoft</h3><div class="kv"><b>What</b>pros-caretend-sf-sync-papi. Runs the SQL, translates codes, upserts.</div><div class="kv"><b>Owner</b>Frey</div><div class="kv"><b>Key</b>upsert on CareTend Rx id, batches of 200</div></div>
+    <div class="store sf" id="st-sf"><h3>Salesforce</h3><div class="kv"><b>What</b>EHR Medication Prescription record under the patient.</div><div class="kv"><b>Salesforce decides</b>patient match, program from NDC, review flag</div><div class="kv"><b>Who sees it</b>review team, admins, portal (read)</div></div>
+  </div>
+  <div class="arrows"><div>replicates &rarr;</div><div>SQL every 30 min &rarr;</div><div>JSON upsert &rarr;</div><div>trigger + review list</div></div>
+  <div class="callout info"><b>One rule to remember:</b> MuleSoft copies, Salesforce decides. The review flag, the reason, the program and the patient link are never sent by MuleSoft; the Salesforce trigger sets them when the row lands.</div>
+  <div class="notes">Open with the four boxes. Point out that the only new thing since the sign-off call on 11/11 is the third box's content: the same pipe that already carries the prescription now also carries the pharmacy block. Then go to section 2 and press Play.</div>
+</section>
+
+<section id="follow">
+  <h2>Follow one prescription</h2>
+  <p class="lede">A pharmacist completes a fill in CareTend. Press Play and watch the same prescription move through the four systems and land in the Pharmacy Details section.</p>
+  <div class="player">
+    <div class="bar"><button class="run" id="play">Play</button><button id="prev">Back</button><button id="next">Next</button><span id="stepLabel" style="color:var(--ink3);font-size:13px"></span></div>
+    <div class="track" id="track"></div>
+    <div class="stage"><div id="stageText"></div><div id="stageCard"></div></div>
+  </div>
+  <div class="notes">Steps 4 and 5 are where the questions come: "why is Origin Code a sentence" (restricted picklist, Mule translates the digit), "what if CareTend sends the same Rx twice" (upsert on Rx id, update not duplicate). Step 6 is the Salesforce trigger from TD-2052, unchanged by this work.</div>
+</section>
+
+<section id="map">
+  <h2>Field by field</h2>
+  <p class="lede">Every pharmacy field on the prescription, where it comes from in CareTend, how it is translated, and whether it flows today. Read from Frey's dev branch on 2026-11-17.</p>
+  <div class="filters" id="mapFilters"><button data-f="all" class="on">All (21)</button><button data-f="M">Flowing (16)</button><button data-f="H">On hold (3)</button><button data-f="S">Salesforce-only (2)</button></div>
+  <table id="mapTable"><thead><tr><th>Salesforce field</th><th>Type</th><th>CareTend source (via Snowflake)</th><th>Translation</th><th>Status</th></tr></thead><tbody></tbody></table>
+  <small class="src">Source: medication_mapping.dwl and the prescription SQL in snowflake-to-sf-sync.xml, repo pros-caretend-sf-sync-papi, branch dev, 2026-11-17 01:34Z. Full table with the base prescription fields: docs/caretend/2026-11-17-caretend-snowflake-to-salesforce-pharmacy-mapping.md.</small>
+  <div class="notes">Click "On hold" and explain the three: Refills Authorized (CareTend has a per-fill yes/no, Sara asked for a prior-auth fill limit, so we keep it manual), DAW Code (no source yet, Niki), Prescriber NPI (the SQL already fetches it; one DataWeave line is still commented out, Frey fixes it before the E2E).</div>
+</section>
+
+<section id="try">
+  <h2>Try a scenario</h2>
+  <p class="lede">Pick what the pharmacist did in CareTend. The page shows the JSON MuleSoft would send and what the Salesforce record looks like afterwards.</p>
+  <div class="sim">
+    <div class="row"><label>Scenario<select id="scn"></select></label><button class="run" id="runScn">Send it</button></div>
+    <div class="out"><div class="box" id="payloadBox"><h4>What MuleSoft sends</h4><pre id="payload"></pre></div><div class="box" id="recordBox"><h4>Salesforce record afterwards</h4><div id="record"></div></div></div>
+    <div class="why" id="why"></div>
+  </div>
+  <div class="notes">Scenario order for a live demo: normal electronic Rx, then controlled CII, then the unknown origin code (field silently dropped, not an error), then the unfilled Rx (fill-based fields blank by design), then the second sync of the same Rx (update, not a duplicate).</div>
+</section>
+
+<section id="watch">
+  <h2>On hold and watch items</h2>
+  <p class="lede">Nothing here blocks the end-to-end test. Each one is a decision or a one-line fix, and each has an owner.</p>
+  <table>
+    <thead><tr><th>Item</th><th>What the data says</th><th>Proposal</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td><b>Refills Authorized (PA)</b></td><td>CareTend keeps a yes/no per fill (ISAUTHORIZEDREFILL). Sara asked for the number of fills a prior authorization permits. Different things.</td><td class="warn">Keep the field a number, leave it manual. If the business wants the per-fill flag, add a separate checkbox.</td><td>Ali (decided 11/16), Sara to confirm</td></tr>
+      <tr><td><b>DAW Code</b></td><td>No CareTend column found yet.</td><td class="warn">Unmapped until Niki names a source; manual meanwhile.</td><td>Frey, Niki</td></tr>
+      <tr><td><b>Prescriber NPI</b></td><td>SQL fetches it (license type 4). The DataWeave line is commented out, so it never arrives.</td><td class="bad">Uncomment one line before the E2E.</td><td>Frey</td></tr>
+      <tr><td><b>Date Filled = Last Fill Date</b></td><td>Both read the latest completed fill. They will always be equal.</td><td>Ask Sara: should Date Filled be the first fill?</td><td>Ali, Sara</td></tr>
+      <tr><td><b>DEA Schedule for non-controlled drugs</b></td><td>Only codes 2 to 5 translate (CII to CV). Everything else is dropped, so the field is blank, not "Not Controlled".</td><td>Accept blank = not controlled, or map the default.</td><td>Sara</td></tr>
+      <tr><td><b>Dosage Form</b></td><td>Null on all five dev test prescriptions.</td><td>Check the CareTend TEST data has a dosage form; otherwise the join is wrong.</td><td>Frey, Emily/Chris</td></tr>
+      <tr><td><b>Unknown codes</b></td><td>An Origin or DEA code the translation table does not know is dropped silently.</td><td>Log it in Mule or extend the Salesforce picklist when CareTend adds codes.</td><td>Frey</td></tr>
+      <tr><td><b>Zero values</b></td><td>Quantity 0 and Refills Allowed 0 are real CareTend zeros (seen on the Pedmark test row).</td><td>Review team reads 0 as "not set in CareTend".</td><td>Ops</td></tr>
+      <tr><td><b>Cadence</b></td><td>Dev runs every 30 minutes; production today runs hourly.</td><td>Decide the production cadence before switch-on.</td><td>Ali, Frey</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="who">
+  <h2>Who sees it, and where we are</h2>
+  <div class="two">
+    <div>
+      <h3>Access to the pharmacy block (sandboxes, read back 11/17)</h3>
+      <table>
+        <thead><tr><th>Who</th><th>How</th><th>Pharmacy fields</th></tr></thead>
+        <tbody>
+          <tr><td>MuleSoft integration user</td><td>Pro-Demo: its CareTend integration set. FullUAT and davidb: System Administrator profile</td><td class="ok">write</td></tr>
+          <tr><td>Review team</td><td>CareTend Review permission set (the prescription-team set)</td><td class="ok">write (manual corrections)</td></tr>
+          <tr><td>Admins</td><td>System Administrator profile</td><td class="ok">write</td></tr>
+          <tr><td>Everyone with EHR object access</td><td>PRO EHR Object Access set</td><td class="ok">read</td></tr>
+          <tr><td>Portal (Heroku)</td><td>Heroku integration set, object read added 11/17</td><td class="warn">read these 21 fields only; the rest of the prescription is not yet visible to the portal</td></tr>
+          <tr><td>Production</td><td>nothing deployed yet</td><td class="bad">in the switch-on package</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Timeline</h3>
+      <ul class="tl">
+        <li><b>11/11 Sara's sign-off call</b><span>23 pharmacy items reviewed; 21 fields designed and built in davidb and FullUAT the same evening.</span></li>
+        <li><b>11/16 Pro-Demo catches up</b><span>Fields, layouts, list view and integration-user access deployed to Pro-Demo (Frey had found 3 of 22).</span></li>
+        <li><b>11/16 MuleSoft dev build</b><span>Frey maps 16 fields, tests on five CareTend TEST prescriptions; 30 records processed in the 19:00 run.</span></li>
+        <li><b>11/17 Access complete</b><span>Admins, review team, integration user and portal set in all three sandboxes.</span></li>
+        <li class="next"><b>Next: end-to-end in Pro-Demo</b><span>Frey, Emily, Chris: new fill in CareTend TEST, wait one cycle, check the Pharmacy Details section.</span></li>
+        <li class="next"><b>Then FullUAT</b><span>Sara and Rachel see the block on live-shaped data.</span></li>
+        <li class="hold"><b>Production</b><span>With the CareTend switch-on package, through the deployment gate. Not before.</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout ok"><b>What changes for Operations:</b> SIG, quantity, day supply, refills, fill dates, dispensed NDC and prescriber identifiers appear on the prescription without typing. Two fields stay manual until CareTend has the right value.</div>
+  <div class="notes">Close on the timeline. The ask of the audience: Sara confirms the three "ask Sara" rows in section 5; everything else is engineering.</div>
+</section>
+
+</main>
+</div>
+
+<script>
+// ---------- synthetic data only ----------
+const FIELDS = [
+ {sf:"Pro_SIG__c",lbl:"SIG",type:"Text(255)",src:"PATIENTORDER.DESCRIPTION",tr:"as is",st:"M"},
+ {sf:"Pro_Quantity__c",lbl:"Quantity",type:"Number(10,2)",src:"PRESCRIPTIONDOSE.WRITTENQUANTITY",tr:"number; 0 stays 0",st:"M"},
+ {sf:"Pro_Quantity_Unit__c",lbl:"Quantity Unit",type:"Text(40)",src:"DRUG.MEDISPANUNITEACH",tr:"as is (EA, ML)",st:"M"},
+ {sf:"Pro_Day_Supply__c",lbl:"Day Supply",type:"Number(4,0)",src:"latest PRESCRIPTIONFILL.DAYSPROVIDED",tr:"only when > 0",st:"M"},
+ {sf:"Pro_Dosage_Form__c",lbl:"Dosage Form",type:"Text(80)",src:"LOOKUPS.DOSAGEFORM.NAME via DRUG",tr:"as is",st:"M"},
+ {sf:"Pro_Refills_Allowed__c",lbl:"Refills Allowed",type:"Number(3,0)",src:"PRESCRIPTIONDOSE.REFILLQUANTITYALLOWED",tr:"number",st:"M"},
+ {sf:"Pro_Refill_Number__c",lbl:"Refill Number",type:"Number(3,0)",src:"PRESCRIPTIONDOSE.CURRENTREFILLNUMBER",tr:"number; 0 = original fill",st:"M"},
+ {sf:"Pro_Refills_Remaining__c",lbl:"Refills Remaining",type:"Formula",src:"Salesforce: Allowed - Refill Number",tr:"never sent",st:"S"},
+ {sf:"Pro_Refills_Authorized__c",lbl:"Refills Authorized (PA)",type:"Number(3,0)",src:"PRESCRIPTIONFILL.ISAUTHORIZEDREFILL (yes/no per fill)",tr:"held: not the PA fill limit; manual",st:"H"},
+ {sf:"Pro_DAW_Code__c",lbl:"DAW Code",type:"Picklist 0-9",src:"none found yet",tr:"held: source pending (Niki)",st:"H"},
+ {sf:"Pro_Origin_Code__c",lbl:"Origin Code",type:"Picklist 0-5",src:"LOOKUPS.PRESCRIPTIONORIGIN.NAME",tr:"digit to full value: 3 becomes \"3 - Electronic\"; unknown digit dropped",st:"M"},
+ {sf:"Pro_DEA_Schedule__c",lbl:"DEA Schedule",type:"Picklist",src:"LOOKUPS.DEASCHEDULE.NAME via DRUG",tr:"2..5 become CII..CV; anything else dropped (blank)",st:"M"},
+ {sf:"Pro_Date_Filled__c",lbl:"Date Filled",type:"Date",src:"latest completed fill ACTUALCOMPOUNDINGDATE",tr:"yyyy-MM-dd (same row as Last Fill Date)",st:"M"},
+ {sf:"Pro_Last_Fill_Date__c",lbl:"Last Fill Date",type:"Date",src:"latest completed fill ACTUALCOMPOUNDINGDATE",tr:"yyyy-MM-dd",st:"M"},
+ {sf:"Pro_Next_Fill_Date__c",lbl:"Next Fill Date",type:"Date",src:"earliest open fill, next compounding or delivery date in the future",tr:"yyyy-MM-dd",st:"M"},
+ {sf:"Pro_Dispensed_NDC__c",lbl:"Dispensed NDC",type:"Text(13)",src:"latest completed fill item NDC (one NDC per fill only)",tr:"as is",st:"M"},
+ {sf:"Pro_Prescriber_NPI__c",lbl:"Prescriber NPI",type:"Text(10)",src:"PARTYLICENSE type 4 of the provider",tr:"held by accident: SQL fetches it, DataWeave line commented out",st:"H"},
+ {sf:"Pro_Prescriber_DEA__c",lbl:"Prescriber DEA",type:"Text(9)",src:"PARTYLICENSE type 2 of the provider",tr:"as is",st:"M"},
+ {sf:"Pro_Prescriber_Tax_ID__c",lbl:"Prescriber Tax ID",type:"Text(10)",src:"COMMON.PARTY.TAXIDENTIFIER of the provider",tr:"as is",st:"M"},
+ {sf:"Pro_Dispensing_Pharmacy_NPI__c",lbl:"Dispensing Pharmacy NPI",type:"Text(10)",src:"PARTYLICENSE type 4 of PATIENTORDER.COMPANY_ID",tr:"the CareTend company's NPI",st:"M"},
+ {sf:"Pro_Dispensing_Pharmacy__c",lbl:"Dispensing Pharmacy",type:"Lookup(Account)",src:"none",tr:"Salesforce matches from the NPI later",st:"S"},
+];
+const ST = {M:["Flowing","yes"],H:["On hold","part"],S:["Salesforce-only","sf"]};
+
+const BASE = {rx:"900001", order:"800042", patient:"700019", name:"Daniel CareTendTest", drug:"Demo-Drug 25 mg tablet", ndc:"55555-5555-55", prescriber:"Dr. Dana Demo", npi:"1999999992", dea:"BD9999999", pharmNpi:"1888888884", written:"2026-11-10"};
+
+const SCN = {
+ normal:{label:"Normal electronic prescription, first fill completed today",
+  ct:{sig:"Take one tablet by mouth once daily",qty:30,unit:"EA",days:30,form:"Tablet",allowed:5,refill:0,origin:"3",dea:"0",filled:"2026-11-17",next:"2026-12-15",dispNdc:"55555-5555-55",auth:false},
+  note:"Everything that has a source flows. Refills Remaining is computed in Salesforce (5 - 0 = 5). Refills Authorized and DAW Code stay blank by decision; Prescriber NPI is blank until the one commented line is restored."},
+ controlled:{label:"Controlled substance (DEA schedule II), faxed in",
+  ct:{sig:"Take one capsule every 12 hours as needed",qty:20,unit:"EA",days:10,form:"Capsule",allowed:0,refill:0,origin:"4",dea:"2",filled:"2026-11-17",next:null,dispNdc:"55555-5555-55",auth:false},
+  note:"DEA code 2 becomes CII, origin 4 becomes \"4 - Facsimile\". No refills allowed, so Refills Remaining shows 0 and Next Fill Date is blank (no open fill)."},
+ unknown:{label:"CareTend sends an origin code Salesforce does not know (7)",
+  ct:{sig:"Apply twice daily",qty:1,unit:"EA",days:30,form:"Cream",allowed:2,refill:0,origin:"7",dea:"0",filled:"2026-11-17",next:"2026-12-17",dispNdc:"55555-5555-55",auth:false},
+  note:"The translation table has 0 to 5 only. Code 7 is dropped silently: the row still saves, Origin Code is simply blank. Watch item: log unknown codes or extend the picklist."},
+ unfilled:{label:"Prescription written, not filled yet",
+  ct:{sig:"Take two tablets by mouth daily",qty:60,unit:"EA",days:null,form:"Tablet",allowed:3,refill:0,origin:"1",dea:"0",filled:null,next:"2026-11-20",dispNdc:null,auth:null},
+  note:"Fill-based fields (Day Supply, Date Filled, Last Fill Date, Dispensed NDC) have no source row yet and are omitted. Next Fill Date comes from the open fill. The record exists in Salesforce before the pharmacy touches it."},
+ again:{label:"Same prescription synced again after the second fill",
+  ct:{sig:"Take one tablet by mouth once daily",qty:30,unit:"EA",days:30,form:"Tablet",allowed:5,refill:1,origin:"3",dea:"0",filled:"2026-12-15",next:"2027-01-12",dispNdc:"55555-5555-55",auth:true},
+  note:"Upsert on the CareTend Rx id: the existing Salesforce record is updated, no duplicate. Refill Number moves to 1, Refills Remaining recomputes to 4, Date Filled and Last Fill Date both move to the new fill date. The per-fill yes/no (true) is still not sent.", update:true},
+};
+const ORIGIN = {"0":"0 - Not Known","1":"1 - Written","2":"2 - Telephone","3":"3 - Electronic","4":"4 - Facsimile","5":"5 - Pharmacy"};
+const DEA = {"2":"CII","3":"CIII","4":"CIV","5":"CV"};
+
+function payloadFor(ct, update){
+  const p = {};
+  p["Caretend_Id__c"]=BASE.rx; p["HealthCloudGA__SourceSystemId__c"]=BASE.rx;
+  p["Pro_CareTend_Patient_Id__c"]=BASE.patient; p["Pro_CareTend_Order_Id__c"]=BASE.order;
+  p["HealthCloudGA__Patient__r"]={type:"HealthCloudGA__EhrPatient__c",Pro_Patient_Id__c:BASE.patient};
+  p["HealthCloudGA__MedicationName__c"]=BASE.drug; p["Pro_NDC__c"]=BASE.ndc;
+  if(ct.dispNdc) p["Pro_Dispensed_NDC__c"]=ct.dispNdc;
+  if(ct.sig) p["Pro_SIG__c"]=ct.sig;
+  p["Pro_CareTend_RX_Id__c"]=BASE.rx; p["Pro_CareTend_RX_Number__c"]="0010000"+BASE.rx.slice(-3);
+  if(ct.qty!=null) p["Pro_Quantity__c"]=ct.qty;
+  if(ct.unit) p["Pro_Quantity_Unit__c"]=ct.unit;
+  if(ct.days!=null && ct.days>0) p["Pro_Day_Supply__c"]=ct.days;
+  if(ct.form) p["Pro_Dosage_Form__c"]=ct.form;
+  if(DEA[ct.dea]) p["Pro_DEA_Schedule__c"]=DEA[ct.dea];
+  if(ct.refill!=null) p["Pro_Refill_Number__c"]=ct.refill;
+  if(ORIGIN[ct.origin]) p["Pro_Origin_Code__c"]=ORIGIN[ct.origin];
+  if(ct.allowed!=null) p["Pro_Refills_Allowed__c"]=ct.allowed;
+  p["HealthCloudGA__DateWritten__c"]={fieldValue:BASE.written+"T00:00:00",fieldType:"LocalDateTime"};
+  if(ct.filled){ p["Pro_Date_Filled__c"]={fieldValue:ct.filled,fieldType:"Date"}; p["Pro_Last_Fill_Date__c"]={fieldValue:ct.filled,fieldType:"Date"}; }
+  if(ct.next) p["Pro_Next_Fill_Date__c"]={fieldValue:ct.next,fieldType:"Date"};
+  p["Pro_Prescriber_First_Name__c"]="Dana"; p["Pro_Prescriber_Last_Name__c"]="Demo";
+  p["Pro_Prescriber_DEA__c"]=BASE.dea; p["Pro_Prescriber_Tax_ID__c"]="99-9999999";
+  p["Pro_Dispensing_Pharmacy_NPI__c"]=BASE.pharmNpi;
+  p["HealthCloudGA__SourceSystem__c"]="CareTend"; p["HealthCloudGA__StatusSystem__c"]="CareTend";
+  return p;
+}
+function pretty(obj){
+  return JSON.stringify(obj,null,2)
+    .replace(/"([^"]+)":/g,'<span class="k">"$1"</span>:')
+    .replace(/: "([^"]*)"/g,': <span class="s">"$1"</span>')
+    .replace(/: (\d+)/g,': <span class="n">$1</span>');
+}
+function recordFor(ct, update){
+  const rows = [
+   ["SIG",ct.sig],["Quantity",ct.qty!=null?ct.qty+(ct.unit?" "+ct.unit:""):null],["Day Supply",ct.days>0?ct.days:null],["Dosage Form",ct.form],
+   ["Refills Allowed",ct.allowed],["Refill Number",ct.refill],["Refills Remaining",(ct.allowed!=null&&ct.refill!=null)?ct.allowed-ct.refill:null],
+   ["Refills Authorized (PA)",null,"manual"],["DAW Code",null,"manual"],["Origin Code",ORIGIN[ct.origin]||null],["DEA Schedule",DEA[ct.dea]||null],
+   ["Date Filled",ct.filled],["Last Fill Date",ct.filled],["Next Fill Date",ct.next],["Dispensed NDC",ct.dispNdc],
+   ["Prescriber NPI",null,"not sent yet"],["Prescriber DEA",BASE.dea],["Prescriber Tax ID","99-9999999"],["Dispensing Pharmacy NPI",BASE.pharmNpi],["Dispensing Pharmacy",null,"matched later"]
+  ];
+  let h = '<div class="card"><h5>'+BASE.name+' &middot; Pres-'+BASE.rx.slice(-2)+' &middot; '+BASE.drug+(update?' &middot; <span class="pill yes">updated, not duplicated</span>':' &middot; <span class="pill yes">created</span>')+'</h5><div class="f">';
+  for(const r of rows){ h += '<b>'+r[0]+'</b>'+(r[1]!=null?'<span class="new">'+r[1]+'</span>':'<span class="blank">'+(r[2]||"blank")+'</span>'); }
+  h += '</div></div><div class="card" style="margin-top:10px"><h5>Set by Salesforce, not by MuleSoft</h5><div class="f"><b>Patient</b><span>'+BASE.name+' (matched on CareTend id)</span><b>Program</b><span>Demo Program (from NDC)</span><b>Requires Review</b><span>No</span><b>Match Method</b><span>CareTend Id</span></div></div>';
+  return h;
+}
+
+// ---------- follow one prescription ----------
+const STEPS = [
+ {who:"CareTend, pharmacist", t:"A fill is completed", body:"The pharmacist completes the first fill of Daniel's prescription. CareTend writes a PRESCRIPTIONFILL row (status completed, compounding date today, days provided 30, the NDC actually dispensed) and stamps MODIFIEDDATE on the prescription.", lit:"ct", card:function(){return '<div class="card"><h5>CareTend tables</h5><div class="f"><b>PRESCRIPTION.ID</b><span>900001</span><b>PRESCRIPTIONFILL.STATUS_ID</b><span class="new">2 (completed)</span><b>ACTUALCOMPOUNDINGDATE</b><span class="new">2026-11-17</span><b>DAYSPROVIDED</b><span class="new">30</span><b>fill item NDC</b><span class="new">55555-5555-55</span><b>PRESCRIPTIONDOSE.WRITTENQUANTITY</b><span>30</span><b>PRESCRIPTIONORIGIN</b><span>3</span></div></div>';}},
+ {who:"Snowflake, data team", t:"The replica catches up", body:"Within minutes the Snowflake replica of CareTend shows the new fill. Nothing reads the live pharmacy database; everything downstream reads this copy.", lit:"sn", card:function(){return '<div class="card"><h5>Snowflake replica</h5><div class="f"><b>Schemas</b><span>PRESCRIPTION, DRUG, LOOKUPS, COMMON, INVENTORY</span><b>Lag</b><span>minutes</span><b>Access</b><span>MuleSoft system API, read only</span></div></div>';}},
+ {who:"MuleSoft scheduler", t:"The :02 / :32 run starts", body:"At the next half hour the scheduler wakes up. It takes the last watermark, sets a cutoff of now minus two minutes (so a row still replicating is not missed), and runs one SQL over all prescriptions created, modified or with a changed fill in that window.", lit:"mu", card:function(){return '<pre><span class="c">-- window</span>\nWHERE ... <span class="k">RX.MODIFIEDDATE</span> &gt; <span class="s">\'$(watermark)\'</span>\n  AND <span class="k">RX.MODIFIEDDATE</span> &lt;= <span class="s">\'$(now - 2 min)\'</span>\n  OR EXISTS (changed <span class="k">PRESCRIPTIONFILL</span>)\n\n<span class="c">-- fill-based columns, latest completed fill</span>\n<span class="k">PF_FILLED.ACTUALCOMPOUNDINGDATE</span> AS RX_DATE_FILLED,\n<span class="k">PF_DAYS.DAYSPROVIDED</span>         AS RX_DAY_SUPPLY,\n<span class="k">PF_DISPENSED.DISPENSED_NDC</span>   AS RX_DISPENSED_NDC</pre>';}},
+ {who:"MuleSoft DataWeave", t:"Codes become Salesforce values", body:"The row is shaped into the Salesforce payload. Digits become the exact picklist values Salesforce accepts, dates lose their time part, empty columns are left out entirely, and the two held fields are not produced at all.", lit:"mu", card:function(){return '<pre><span class="c">// origin 3 -> picklist value</span>\n<span class="k">"Pro_Origin_Code__c"</span>: <span class="s">"3 - Electronic"</span>,\n<span class="c">// DEA 2..5 -> CII..CV, else omitted</span>\n<span class="k">"Pro_DEA_Schedule__c"</span>: <span class="s">"CII"</span>,\n<span class="c">// date, no time</span>\n<span class="k">"Pro_Date_Filled__c"</span>: {<span class="k">"fieldValue"</span>: <span class="s">"2026-11-17"</span>, <span class="k">"fieldType"</span>: <span class="s">"Date"</span>},\n<span class="c">// held, never produced</span>\n<span class="c">// "Pro_Refills_Authorized__c", "Pro_DAW_Code__c"</span></pre>';}},
+ {who:"MuleSoft to Salesforce system API", t:"Upsert on the CareTend Rx id", body:"The payload goes to Salesforce as an upsert on Caretend_Id__c = 900001, two hundred records per call. First time: a record is created. Every later run with the same Rx id: the same record is updated. A prescription can never appear twice.", lit:"sf", card:function(){return '<div class="card"><h5>Upsert</h5><div class="f"><b>Object</b><span>EHR Medication Prescription</span><b>External id</b><span>Caretend_Id__c = 900001</span><b>Result</b><span class="new">created (id a0b...)</span><b>Batch</b><span>200 per call</span><b>Errors</b><span>type mismatches are rejected per row and logged (that is how the Boolean on Refills Authorized was caught on 11/16)</span></div></div>';}},
+ {who:"Salesforce trigger (TD-2052)", t:"Salesforce decides patient and program", body:"The row lands and the prescription trigger runs: the patient is matched (CareTend id, then name and date of birth), the program is resolved from the NDC list, and the review flag is set only when something is missing. None of that comes from MuleSoft.", lit:"sf", card:function(){return '<div class="card"><h5>Set by Salesforce</h5><div class="f"><b>Patient</b><span class="new">Daniel CareTendTest</span><b>Match Method</b><span class="new">CareTend Id</span><b>Program</b><span class="new">Demo Program (NDC 55555-5555-55)</span><b>Requires Review</b><span class="new">No</span></div></div>';}},
+ {who:"Review team", t:"Pharmacy Details on the record", body:"On the prescription page the new section shows the pharmacy block. The review team can correct a value by hand; the review list views now carry Quantity, Day Supply, SIG and Refills Allowed as columns.", lit:"sf", card:function(){return recordFor(SCN.normal.ct,false);}},
+ {who:"Second fill, a month later", t:"Same record, new numbers", body:"When the pharmacist completes the next fill, the same prescription is picked up again. Refill Number becomes 1, Refills Remaining recomputes, the fill dates move. Nothing is duplicated, nothing is typed.", lit:"sf", card:function(){return recordFor(SCN.again.ct,true);}},
+];
+let step = 0, timer = null;
+function renderStep(){
+  const s = STEPS[step];
+  document.getElementById('stepLabel').textContent = 'Step '+(step+1)+' of '+STEPS.length;
+  document.getElementById('track').innerHTML = STEPS.map((x,i)=>'<div class="dot '+(i<step?'done':i===step?'now':'')+'"></div>').join('');
+  document.getElementById('stageText').innerHTML = '<h4>'+s.t+'</h4><div class="who">'+s.who+'</div><p>'+s.body+'</p>';
+  document.getElementById('stageCard').innerHTML = s.card();
+  document.querySelectorAll('.store').forEach(el=>el.classList.remove('lit'));
+  const lit = document.getElementById('st-'+s.lit); if(lit) lit.classList.add('lit');
+}
+function play(){
+  if(timer){clearInterval(timer);timer=null;document.getElementById('play').textContent='Play';return;}
+  document.getElementById('play').textContent='Pause';
+  timer = setInterval(()=>{ if(step<STEPS.length-1){step++;renderStep();} else {clearInterval(timer);timer=null;document.getElementById('play').textContent='Play';} }, 6500);
+}
+document.getElementById('play').onclick = play;
+document.getElementById('next').onclick = ()=>{ if(step<STEPS.length-1){step++;renderStep();} };
+document.getElementById('prev').onclick = ()=>{ if(step>0){step--;renderStep();} };
+
+// ---------- mapping table ----------
+function renderMap(f){
+  const tb = document.querySelector('#mapTable tbody');
+  tb.innerHTML = FIELDS.filter(x=>f==='all'||x.st===f).map(x=>{
+    const cls = x.st==='M'?'ok':x.st==='H'?'warn':'';
+    return '<tr><td><b>'+x.lbl+'</b><br><code>'+x.sf+'</code></td><td>'+x.type+'</td><td>'+x.src+'</td><td>'+x.tr+'</td><td class="'+cls+'"><span class="pill '+ST[x.st][1]+'">'+ST[x.st][0]+'</span></td></tr>';
+  }).join('');
+}
+document.getElementById('mapFilters').onclick = e=>{ const b=e.target.closest('button'); if(!b)return; document.querySelectorAll('#mapFilters button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); renderMap(b.dataset.f); };
+
+// ---------- scenarios ----------
+const sel = document.getElementById('scn');
+for(const k in SCN){ const o=document.createElement('option'); o.value=k; o.textContent=SCN[k].label; sel.appendChild(o); }
+function runScn(){
+  const s = SCN[sel.value];
+  document.getElementById('payload').innerHTML = pretty(payloadFor(s.ct, s.update));
+  document.getElementById('record').innerHTML = recordFor(s.ct, s.update);
+  const pb = document.getElementById('payloadBox'), rb = document.getElementById('recordBox');
+  pb.className = 'box'; rb.className = 'box '+(sel.value==='unknown'?'warn':'ok');
+  document.getElementById('why').innerHTML = '<b>Why:</b> '+s.note;
+}
+document.getElementById('runScn').onclick = runScn;
+
+// ---------- nav / misc ----------
+document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>{ document.querySelectorAll('nav a').forEach(x=>x.classList.remove('on')); a.classList.add('on'); document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on', s.id===a.dataset.s)); window.scrollTo(0,0); });
+document.getElementById('notesBtn').onclick = ()=>document.body.classList.toggle('notes');
+document.getElementById('resetBtn').onclick = ()=>{ step=0; if(timer){clearInterval(timer);timer=null;document.getElementById('play').textContent='Play';} renderStep(); sel.value='normal'; runScn(); renderMap('all'); document.querySelectorAll('#mapFilters button').forEach((x,i)=>x.classList.toggle('on',i===0)); };
+renderStep(); renderMap('all'); runScn();
+</script>
+</body>
+</html>
